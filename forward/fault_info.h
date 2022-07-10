@@ -4,8 +4,8 @@
 #include "gd_info.h"
 #include "constants.h"
 
-typedef struct{
-
+typedef struct
+{
   //Fault coefs
   float *D11_1;
   float *D12_1;
@@ -49,8 +49,10 @@ typedef struct{
   float *matVy2Vz1;
   float *matVx2Vz2;
   float *matVy2Vz2;
-  float *matVx_free;
-  float *matVy_free;
+  float *matVx1_free;
+  float *matVy1_free;
+  float *matVx2_free;
+  float *matVy2_free;
 
   float *matPlus2Min1f; //zhangzhengguo
   float *matPlus2Min2f;
@@ -69,45 +71,90 @@ typedef struct{
   float *mu_f;
   float *rho_f;
 
-  int srci;
-  int FaultAtThisNode;
-  int *Faultgrid;
-  int *united;
-  Init_t0;
-  MaxRate;
-  flag_rup;
-  rup_index_z;
-  rup_index_y;
-  PeakRate;
-  Slip;
-  hSlip;
-  Slipy;
-  Slipz;
-  Ts1;
-  Ts2;
-  Tn;
-  tTs1;
-  tTs2;
-  tTn;
-  Ux;
-  Uy;
-  Uz;
-  Dc_slip;
-  str_peak;
-  str_init_x;
-  str_init_y;
-  init_str_z;
-  C0;
-  Ratex;
-  Ratey;
-  Ratez;
-  vec_n;
-  vec_s1;
-  vec_s2;
-  x_et;
-  y_et;
-  z_et;
-} fault_info_t
+  //
+  float *vec_n; //normal direction
+  float *vec_s1;
+  float *vec_s2;
+  float *x_et;
+  float *y_et;
+  float *z_et;
 
+} fault_coef_t
+
+typedef struct
+{
+  float *W;
+  float *Ws;
+  float *mW;
+  float *hW;
+  float *tW;
+  float *T11;
+  float *T12;
+  float *T13;
+  float *mT11;
+  float *mT12;
+  float *mT13;
+  float *hT11;
+  float *hT12;
+  float *hT13;
+
+} fault_wav_t
+
+typedef struct
+{
+  float *str_init_x;
+  float *str_init_y;
+  float *str_init_z;
+  float *str_peak;
+  float *friction;
+  float *T0x;
+  float *T0y;
+  float *T0z;
+  float *dT0x;
+  float *dT0y;
+  float *dT0z;
+  float *Tn;
+  float *Ts1;
+  float *Ts2;
+  float *tTn;
+  float *tTs1
+  float *tTs2;
+  //friction 2,3
+  float *a;
+  float *b;
+  float *L;
+  float *Vw;
+  //friction 1
+  float *mu_d;
+  float *Dc;
+  float *C0;
+  float *slip;
+  float *hslip;
+  float *mslip;
+  float *tslip;
+  float *slip1;
+  float *slip2;
+  float *Vs1;
+  float *Vs2;
+  float *State;
+  float *mState;
+  float *hState;
+  float *tState;
+  float *init_t0;
+  int *init_t0_flag;
+  int *united;
+  int *rup_index_y;
+  int *rup_index_z;
+  int *Faultgrid;
+  int *flag_rup;
+  int *first_rup;
+  int *faultgrid;
+  // for friction_type == 3
+  float *TP_T;
+  float *TP_P;
+  float *TP_dT;
+  float *TP_dP;
+  float *TP_hy;
+} fault_io_info_t
 
 #endif

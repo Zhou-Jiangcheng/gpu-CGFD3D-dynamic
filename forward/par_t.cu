@@ -137,6 +137,7 @@ par_read_from_str(const char *str, par_t *par)
   // default mpi threads
   par->number_of_mpiprocs_x = 1;
   par->number_of_mpiprocs_y = 1;
+  par->number_of_mpiprocs_z = 1;
 
   if (item = cJSON_GetObjectItem(root, "number_of_mpiprocs_x")) {
     par->number_of_mpiprocs_x = item->valueint;
