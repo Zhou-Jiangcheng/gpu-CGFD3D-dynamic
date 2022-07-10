@@ -15,7 +15,7 @@ output_dir='../project/output'
 id=1;
 
 %-- z slice
-subs=[1,1,35];      % start from index '1'
+subs=[1,1,1];      % start from index '1'
 subc=[-1,-1,1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
@@ -31,8 +31,8 @@ subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vx';
-ns=50;
-ne=600;
+ns=300;
+ne=300;
 nt=50;
 
 

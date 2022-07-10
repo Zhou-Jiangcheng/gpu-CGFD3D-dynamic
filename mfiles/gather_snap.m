@@ -28,14 +28,14 @@ end
 nthd=length(snapinfo);
 for n=1:nthd
     
-    n_i=snapinfo(n).thisid(1); n_j=snapinfo(n).thisid(2);
+    n_i=snapinfo(n).thisid(1); n_j=snapinfo(n).thisid(2);n_k=snapinfo(n).thisid(3);
     i1=snapinfo(n).indxs(1); j1=snapinfo(n).indxs(2); k1=snapinfo(n).indxs(3);
     i2=snapinfo(n).indxe(1); j2=snapinfo(n).indxe(2); k2=snapinfo(n).indxe(3);
     subs=snapinfo(n).subs;
     subc=snapinfo(n).subc;
     subt=snapinfo(n).subt;
     fnm_snap=[snap_dir,'/',snapinfo(n).fnmprefix,'_px',num2str(n_i),...
-              '_py',num2str(n_j),'.nc'];
+              '_py',num2str(n_j),'_pz',num2str(n_k),'.nc'];
     if ~ exist(fnm_snap)
        error([mfilename ': file ',fnm_snap, ' does not exist']);
     end

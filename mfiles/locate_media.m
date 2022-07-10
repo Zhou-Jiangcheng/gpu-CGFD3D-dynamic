@@ -73,16 +73,23 @@ for i=1:length(medialist)
     xyzs=double(nc_attget(medianm,nc_global,'global_index_of_first_physical_points'));
     xs=xyzs(1);
     ys=xyzs(2);
+    zs=xyzs(3);
     xyzc=double(nc_attget(medianm,nc_global,'count_of_physical_points'));
     xc=xyzc(1);
     yc=xyzc(2);
+    zc=xyzc(3);
     xarray=[xs:xs+xc-1];
     yarray=[ys:ys+yc-1];
-    if length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
-       length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0
+    zarray=[zs:zs+zc-1];
+    if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
+        length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
+        length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0 )
+    
         px(n)=str2num(medialist(i).name( strfind(medialist(i).name,'px' )+2 : ...
                                          strfind(medialist(i).name,'_py')-1));
         py(n)=str2num(medialist(i).name( strfind(medialist(i).name,'py' )+2 : ...
+                                         strfind(medialist(i).name,'_pz')-1));
+        pz(n)=str2num(medialist(i).name( strfind(medialist(i).name,'pz' )+2 : ...
                                          strfind(medialist(i).name,'.nc')-1));
         n=n+1;
     end
@@ -96,7 +103,7 @@ for ip=1:length(px)
     nthd=nthd+1;
     
     medianm=[media_dir,'/',mediaprefix,'_px',num2str(px(ip)),...
-            '_py',num2str(py(ip)),'.nc'];
+            '_py',num2str(py(ip)),'_pz',num2str(pz(ip)),'.nc'];
     xyzs=double(nc_attget(medianm,nc_global,'global_index_of_first_physical_points'));
     xs=xyzs(1);
     ys=xyzs(2);
@@ -116,7 +123,7 @@ for ip=1:length(px)
     gzarray=gsubs(3):gsubt(3):gsube(3);
     gzarray=gzarray-1;
     
-    mediainfo(nthd).thisid=[px(ip),py(ip)];
+    mediainfo(nthd).thisid=[px(ip),py(ip),pz(ip)];
     i=find(gxarray>=xs & gxarray<=xe);
     j=find(gyarray>=ys & gyarray<=ye);
     k=find(gzarray>=zs & gzarray<=ze);

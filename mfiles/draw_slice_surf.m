@@ -11,13 +11,13 @@ parfnm='../project/test.json';
 output_dir='../project/output';
 
 % which slice to plot
-slicedir='y';
-sliceid=120;
+slicedir='x';
+sliceid=190;
 
 % which variable and time to plot
 varnm='Vz';
-ns=1;
-ne=500;
+ns=300;
+ne=300;
 nt=50;
 
 % figure control parameters
@@ -38,7 +38,7 @@ nj=par.number_of_total_grid_points_y;
 nk=par.number_of_total_grid_points_z;
 nproi=par.number_of_mpiprocs_x;
 nproj=par.number_of_mpiprocs_y;
-
+nprok=par.number_of_mpiprocs_z;
 
 % figure plot
 hid=figure;
@@ -46,55 +46,62 @@ set(hid,'BackingStore','on');
 
 % load data
 for nlayer=ns:nt:ne
-
-    % -------------------- slice x ---------------------- %
-    if slicedir == 'x'
-        
-        for jp=0:nproj-1
-            
-            % snapshot data
-            slicestruct=dir([output_dir,'/','slicex_i',num2str(sliceid),'_px*_py',num2str(jp),'.nc']);
-            slicenm=slicestruct.name;
-            slicenm=[output_dir,'/',slicenm];
-            pnjstruct=nc_getdiminfo(slicenm,'j');
-            pnj=pnjstruct.Length;
-            pnkstruct=nc_getdiminfo(slicenm,'k');
-            pnk=pnkstruct.Length;
-            if jp==0
-                V=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pnj],[1,1,1]));
-            else
-                V0=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pnj],[1,1,1]));
-                V=horzcat(V,V0);
+ if slicedir == 'x'
+    for kp=0:nprok-1      
+            for jp=0:nproj-1
+                % snapshot data
+                slicestruct=dir([output_dir,'/','slicex_i',num2str(sliceid),'_px*_py',num2str(jp),'_pz',num2str(kp),'.nc']);
+                slicenm=slicestruct.name;
+                slicenm=[output_dir,'/',slicenm];
+                pnjstruct=nc_getdiminfo(slicenm,'j');
+                pnj=pnjstruct.Length;
+                pnkstruct=nc_getdiminfo(slicenm,'k');
+                pnk=pnkstruct.Length;
+                if jp==0
+                    VV=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pnj],[1,1,1]));
+                else
+                    VV0=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pnj],[1,1,1]));
+                    VV=horzcat(VV,VV0);
+                end
+                t=nc_varget(slicenm,'time',[nlayer-1],[1]);
+                
+                % coordinate data
+                slicestruct=dir([output_dir,'/','slicex_i',num2str(sliceid),'_px*_py',num2str(jp),'_pz',num2str(kp),'.nc']);
+                slicenm=slicestruct.name;
+                ip=str2num(slicenm( strfind(slicenm,'px')+2 : strfind(slicenm,'_py')-1 ));
+                slicenm=[output_dir,'/',slicenm];
+                coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'_pz',num2str(kp),'.nc'];
+                coordnm=[output_dir,'/',coordnm];
+                idwithghost=double(nc_attget(slicenm,nc_global,'i_index_with_ghosts_in_this_thread'));
+                coorddimstruct=nc_getdiminfo(coordnm,'k');
+                slicedimstruct=nc_getdiminfo(slicenm,'k');
+                ghostp=(coorddimstruct.Length-slicedimstruct.Length)/2;
+                if jp==0
+                    XX=squeeze(nc_varget(coordnm,'x',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                    YY=squeeze(nc_varget(coordnm,'y',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                    ZZ=squeeze(nc_varget(coordnm,'z',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                else
+                    XX0=squeeze(nc_varget(coordnm,'x',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                    YY0=squeeze(nc_varget(coordnm,'y',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                    ZZ0=squeeze(nc_varget(coordnm,'z',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+                    XX=horzcat(XX,XX0);
+                    YY=horzcat(YY,YY0);
+                    ZZ=horzcat(ZZ,ZZ0);
+                end             
             end
-            t=nc_varget(slicenm,'time',[nlayer-1],[1]);
-            
-            % coordinate data
-            slicestruct=dir([output_dir,'/','slicex_i',num2str(sliceid),'_px*_py',num2str(jp),'.nc']);
-            slicenm=slicestruct.name;
-            ip=str2num(slicenm( strfind(slicenm,'px')+2 : strfind(slicenm,'_py')-1 ));
-            slicenm=[output_dir,'/',slicenm];
-            coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'.nc'];
-            coordnm=[output_dir,'/',coordnm];
-            idwithghost=double(nc_attget(slicenm,nc_global,'i_index_with_ghosts_in_this_thread'));
-            coorddimstruct=nc_getdiminfo(coordnm,'k');
-            slicedimstruct=nc_getdiminfo(slicenm,'k');
-            ghostp=(coorddimstruct.Length-slicedimstruct.Length)/2;
-            if jp==0
-                X=squeeze(nc_varget(coordnm,'x',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
-                Y=squeeze(nc_varget(coordnm,'y',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
-                Z=squeeze(nc_varget(coordnm,'z',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
+            if kp==0
+                V=VV;
+                X=XX;
+                Y=YY;
+                Z=ZZ;
             else
-                X0=squeeze(nc_varget(coordnm,'x',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
-                Y0=squeeze(nc_varget(coordnm,'y',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
-                Z0=squeeze(nc_varget(coordnm,'z',[ghostp,ghostp,idwithghost],[pnk,pnj,1],[1,1,1]));
-                X=horzcat(X,X0);
-                Y=horzcat(Y,Y0);
-                Z=horzcat(Z,Z0);
-            end  
-            
+                V=vertcat(V,VV);
+                X=vertcat(X,XX);
+                Y=vertcat(Y,YY);
+                Z=vertcat(Z,ZZ);
+            end
         end
         
-        % unit
         str_unit='m';
         if flag_km
             X=X/1e3;
@@ -102,6 +109,7 @@ for nlayer=ns:nt:ne
             Z=Z/1e3;
             str_unit='km';
         end
+    
         
         disp([ '  draw ' num2str(nlayer) 'th time step (t=' num2str(t) ')']);
         
@@ -114,48 +122,60 @@ for nlayer=ns:nt:ne
     % -------------------- slice y ---------------------- %
     elseif slicedir == 'y'
    
-        for ip=0:nproi-1
+        for kp=0:nprok-1
             
-            % snapshot data
-            slicestruct=dir([output_dir,'/','slicey_j',num2str(sliceid),'_px',num2str(ip),'_py*.nc']);
-            slicenm=slicestruct.name;
-            slicenm=[output_dir,'/',slicenm];
-            pnistruct=nc_getdiminfo(slicenm,'i');
-            pni=pnistruct.Length;
-            pnkstruct=nc_getdiminfo(slicenm,'k');
-            pnk=pnkstruct.Length;
-            if ip==0
-                V=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
-            else
-                V0=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
-                V=horzcat(V,V0);
+            for ip=0:nproi-1
+                % snapshot data
+                slicestruct=dir([output_dir,'/','slicey_j',num2str(sliceid),'_px',num2str(ip),'_py*','_pz',num2str(kp),'.nc']);
+                slicenm=slicestruct.name;
+                slicenm=[output_dir,'/',slicenm];
+                pnistruct=nc_getdiminfo(slicenm,'i');
+                pni=pnistruct.Length;
+                pnkstruct=nc_getdiminfo(slicenm,'k');
+                pnk=pnkstruct.Length;
+                if ip==0
+                    VV=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
+                else
+                    VV0=squeeze(nc_varget(slicenm,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
+                    VV=vertcat(VV,VV0);
+                end
+                t=nc_varget(slicenm,'time',[nlayer-1],[1]);
+                
+                % coordinate data
+                slicestruct=dir([output_dir,'/','slicey_j',num2str(sliceid),'_px',num2str(ip),'_py*','_pz',num2str(kp),'.nc']);
+                slicenm=slicestruct.name;
+                jp=str2num(slicenm( strfind(slicenm,'py')+2 : strfind(slicenm,'_pz')-1 ));
+                slicenm=[output_dir,'/',slicenm];
+                coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'_pz',num2str(kp),'.nc'];
+                coordnm=[output_dir,'/',coordnm];
+                idwithghost=double(nc_attget(slicenm,nc_global,'j_index_with_ghosts_in_this_thread'));
+                coorddimstruct=nc_getdiminfo(coordnm,'i');
+                slicedimstruct=nc_getdiminfo(slicenm,'i');
+                ghostp=(coorddimstruct.Length-slicedimstruct.Length)/2;
+                if ip==0
+                    XX=squeeze(nc_varget(coordnm,'x',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                    YY=squeeze(nc_varget(coordnm,'y',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                    ZZ=squeeze(nc_varget(coordnm,'z',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                else
+                    XX0=squeeze(nc_varget(coordnm,'x',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                    YY0=squeeze(nc_varget(coordnm,'y',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                    ZZ0=squeeze(nc_varget(coordnm,'z',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+                    XX=vertcat(XX,XX0);
+                    YY=vertcat(YY,YY0);
+                    ZZ=vertcat(ZZ,ZZ0);
+                end  
             end
-            t=nc_varget(slicenm,'time',[nlayer-1],[1]);
-            
-            % coordinate data
-            slicestruct=dir([output_dir,'/','slicey_j',num2str(sliceid),'_px',num2str(ip),'_py*.nc']);
-            slicenm=slicestruct.name;
-            jp=str2num(slicenm( strfind(slicenm,'py')+2 : strfind(slicenm,'.nc')-1 ));
-            slicenm=[output_dir,'/',slicenm];
-            coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'.nc'];
-            coordnm=[output_dir,'/',coordnm];
-            idwithghost=double(nc_attget(slicenm,nc_global,'j_index_with_ghosts_in_this_thread'));
-            coorddimstruct=nc_getdiminfo(coordnm,'i');
-            slicedimstruct=nc_getdiminfo(slicenm,'i');
-            ghostp=(coorddimstruct.Length-slicedimstruct.Length)/2;
-            if ip==0
-                X=squeeze(nc_varget(coordnm,'x',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
-                Y=squeeze(nc_varget(coordnm,'y',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
-                Z=squeeze(nc_varget(coordnm,'z',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
+            if kp==0
+                V=VV;
+                X=XX;
+                Y=YY;
+                Z=ZZ;
             else
-                X0=squeeze(nc_varget(coordnm,'x',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
-                Y0=squeeze(nc_varget(coordnm,'y',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
-                Z0=squeeze(nc_varget(coordnm,'z',[ghostp,idwithghost,ghostp],[pnk,1,pni],[1,1,1]));
-                X=horzcat(X,X0);
-                Y=horzcat(Y,Y0);
-                Z=horzcat(Z,Z0);
-            end  
-            
+                V=vertcat(V,VV);
+                X=vertcat(X,XX);
+                Y=vertcat(Y,YY);
+                Z=vertcat(Z,ZZ);
+            end
         end
         
         % unit
@@ -178,11 +198,13 @@ for nlayer=ns:nt:ne
     % -------------------- slice z ---------------------- %
     else
 
-        for jp=0:nproj-1
+         for jp=0:nproj-1
+            
             for ip=0:nproi-1
-                
                 % snapshot data
-                slicenm=[output_dir,'/','slicez_k',num2str(sliceid),'_px',num2str(ip),'_py',num2str(jp),'.nc'];
+                slicestruct=dir([output_dir,'/','slicez_k',num2str(sliceid),'_px',num2str(ip),'_py',num2str(jp),'_pz*.nc']);
+                slicenm=slicestruct.name;
+                slicenm=[output_dir,'/',slicenm];
                 pnistruct=nc_getdiminfo(slicenm,'i');
                 pni=pnistruct.Length;
                 pnjstruct=nc_getdiminfo(slicenm,'j');
@@ -196,7 +218,11 @@ for nlayer=ns:nt:ne
                 t=nc_varget(slicenm,'time',[nlayer-1],[1]);
                 
                 % coordinate data
-                coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'.nc'];
+                slicestruct=dir([output_dir,'/','slicez_k',num2str(sliceid),'_px',num2str(ip),'_py',num2str(jp),'_pz*.nc']);
+                slicenm=slicestruct.name;
+                kp=str2num(slicenm( strfind(slicenm,'pz')+2 : strfind(slicenm,'.nc')-1 ));
+                slicenm=[output_dir,'/',slicenm];
+                coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'_pz',num2str(kp),'.nc'];
                 coordnm=[output_dir,'/',coordnm];
                 idwithghost=double(nc_attget(slicenm,nc_global,'k_index_with_ghosts_in_this_thread'));
                 coorddimstruct=nc_getdiminfo(coordnm,'j');
@@ -213,10 +239,8 @@ for nlayer=ns:nt:ne
                     XX=horzcat(XX,XX0);
                     YY=horzcat(YY,YY0);
                     ZZ=horzcat(ZZ,ZZ0);
-                end
-                    
+                end  
             end
-            
             if jp==0
                 V=VV;
                 X=XX;
@@ -228,8 +252,7 @@ for nlayer=ns:nt:ne
                 Y=vertcat(Y,YY);
                 Z=vertcat(Z,ZZ);
             end
-        end
-        
+         end
         % unit
         str_unit='m';
         if flag_km
@@ -238,6 +261,7 @@ for nlayer=ns:nt:ne
             Z=Z/1e3;
             str_unit='km';
         end
+
             
         disp([ '  draw ' num2str(nlayer) 'th time step (t=' num2str(t) ')']);
         

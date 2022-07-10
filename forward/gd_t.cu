@@ -434,7 +434,7 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
   int r_iptr;
 
   MPI_Status status;
-  MPI_Datatype DTypeXL, DTypeYL;
+  MPI_Datatype DTypeXL, DTypeYL, DTypeZL;
 
   MPI_Type_vector(ny*nz,
                   3,
@@ -446,8 +446,14 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
                   nx*ny,
                   MPI_FLOAT,
                   &DTypeYL);
+  MPI_Type_vector(3,
+                  nx*ny,
+                  nx*ny,
+                  MPI_FLOAT,
+                  &DTypeZL);
   MPI_Type_commit(&DTypeXL);
   MPI_Type_commit(&DTypeYL);
+  MPI_Type_commit(&DTypeZL);
 
   for(int i=0; i<metric->ncmp; i++)
   {
@@ -475,77 +481,19 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
     MPI_Sendrecv(&g3d[s_iptr],1,DTypeYL,neighid[3],220,
                  &g3d[r_iptr],1,DTypeYL,neighid[2],220,
                  topocomm,&status);
+    // to Z1
+    s_iptr = nk1 * siz_slice + i * siz_volume;        //sendbuff point (nx1,ny1,nk1)
+    r_iptr = (nk2+1) * siz_slice + i * siz_volume;    //recvbuff point (nx1,ny1,nk2+1)
+    MPI_Sendrecv(&g3d[s_iptr],1,DTypeZL,neighid[4],310,
+                 &g3d[r_iptr],1,DTypeZL,neighid[5],310,
+                 topocomm,&status);
+    // to Z2
+    s_iptr = (nk2-3+1) * siz_slice + i * siz_volume;   //sendbuff point (nx1,ny1,nk2-3+1)
+    r_iptr = (nk1-3) * siz_slice + i * siz_volume;     //recvbuff point (nx1,ny1,nk1-3)
+    MPI_Sendrecv(&g3d[s_iptr],1,DTypeZL,neighid[5],320,
+                 &g3d[r_iptr],1,DTypeZL,neighid[4],320,
+                 topocomm,&status);
   }
-/*
-  // for test.  check send_recv whether success
-  for (size_t i = ni1; i < ni1+3; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==1 && myid2[1]==0 ) fprintf(stdout,"aaa  %f %f %f aaa\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t i = ni2+1; i <= ni2+3; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==0 && myid2[1]==0) fprintf(stdout,"**a %f %f %f **a\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-
-  for (size_t i = ni2-2; i <= ni2; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==0 && myid2[1]==1) fprintf(stdout,"bbb %f %f %f bbb\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t i = ni1-3; i < ni1; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==1 && myid2[1]==1) fprintf(stdout,"**b %f %f %f **b\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-
-  for (size_t j = nj2-2; j <= nj2; j++)
-  {
-    int i = ni1+1;
-    int k = nk1+1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==0 && myid2[1]==0) fprintf(stdout,"ccc %f %f %f ccc\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t j = nj1-3; j < nj1; j++)
-  {
-    int i = ni1+1;
-    int k = nk1+1;
-    size_t iptr = i + j * siz_line + k * siz_slice;
-    if(myid2[0]==0 && myid2[1]==1) fprintf(stdout,"**c %f %f %f **c\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-*/
-
-  // for test
-  /*
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++)
-      {
-        float dh=100.0;
-        size_t iptr = i + j * siz_line + k * siz_slice;
-        jac3d[iptr] = dh*dh*dh;
-         xi_x[iptr] = 1.0/dh;
-         xi_y[iptr] =  0.0;
-         xi_z[iptr] =  0.0;
-         et_x[iptr] =  0.0;
-         et_y[iptr] = 1.0/dh;
-         et_z[iptr] =  0.0;
-         zt_x[iptr] =  0.0;
-         zt_y[iptr] =  0.0;
-         zt_z[iptr] = 1.0/dh;
-      }
-    }
-  }
-  */
 }
 
 /*

@@ -16,6 +16,7 @@ int
 mympi_set(mympi_t *mympi,
           int number_of_mpiprocs_x,
           int number_of_mpiprocs_y,
+          int number_of_mpiprocs_z,
           MPI_Comm comm, 
           const int myid, const int verbose)
 {
@@ -23,26 +24,31 @@ mympi_set(mympi_t *mympi,
 
   mympi->nprocx = number_of_mpiprocs_x;
   mympi->nprocy = number_of_mpiprocs_y;
+  mympi->nprocz = number_of_mpiprocs_z;
 
-  mympi->myid = myid;
+  int old_myid = myid;
   mympi->comm = comm;
 
-  // mpi topo, only consider 2d topo
-  int pdims[2]   = {number_of_mpiprocs_x, number_of_mpiprocs_y};
-  int periods[2] = {0,0};
+  // mpi topo
+  int ndims[3]   = {number_of_mpiprocs_x, number_of_mpiprocs_y, number_of_mpiprocs_z};
+  int periods[3] = {0,0,0};
+  int reorder = 1; 
 
   // create Cartesian topology
-  MPI_Cart_create(comm, 2, pdims, periods, 0, &(mympi->topocomm));
+  MPI_Cart_create(comm, 3, ndims, periods, reorder, &(mympi->topocomm));
+  
+  MPI_Comm_rank(mympi->topocomm,&(mympi->myid));
+  if(mympi->myid != old_myid){
+    printf("myid has change: from %d to %d\n", old_myid, mympi->myid);
+  }
 
   // get my local x,y coordinates
-  MPI_Cart_coords(mympi->topocomm, myid, 2, mympi->topoid);
+  MPI_Cart_coords(mympi->topocomm, mympi->myid, 3, mympi->topoid);
 
   // neighour
   MPI_Cart_shift(mympi->topocomm, 0, 1, &(mympi->neighid[0]), &(mympi->neighid[1]));
   MPI_Cart_shift(mympi->topocomm, 1, 1, &(mympi->neighid[2]), &(mympi->neighid[3]));
-  // set z dir for bdry condition
-  mympi->neighid[4] = MPI_PROC_NULL;
-  mympi->neighid[5] = MPI_PROC_NULL;
+  MPI_Cart_shift(mympi->topocomm, 2, 1, &(mympi->neighid[4]), &(mympi->neighid[5]));
 
   return ierr;
 }
@@ -54,26 +60,15 @@ mympi_print(mympi_t *mympi)
   fprintf(stdout, "print mympi info:\n");
   fprintf(stdout, "-------------------------------------------------------\n\n");
 
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> media info.\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //if (blk->media_type == MEDIA_TYPE_LAYER)
-  //{
-  //    strcpy(str, "layer");
-  //}
-  //else if (blk->media_type == MEDIA_TYPE_GRID)
-  //{
-  //    strcpy(str, "grid");
-  //}
-  //fprintf(stdout, " media_type = %s\n", str);
-  //if(blk->media_type == MEDIA_TYPE_GRID)
-  //{
-  //    fprintf(stdout, "\n --> the media filename is:\n");
-  //    fprintf(stdout, " velp_file  = %s\n", blk->fnm_velp);
-  //    fprintf(stdout, " vels_file  = %s\n", blk->fnm_vels);
-  //    fprintf(stdout, " rho_file   = %s\n", blk->fnm_rho);
-  //}
-  //fprintf(stdout, "\n");
+  fprintf(stdout, " myid = %d, topoid[%d,%d,%d]\n", mympi->myid,mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]);
+  fprintf(stdout, " neighid_x[%d,%d]\n", mympi->neighid[0], mympi->neighid[1]);
+  fprintf(stdout, " neighid_y[%d,%d]\n", mympi->neighid[2], mympi->neighid[3]);
+  fprintf(stdout, " neighid_z[%d,%d]\n", mympi->neighid[4], mympi->neighid[5]);
+  
+  return;
+  fprintf(stdout, "\n-------------------------------------------------------\n");
+  fprintf(stdout, "print mympi info:\n");
+  fprintf(stdout, "-------------------------------------------------------\n\n");
   
   return;
 }

@@ -5,8 +5,8 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project1/test.json';
-output_dir='../project1/output';
+parfnm='../project/test.json';
+output_dir='../project/output';
 PG_dir = output_dir;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.
@@ -52,6 +52,7 @@ for i=1:length(PG_list)
     topoid = nc_attget(PG_nm,nc_global,'coords_of_mpi_topo');
     px(i) = topoid(1);
     py(i) = topoid(2);
+    pz(i) = topoid(3);
     counts = nc_attget(PG_nm,nc_global,'count_index_of_physical_points');
     ni = counts(1);
     nj = counts(2);
@@ -61,7 +62,7 @@ for i=1:length(PG_list)
     subs1 = [3,3]; 
     subc1 = [nj,ni]; 
     subt1 = [1,1]; 
-    fnm_PG = [PG_dir,'/',PG_prefix,'_px',num2str(px(i)),'_py',num2str(py(i)),'.nc']
+    fnm_PG = [PG_dir,'/',PG_prefix,'_px',num2str(px(i)),'_py',num2str(py(i)),'_pz',num2str(pz(i)),'.nc']
     V(gnj1:gnj1+nj-1,gni1:gni1+ni-1)=nc_varget(fnm_PG,varnm,subs1,subc1,subt1);
 end
 % transpose to (x,y)

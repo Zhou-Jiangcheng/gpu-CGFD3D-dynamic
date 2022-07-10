@@ -105,8 +105,38 @@ gd_info_set(gdinfo_t *const gdinfo,
   }
 
   // determine nk
-  int nk = number_of_total_grid_points_z;
-  gdinfo->gnk1 = 0;
+  int nz_et = number_of_total_grid_points_z;
+  // double cfspml load
+  // if has free_surface, abs_num_of_layers[2][1] = 0
+  nz_et += abs_num_of_layers[2][0] + abs_num_of_layers[2][1];
+  int nz_avg  = nz_et / mympi->nprocz;
+  int nz_left = ny_et % mympi->nprocz;
+  if (nz_avg < 2 * fdz_nghosts) {
+    // error
+  }
+  if (nz_avg<abs_num_of_layers[2][0] || nz_avg<abs_num_of_layers[2][1]) {
+    // error
+  }
+  int nk = nz_avg;
+  if (mympi->neighid[4] == MPI_PROC_NULL) {
+    nk -= abs_num_of_layers[2][0];
+  }
+  if (mympi->neighid[5] == MPI_PROC_NULL) {
+    nk -= abs_num_of_layers[2][1];
+  }
+  // not equal divided points given to first ny_left procs
+  if (mympi->topoid[2] < nz_left) {
+    nk++;
+  }
+  // global index
+  if (mympi->topoid[2]==0) {
+    gdinfo->gnk1 = 0;
+  } else {
+    gdinfo->gnk1 = mympi->topoid[2] * nz_avg - abs_num_of_layers[2][0];
+  }
+  if (nz_left != 0) {
+    gdinfo->gnk1 += (mympi->topoid[2] < nz_left)? mympi->topoid[2] : nz_left;
+  }
   
   // add ghost points
   int nx = ni + 2 * fdx_nghosts;

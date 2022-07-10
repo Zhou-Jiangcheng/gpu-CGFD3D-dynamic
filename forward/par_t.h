@@ -46,6 +46,7 @@ typedef struct{
   // MPI
   int number_of_mpiprocs_x;
   int number_of_mpiprocs_y;
+  int number_of_mpiprocs_z;
 
   // time step
   int   number_of_time_steps;

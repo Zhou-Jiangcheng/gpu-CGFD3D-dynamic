@@ -119,8 +119,8 @@ sv_eq1st_curv_col_allstep(
   io_snap_nc_create(iosnap, &iosnap_nc, topoid);
 
   // only x/y mpi
-  int num_of_r_reqs = 4;
-  int num_of_s_reqs = 4;
+  int num_of_r_reqs = 6;
+  int num_of_s_reqs = 6;
   
 
   // set pml for rk
@@ -302,7 +302,6 @@ sv_eq1st_curv_col_allstep(
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
         //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
         //}
-
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
 
@@ -430,6 +429,7 @@ sv_eq1st_curv_col_allstep(
           }
         }
       }
+
       MPI_Waitall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
       MPI_Waitall(num_of_r_reqs, mympi->pair_r_reqs[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
  

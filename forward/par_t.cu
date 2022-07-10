@@ -144,6 +144,9 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "number_of_mpiprocs_y")) {
     par->number_of_mpiprocs_y = item->valueint;
   }
+  if (item = cJSON_GetObjectItem(root, "number_of_mpiprocs_z")) {
+    par->number_of_mpiprocs_z = item->valueint;
+  }
 
   // set default values to negative
   par->size_of_time_step = -1.0;

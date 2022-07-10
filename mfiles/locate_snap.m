@@ -73,19 +73,26 @@ for i=1:length(snaplist)
     xyzs=double(nc_attget(snapnm,nc_global,'first_index_to_snapshot_output'));
     xs=xyzs(1);
     ys=xyzs(2);
+    zs=xyzs(3);
     xc=nc_getdiminfo(snapnm,'i');
     xc=xc.Length;
     yc=nc_getdiminfo(snapnm,'j');
     yc=yc.Length;
+    zc=nc_getdiminfo(snapnm,'k');
+    zc=zc.Length;
     xarray=[xs:xs+xc-1];
     yarray=[ys:ys+yc-1];
-    if length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
-       length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0
-        px(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'px' )+2 : ...
+    zarray=[zs:zs+zc-1];
+   if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
+       length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
+       length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
+       px(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'px' )+2 : ...
                                         strfind(snaplist(i).name,'_py')-1));
-        py(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'py' )+2 : ...
+       py(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'py' )+2 : ...
+                                        strfind(snaplist(i).name,'_pz')-1));
+       pz(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'pz' )+2 : ...
                                         strfind(snaplist(i).name,'.nc')-1));
-        n=n+1;
+       n=n+1;
     end
     
 end
@@ -97,7 +104,7 @@ for ip=1:length(px)
     nthd=nthd+1;
     
     snapnm=[snap_dir,'/',snapprefix,'_px',num2str(px(ip)),...
-            '_py',num2str(py(ip)),'.nc'];
+            '_py',num2str(py(ip)),'_pz',num2str(pz(ip)),'.nc'];
     xyzs=double(nc_attget(snapnm,nc_global,'first_index_to_snapshot_output'));
     xs=xyzs(1);
     ys=xyzs(2);
@@ -119,7 +126,7 @@ for ip=1:length(px)
     gzarray=gsubs(3):gsubt(3):gsube(3);
     gzarray=gzarray-1;
     
-    snapinfo(nthd).thisid=[px(ip),py(ip)];
+    snapinfo(nthd).thisid=[px(ip),py(ip),pz(ip)];
     i=find(gxarray>=xs & gxarray<=xe);
     j=find(gyarray>=ys & gyarray<=ye);
     k=find(gzarray>=zs & gzarray<=ze);

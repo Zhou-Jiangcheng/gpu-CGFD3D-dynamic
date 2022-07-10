@@ -34,13 +34,13 @@ coordprefix='coord';
 nthd=length(coordinfo);
 for n=1:nthd
     
-    n_i=coordinfo(n).thisid(1); n_j=coordinfo(n).thisid(2);
+    n_i=coordinfo(n).thisid(1); n_j=coordinfo(n).thisid(2); n_k=coordinfo(n).thisid(3);
     i1=coordinfo(n).indxs(1); j1=coordinfo(n).indxs(2); k1=coordinfo(n).indxs(3);
     i2=coordinfo(n).indxe(1); j2=coordinfo(n).indxe(2); k2=coordinfo(n).indxe(3);
     subs=coordinfo(n).wsubs;
     subc=coordinfo(n).wsubc;
     subt=coordinfo(n).wsubt;
-    fnm_coord=[coord_dir,'/',coordprefix,'_px',num2str(n_i),'_py',num2str(n_j),'.nc'];
+    fnm_coord=[coord_dir,'/',coordprefix,'_px',num2str(n_i),'_py',num2str(n_j),'_pz',num2str(n_k),'.nc'];
     
     if ~ exist(fnm_coord,'file')
        error([mfilename ': file ' fnm_coord 'does not exist']);

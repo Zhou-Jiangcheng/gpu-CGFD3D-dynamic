@@ -121,8 +121,12 @@ int main(int argc, char** argv)
   mympi_set(mympi,
             par->number_of_mpiprocs_x,
             par->number_of_mpiprocs_y,
+            par->number_of_mpiprocs_z,
             comm,
             myid, verbose);
+
+  //reset myid number after mympi_set, general myid not changed
+  myid = mympi->myid;
 
   // set gdinfo
   gd_info_set(gdinfo, mympi,
@@ -261,7 +265,7 @@ int main(int argc, char** argv)
   }
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
   // print basic info for QC
-  fprintf(stdout,"gdcurv info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
+  fprintf(stdout,"gdcurv info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]); 
   //gd_print(gdcurv);
 //-------------------------------------------------------------------------------
 //-- media generation or import
@@ -527,8 +531,8 @@ int main(int argc, char** argv)
             &dtmax, &dtmaxVp, &dtmaxL, &dtmaxi, &dtmaxj, &dtmaxk);
     
     //-- print for QC
-    fprintf(stdout, "-> topoid=[%d,%d], dtmax=%f, Vp=%f, L=%f, i=%d, j=%d, k=%d\n",
-            mympi->topoid[0],mympi->topoid[1], dtmax, dtmaxVp, dtmaxL, dtmaxi, dtmaxj, dtmaxk);
+    fprintf(stdout, "-> topoid=[%d,%d,%d], dtmax=%f, Vp=%f, L=%f, i=%d, j=%d, k=%d\n",
+            mympi->topoid[0],mympi->topoid[1], mympi->topoid[2], dtmax, dtmaxVp, dtmaxL, dtmaxi, dtmaxj, dtmaxk);
     
     // receive dtmax from each proc
     MPI_Allgather(&dtmax,1,MPI_REAL,dt_est,1,MPI_REAL,MPI_COMM_WORLD);
@@ -598,7 +602,7 @@ int main(int argc, char** argv)
 
   // print basic info for QC
   if (verbose>1000) {
-    fprintf(stdout,"src info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
+    fprintf(stdout,"src info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1], mympi->topoid[2]); 
     src_print(src, verbose);
   }
   /*
@@ -703,6 +707,8 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
   
   fd_print(fd);
+
+  mympi_print(mympi);
 
   blk_print(blk);
 
