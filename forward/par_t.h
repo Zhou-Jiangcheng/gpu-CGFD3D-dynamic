@@ -15,6 +15,7 @@
 #define PAR_GRID_IMPORT       1
 #define PAR_GRID_CARTESIAN    2
 #define PAR_GRID_LAYER_INTERP 3
+#define PAR_GRID_FAULT_PLANE  4
 
 #define PAR_METRIC_CALCULATE 1
 #define PAR_METRIC_IMPORT    2
@@ -95,12 +96,8 @@ typedef struct{
   char grid_export_dir[PAR_MAX_STRLEN];
   char grid_import_dir[PAR_MAX_STRLEN];
 
-  float cartesian_grid_origin[CONST_NDIM];
-  float cartesian_grid_stepsize[CONST_NDIM];
-
-  char in_grid_layer_file[PAR_MAX_STRLEN];
-  int  grid_layer_resample_factor[CONST_NDIM];
-  int  grid_layer_start[CONST_NDIM];
+  char in_grid_fault_nc[PAR_MAX_STRLEN];
+  float dh;
 
   // metric
   int metric_method_itype;

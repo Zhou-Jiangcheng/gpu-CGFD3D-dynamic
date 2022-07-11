@@ -331,40 +331,16 @@ par_read_from_str(const char *str, par_t *par)
        par->grid_generation_itype = PAR_GRID_IMPORT;
        sprintf(par->grid_import_dir, "%s", subitem->valuestring);
     }
-    // generate cartesian grid
-    if (subitem = cJSON_GetObjectItem(item, "cartesian")) {
-       par->grid_generation_itype = PAR_GRID_CARTESIAN;
-       if (thirditem = cJSON_GetObjectItem(subitem, "origin")) {
-         for (int i = 0; i < CONST_NDIM; i++) {
-           par->cartesian_grid_origin[i] = cJSON_GetArrayItem(thirditem, i)->valuedouble;
-         }
+    // fault import
+    if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
+       par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
+       if (thirditem = cJSON_GetObjectItem(subitem, "in_grid_fault_nc")) {
+          sprintf(par->in_grid_fault_nc, "%s", thirditem->valuestring);
        }
-       if (thirditem = cJSON_GetObjectItem(subitem, "inteval")) {
-         for (int i = 0; i < CONST_NDIM; i++) {
-           par->cartesian_grid_stepsize[i] = cJSON_GetArrayItem(thirditem, i)->valuedouble;
-         }
+       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
+         par->dh = thirditem->valueint;
        }
-    }
-    // layer interp
-    if (subitem = cJSON_GetObjectItem(item, "layer_interp")) {
-       par->grid_generation_itype = PAR_GRID_LAYER_INTERP;
-       if (thirditem = cJSON_GetObjectItem(subitem, "in_grid_layer_file")) {
-          sprintf(par->in_grid_layer_file, "%s", thirditem->valuestring);
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "refine_factor")) {
-         for (int i = 0; i < CONST_NDIM; i++) {
-           par->grid_layer_resample_factor[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-         }
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "horizontal_start_index")) {
-         for (int i = 0; i < CONST_NDIM-1; i++) {
-           par->grid_layer_start[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-         }
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "vertical_last_to_top")) {
-         par->grid_layer_start[CONST_NDIM-1] = thirditem->valueint;
-       }
-    }
+     }
   }
 
   par->is_export_grid = 1;
@@ -1014,15 +990,6 @@ par_print(par_t *par)
           n, par->disg_at_zindx[n], par->disg_factor[n]);
   }
 
-  fprintf(stdout, " grid_generation_itype = %d\n", par->grid_generation_itype);
-  if (par->grid_generation_itype==PAR_GRID_CARTESIAN) {
-    fprintf(stdout, " cartesian_grid_x0 = %10.4e\n", par->cartesian_grid_origin[0]);
-    fprintf(stdout, " cartesian_grid_y0 = %10.4e\n", par->cartesian_grid_origin[1]);
-    fprintf(stdout, " cartesian_grid_z0 = %10.4e\n", par->cartesian_grid_origin[2]);
-    fprintf(stdout, " cartesian_grid_dx = %10.4e\n", par->cartesian_grid_stepsize[0]);
-    fprintf(stdout, " cartesian_grid_dy = %10.4e\n", par->cartesian_grid_stepsize[1]);
-    fprintf(stdout, " cartesian_grid_dz = %10.4e\n", par->cartesian_grid_stepsize[2]);
-  }
 
   fprintf(stdout, " metric_method_itype = %d\n", par->metric_method_itype);
 

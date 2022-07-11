@@ -161,22 +161,6 @@ int main(int argc, char** argv)
   // generate grid coord
   switch (par->grid_generation_itype)
   {
-    case PAR_GRID_CARTESIAN : {
-
-        if (myid==0) fprintf(stdout,"generate cartesian grid in code ...\n"); 
-
-        float dx = par->cartesian_grid_stepsize[0];
-        float dy = par->cartesian_grid_stepsize[1];
-        float dz = par->cartesian_grid_stepsize[2];
-
-        float x0 = par->cartesian_grid_origin[0];
-        float y0 = par->cartesian_grid_origin[1];
-        float z0 = par->cartesian_grid_origin[2];
-
-        gd_curv_gen_cart(gdinfo,gdcurv,dx,x0,dy,y0,dz,z0);
-
-        break;
-    }
     case PAR_GRID_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
@@ -184,22 +168,13 @@ int main(int argc, char** argv)
 
         break;
     }
-    case PAR_GRID_LAYER_INTERP : {
+    case PAR_GRID_FAULT_PLANE : {
 
-        if (myid==0) fprintf(stdout,"gerate grid using layer interp ...\n"); 
 
-        gd_curv_gen_layer(par->in_grid_layer_file,
-							par->grid_layer_resample_factor,
-							par->grid_layer_start,
-							par->number_of_total_grid_points_x,
-							par->number_of_total_grid_points_y,
-							par->number_of_total_grid_points_z,
-							gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-							gdinfo->nx, gdinfo->ni, gdinfo->gni1, fd->fdx_nghosts,
-							gdinfo->ny, gdinfo->nj, gdinfo->gnj1, fd->fdy_nghosts,
-							gdinfo->nz, gdinfo->nk, gdinfo->gnk1, fd->fdz_nghosts);
+        if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
+        gd_curv_gen_fault(gdcurv, gdinfo, par->number_of_total_grid_points_x, par->dh, par->in_grid_fault_nc);
 
-      break;
+        break;
     }
   }
 

@@ -35,18 +35,9 @@ typedef struct {
   float *x3d; // pointer to var
   float *y3d;
   float *z3d;
-
-  // for cart grid
-  float *x1d;
-  float *y1d;
-  float *z1d;
   float dx;
   float dy;
   float dz;
-  // x0/y0/z0 for grid gen
-  float x0_glob;
-  float y0_glob;
-  float z0_glob;
 
   // min/max of this thread including ghost points
   float xmin, xmax;
@@ -158,13 +149,19 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
                         int             *neighid,
                         MPI_Comm        topocomm);
 
+
 void
-gd_curv_gen_cart(
-  gdinfo_t *gdinfo,
+gd_curv_gen_fault(
   gd_t *gdcurv,
-  float dx, float x0,
-  float dy, float y0,
-  float dz, float z0);
+  gdinfo_t *gdinfo,
+  int  num_of_x_points,
+  float dh,
+  char *in_grid_fault_nc);
+
+void
+nc_read_fault_geometry(
+        float *fault_x, float *fault_y, float *fault_z, 
+        char *in_grid_fault_nc, gdinfo_t *gdinfo);
 
 void
 gd_curv_metric_import(gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
@@ -179,12 +176,6 @@ gd_curv_coord_export(
   char *fname_coords,
   char *output_dir);
 
-void
-gd_cart_coord_export(
-  gdinfo_t *gdinfo,
-  gd_t *gdcart,
-  char *fname_coords,
-  char *output_dir);
 
 void
 gd_curv_metric_export(gdinfo_t        *gdinfo,
@@ -192,55 +183,9 @@ gd_curv_metric_export(gdinfo_t        *gdinfo,
                       char *fname_coords,
                       char *output_dir);
 
-int
-gd_curv_gen_layer(char *in_grid_layer_file,
-                      int *grid_layer_resample_factor,
-                      int *grid_layer_start,
-                      int n_total_grid_x,
-                      int n_total_grid_y,
-                      int n_total_grid_z,
-                      float *x3d,
-                      float *y3d,
-                      float *z3d,
-                      int nx, int ni, int gni1, int fdx_nghosts, 
-                      int ny, int nj, int gnj1, int fdy_nghosts, 
-                      int nz, int nk, int gnk1, int fdz_nghosts);
-
-int gd_grid_z_interp(float *z3dpart, float *zlayerpart, int *NCellPerlay,
-                     int *VmapSpacingIsequal, int nLayers, int nx, int ny);
-
-float gd_seval(int ni, float u,
-            int n, float x[], float y[],
-            float b[], float c[], float d[],
-            int *last);
-
-int gd_SPLine( int n, int end1, int end2,
-           float slope1, float slope2,
-           float x[], float y[],
-           float b[], float c[], float d[],
-           int *iflag);
-
-void gd_SPL(int n, float *x, float *y, int ni, float *xi, float *yi);
 
 void
 gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
-
-void 
-gd_cart_init_set(gdinfo_t *gdinfo, gd_t *gdcart,
-  float dx, float x0_glob,
-  float dy, float y0_glob,
-  float dz, float z0_glob);
-
-__host__ __device__ int
-gd_cart_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcart,
-                           float sx,
-                           float sy,
-                           float sz,
-                           MPI_Comm comm,
-                           int myid,
-                           int   *ou_si, int *ou_sj, int *ou_sk,
-                           float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
 
 int
 gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,

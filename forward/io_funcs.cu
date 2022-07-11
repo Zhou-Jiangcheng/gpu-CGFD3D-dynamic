@@ -113,9 +113,6 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     if (gd->type == GD_TYPE_CURV) {
       init_gdcurv_device(gd,&gd_d);
     }
-    if (gd->type == GD_TYPE_CART){
-      init_gdcart_device(gd,&gd_d);
-    }
     //init_gdinfo_deviece
     gdinfo_t gdinfo_d;
     init_gdinfo_device(gdinfo,&gdinfo_d);
@@ -1412,11 +1409,6 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd
       {
         gd_curv_depth_to_axis(&gdinfo_d,&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
       }
-      else if (gd_d.type == GD_TYPE_CART)
-      {
-        all_coords_d[3*ix+2] = gd_d.z1d[gdinfo_d.nk2] - all_coords_d[3*ix+2];
-      }
-      //printf("ix is %d, sx is %f,sy is %f, sz is %f\n",ix, all_coords_d[3*ix+0],all_coords_d[3*ix+1],all_coords_d[3*ix+2]);
     }
   }
 }
@@ -1441,11 +1433,6 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
       if (gd_d.type == GD_TYPE_CURV)
       {
         gd_curv_coord_to_glob_indx_gpu(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
-      }
-      else if (gd_d.type == GD_TYPE_CART)
-      {
-        gd_cart_coord_to_glob_indx(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
-                               &ri_glob,&rj_glob,&rk_glob,&rx_inc,&ry_inc,&rz_inc);
       }
       
       // keep index to avoid duplicat run

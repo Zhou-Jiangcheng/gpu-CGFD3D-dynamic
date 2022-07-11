@@ -304,11 +304,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
     //computational big, use GPU
     fprintf(stdout,"physical coords, computational big, use GPU\n");
     gd_t gd_d;
-    if (gd->type == GD_TYPE_CURV) {
+    if (gd->type == GD_TYPE_CURV)
+    {
       init_gdcurv_device(gd,&gd_d);
-    }
-    if (gd->type == GD_TYPE_CART){
-      init_gdcart_device(gd,&gd_d);
     }
     //init_gdinfo_deviece
     gdinfo_t gdinfo_d;
@@ -892,11 +890,6 @@ src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
       gd_curv_coord_to_glob_indx_gpu(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
                              &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
     }
-    else if (gd_d.type == GD_TYPE_CART)
-    {
-      gd_cart_coord_to_glob_indx(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
-                             &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
-    }
     
     // keep index to avoid duplicat run
     all_index_d[3*ix+0] = si_glob;
@@ -920,10 +913,6 @@ src_depth_to_axis(float *all_coords_d, gdinfo_t gdinfo_d, gd_t gd_d,
     if (gd_d.type == GD_TYPE_CURV)
     {
       gd_curv_depth_to_axis(&gdinfo_d,&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
-    }
-    else if (gd_d.type == GD_TYPE_CART)
-    {
-      all_coords_d[3*ix+2] = gd_d.z1d[gdinfo_d.nk2] - all_coords_d[3*ix+2];
     }
   }
 }
