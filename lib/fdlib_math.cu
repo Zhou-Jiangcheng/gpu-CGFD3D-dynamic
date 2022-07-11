@@ -3,6 +3,16 @@
 #include "fdlib_math.h"
 
 __host__ __device__
+float fdlib_math_norm3(float *A)
+{
+  float x2 = A[0] * A[0];
+  float y2 = A[1] * A[1];
+  float z2 = A[2] * A[2];
+
+  return sqrtf(x2+y2+z2);
+}
+
+__host__ __device__
 void fdlib_math_invert3x3(float m[][3])
 {
   float inv[3][3];

@@ -2,6 +2,9 @@
 #define FDLIB_MATH_H
 
 __host__ __device__
+float fdlib_math_norm3(float *A);
+
+__host__ __device__
 void fdlib_math_invert3x3(float m[][3]);
 
 __host__ __device__

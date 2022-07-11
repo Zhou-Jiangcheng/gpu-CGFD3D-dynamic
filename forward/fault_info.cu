@@ -17,9 +17,8 @@ init_fault_coef(gdinfo_t *gdinfo,
   size_t siz_slice = gdinfo->siz_slice;
   // x direction only has 1 mpi. npoint_x = nx
   int npoint_x = gdinfo->npoint_x;
-  int npoint_y = gdinfo->npoint_y;
   int npoint_z = gdinfo->npoint_z;
-  int i0 = npoint_x/2;
+  int i0 = npoint_x/2; //fault plane x index
   size_t iptr, iptr_f;
   float rho, mu, lam, lam2mu;
   // point to each var
@@ -525,7 +524,7 @@ init_fault_coef(gdinfo_t *gdinfo,
           FC->vec_s2[iptr_f*3+i] = vec_s2[i];
       }
 
-      if (k-3 == npoint_z-1) // free surface
+      if (k-3 == npoint_z-1) // free surface global index, index start 0
       {
         for (int ii = 0; ii < 3; ii++) {
           for (int jj = 0; jj < 3; jj++) {
