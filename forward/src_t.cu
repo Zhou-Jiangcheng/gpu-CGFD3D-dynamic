@@ -129,6 +129,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
                      int   max_stage,
                      float *rk_stage_time,
                      int   npoint_half_ext,
+                     int   num_of_mpiprocs_z,
                      MPI_Comm comm,
                      int myid,
                      int verbose)
@@ -314,11 +315,16 @@ src_read_locate_file(gdinfo_t *gdinfo,
     CUDACHECK(cudaMemcpy(all_coords_d,all_coords,sizeof(float)*in_num_source*CONST_NDIM,cudaMemcpyHostToDevice));
     if(in_3coord_meaning == 1)
     {
-      dim3 block(256);
-      dim3 grid;
-      grid.x = (in_num_source+block.x-1) / block.x;
-      src_depth_to_axis<<<grid, block>>> (all_coords_d, gdinfo_d, gd_d, in_num_source, comm, myid);
-      CUDACHECK(cudaDeviceSynchronize());
+      if(num_of_mpiprocs_z >= 2) {
+      fprintf(stderr,"source not yet implement z axis depth to physical coord with z axis mpi >= 2\n");
+      fflush(stderr); exit(1);
+      } else {
+        dim3 block(256);
+        dim3 grid;
+        grid.x = (in_num_source+block.x-1) / block.x;
+        src_depth_to_axis<<<grid, block>>> (all_coords_d, gdinfo_d, gd_d, in_num_source, comm, myid);
+        CUDACHECK(cudaDeviceSynchronize());
+      }
     }
     //GPU modify
     {

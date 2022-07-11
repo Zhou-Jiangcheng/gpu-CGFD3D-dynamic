@@ -78,30 +78,6 @@ typedef struct {
   char  **cmp_name;
 } gd_t;
 
-//  default means coordinate
-typedef struct {
-  int n1, n2, n3, n4;
-  int nx, ny, nz, ncmp;
-  float *v4d; // allocated var
-
-  //to avoid ref x3d at different funcs
-  float *x3d; // pointer to var
-  float *y3d;
-  float *z3d;
-
-  // min/max including ghost points
-  float xmin, xmax;
-  float ymin, ymax;
-  float zmin, zmax;
-
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
-
-  size_t *cmp_pos;
-  char  **cmp_name;
-} gdcurv_t_nouse;
-
 //  for metric
 typedef struct {
   int n1, n2, n3, n4;
@@ -143,11 +119,13 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
                    gdcurv_metric_t *metric,
                    int fd_len, int *fd_indx, float *fd_coef);
+
 void
-gd_curv_metric_exchange(gdinfo_t        *gdinfo,
-                        gdcurv_metric_t *metric,
-                        int             *neighid,
-                        MPI_Comm        topocomm);
+gd_curv_exchange(gdinfo_t *gdinfo,
+                 float *g3d,
+                 int ncmp,
+                 int *neighid,
+                 MPI_Comm topocomm);
 
 
 void

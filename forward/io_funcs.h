@@ -147,48 +147,13 @@ iosnap_nc_t;
 /*************************************************
  * function prototype
  *************************************************/
-
-void
-io_build_fname(char *out_dir,
-               char *prefix,
-               char *subfix,
-               int *myid2,
-               char *ou_fname);
-
-void
-io_build_fname_time(char *out_dir,
-                    char *prefix,
-                    char *subfix,
-                    int *myid2,
-                    int  it,
-                    char *ou_fname);
-
-void
-io_snapshot_export_binary(char *fname,
-                   float *var,
-                   int nx,
-                   int ny,
-                   int nz,
-                   int *snap_indx,
-                   int verbose);
-
-void
-io_var3d_export_nc(char   *ou_file,
-                   float  *v3d,
-                   size_t *v3d_pos,
-                   char  **v3d_name,
-                   int   number_of_vars,
-                   char  **coord_name,
-                   int  nx,
-                   int  ny,
-                   int  nz);
-
 int
 io_recv_read_locate(gdinfo_t *gdinfo,
                     gd_t *gd,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
+                    int       num_of_mpiprocs_z,
                     char      *in_filenm,
                     MPI_Comm  comm,
                     int       myid,
@@ -259,23 +224,6 @@ io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
                gdinfo_t    *gdinfo,
                md_t    *md,
-               wav_t   *wav,
-               float *w4d,
-               float *buff,
-               int   nt_total,
-               int   it,
-               float time,
-               int is_run_out_vel,     // for stg, out vel and stress at sep call
-               int is_run_out_stress,  // 
-               int is_incr_cur_it);     // for stg, should output cur_it once
-
-int
-io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
-
-int
-io_snap_nc_put_ac(iosnap_t *iosnap,
-               iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
                wav_t   *wav,
                float *w4d,
                float *buff,

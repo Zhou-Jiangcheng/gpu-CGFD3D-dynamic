@@ -37,6 +37,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
+                    int       num_of_mpiprocs_z,
                     char      *in_filenm,
                     MPI_Comm  comm,
                     int       myid,
@@ -88,6 +89,11 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     if(flag_indx[ir] == 0)
     {
       recv_by_coords += 1;
+    }
+    if(num_of_mpiprocs_z >= 2 && flag_indx[ir] == 0 && flag_depth[ir] == 1)
+    {
+      fprintf(stderr,"station not yet implement z axis depth to physical coord with z axis mpi >= 2\n");
+      fflush(stderr); exit(1);
     }
 
   }

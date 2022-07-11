@@ -97,6 +97,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
                      int   max_stages,
                      float *rk_stage_time,
                      int   npoint_half_ext,
+                     int   num_of_mpiprocs_z,
                      MPI_Comm comm,
                      int myid,
                      int verbose);
