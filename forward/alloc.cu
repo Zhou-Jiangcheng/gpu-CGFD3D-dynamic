@@ -12,12 +12,6 @@ int init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d)
   return 0;
 }
 
-int init_gdcart_device(gd_t *gdcart, gd_t *gdcart_d)
-{
-  memcpy(gdcart_d,gdcart,sizeof(gd_t));
-  return 0;
-}
-
 int init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d)
 {
   size_t siz_icmp = gdcurv->siz_icmp;
@@ -176,6 +170,30 @@ int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
   CUDACHECK( cudaMemcpy(metric_d->zeta_z, metric->zeta_z, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
   return 0;
 }
+
+//int init_fault_coef_device(fault_coef_t *fault_coef, fault_coef_t *fault_coef_d)
+//{
+//  memcpy(fault_d,fault,sizeof(fault_t));
+//  if(method == 1) //zhangzhengguo
+//  {
+//
+//
+//  }
+//  if(method == 2) //zhangwenqiang
+//  {
+//
+//
+//  }
+//
+//
+//
+//
+//  return 0;
+//}
+
+
+
+
 
 int init_src_device(src_t *src, src_t *src_d)
 {

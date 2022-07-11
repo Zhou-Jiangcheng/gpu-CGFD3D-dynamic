@@ -172,20 +172,6 @@ par_read_from_str(const char *str, par_t *par)
     par->time_check_stability = item->valueint;
   }
 
-  // check 
-  //int num_time_minus = 0;
-  //if (par->size_of_time_step    < 0.0) num_time_minus += 1;
-  //if (par->time_window_length   < 0.0) num_time_minus += 1;
-  //if (par->number_of_time_steps < 0  ) num_time_minus += 1;
-  //if (num_time_minus >= 2)
-  //{
-  //  fprintf(stderr," --> size_of_time_step   =%f\n", par->size_of_time_step);
-  //  fprintf(stderr," --> number_of_time_steps=%d\n", par->number_of_time_steps);
-  //  fprintf(stderr," --> time_window_length  =%f\n", par->time_window_length);
-  //  fprintf(stderr,"Error: at lest two of above three paras should > 0\n");
-  //  exit(-1);
-  //}
-
   if (par->size_of_time_step < 0.0 && par->time_window_length < 0)
   {
     fprintf(stderr," --> size_of_time_step   =%f\n", par->size_of_time_step);
@@ -211,9 +197,6 @@ par_read_from_str(const char *str, par_t *par)
     par->time_window_length = par->size_of_time_step * par->number_of_time_steps;
   }
 
-  //par->time_end   = par->time_start + 
-  //        par->number_of_time_steps * par->size_of_time_step;
-  //int     nt_total = (int) ((par->time_end - par->time_start) / dt+0.5);
 
   //
   // boundary default values
@@ -326,16 +309,14 @@ par_read_from_str(const char *str, par_t *par)
 
   par->grid_generation_itype = PAR_GRID_IMPORT;
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
-    // import grid
-    if (subitem = cJSON_GetObjectItem(item, "import")) {
-       par->grid_generation_itype = PAR_GRID_IMPORT;
-       sprintf(par->grid_import_dir, "%s", subitem->valuestring);
-    }
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
        par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
-       if (thirditem = cJSON_GetObjectItem(subitem, "in_grid_fault_nc")) {
-          sprintf(par->in_grid_fault_nc, "%s", thirditem->valuestring);
+       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry")) {
+          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
+       }
+       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress")) {
+          sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
        }
        if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
          par->dh = thirditem->valueint;
@@ -679,11 +660,26 @@ par_read_from_str(const char *str, par_t *par)
   //
   //-- source
   //
-
-  // if input by source file
-  if (item = cJSON_GetObjectItem(root, "in_source_file"))
+  if (item = cJSON_GetObjectItem(root, "source"))
   {
-      sprintf(par->source_input_file, "%s", item->valuestring);
+    // source type is rupture and points src
+    if (subitem = cJSON_GetObjectItem(item, "type")) {
+        sprintf(par->source_type, "%s", subitem->valuestring);
+        if (strcmp(par->source_type, "rupture")==0) {
+          par->source_itype = CONST_SOURCE_RUPTURE;
+        } else if (strcmp(par->source_type, "point_src")==0) {
+          par->source_itype = CONST_SOURCE_POINTS;
+        } else {
+          fprintf(stderr,"ERROR: source_type=%s is unknown\n",par->source_type);
+          MPI_Abort(MPI_COMM_WORLD,9);
+        }
+      }
+    if (subitem = cJSON_GetObjectItem(item, "point_src")) 
+    {
+        if (thirditem = cJSON_GetObjectItem(subitem, "in_source_file")) {
+          sprintf(par->source_input_file, "%s", thirditem->valuestring);
+        }
+    }
   }
 
   par->is_export_source = 1;

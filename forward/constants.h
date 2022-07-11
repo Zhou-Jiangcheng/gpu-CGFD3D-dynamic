@@ -22,6 +22,10 @@
 #define CONST_MEDIUM_ELASTIC_VTI   3
 #define CONST_MEDIUM_ELASTIC_ANISO 4
 
+// source type
+#define CONST_SOURCE_RUPTURE  1
+#define CONST_SOURCE_POINTS   2
+
 // visco type
 #define CONST_VISCO_GRAVES_QS  1
 

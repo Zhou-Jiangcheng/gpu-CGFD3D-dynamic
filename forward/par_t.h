@@ -96,7 +96,8 @@ typedef struct{
   char grid_export_dir[PAR_MAX_STRLEN];
   char grid_import_dir[PAR_MAX_STRLEN];
 
-  char in_grid_fault_nc[PAR_MAX_STRLEN];
+  char fault_coord_nc[PAR_MAX_STRLEN];
+  char init_stress_nc[PAR_MAX_STRLEN];
   float dh;
 
   // metric
@@ -176,7 +177,9 @@ typedef struct{
   float visco_Qs_freq;
 
   // source
+  int source_itype;
   char source_input_file[PAR_MAX_STRLEN];
+  char source_type[PAR_MAX_STRLEN];
   int is_export_source;
   char source_export_dir[PAR_MAX_STRLEN];
 

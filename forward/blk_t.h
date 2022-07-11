@@ -12,6 +12,7 @@
 #include "bdry_free.h"
 #include "bdry_pml.h"
 #include "io_funcs.h"
+#include "fault_info.h"
 
 /*******************************************************************************
  * structure
@@ -62,6 +63,9 @@ typedef struct
   ioline_t  *ioline;
   iosnap_t  *iosnap;
   ioslice_t *ioslice;
+
+  //fault
+  fault_coef_t *fault_coef;
 
   // fname and dir
   char output_fname_part[CONST_MAX_STRLEN];

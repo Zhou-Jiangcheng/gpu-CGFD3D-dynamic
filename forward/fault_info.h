@@ -79,7 +79,7 @@ typedef struct
   float *y_et;
   float *z_et;
 
-} fault_coef_t
+} fault_coef_t;
 
 typedef struct
 {
@@ -98,7 +98,7 @@ typedef struct
   float *hT12;
   float *hT13;
 
-} fault_wav_t
+} fault_wav_t;
 
 typedef struct
 {
@@ -117,7 +117,7 @@ typedef struct
   float *Ts1;
   float *Ts2;
   float *tTn;
-  float *tTs1
+  float *tTs1;
   float *tTs2;
   //friction 2,3
   float *a;
@@ -155,6 +155,6 @@ typedef struct
   float *TP_dT;
   float *TP_dP;
   float *TP_hy;
-} fault_io_info_t
+} fault_io_info_t;
 
 #endif

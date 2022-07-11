@@ -110,6 +110,7 @@ int main(int argc, char** argv)
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
+  fault_coef_t    *fault_coef    = blk->fault_coef;
 
   // set up fd_t
   //    not support selection scheme by par file yet
@@ -172,7 +173,7 @@ int main(int argc, char** argv)
 
 
         if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
-        gd_curv_gen_fault(gdcurv, gdinfo, par->number_of_total_grid_points_x, par->dh, par->in_grid_fault_nc);
+        gd_curv_gen_fault(gdcurv, gdinfo, par->number_of_total_grid_points_x, par->dh, par->fault_coord_nc);
         if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
         gd_curv_exchange(gdinfo,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
 
