@@ -172,6 +172,10 @@ gd_info_set(gdinfo_t *const gdinfo,
   gdinfo->nk1_to_glob_phys0 = gdinfo->gnk1;
   gdinfo->nk2_to_glob_phys0 = gdinfo->gnk2;
   
+  gdinfo->npoint_x = number_of_total_grid_points_x; 
+  gdinfo->npoint_y = number_of_total_grid_points_y; 
+  gdinfo->npoint_z = number_of_total_grid_points_z;
+
   // x dimention varies first
   gdinfo->siz_line   = nx; 
   gdinfo->siz_slice  = nx * ny; 

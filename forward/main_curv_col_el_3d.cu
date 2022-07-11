@@ -561,18 +561,26 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
       
   time_t t_start_src = time(NULL);
-  src_read_locate_file(gdinfo, gdcurv, md, src,
-                       par->source_input_file,
-                       t0,
-                       dt,
-                       fd->num_rk_stages, fd->rk_rhs_time,
-                       fd->fdx_max_half_len,
-                       par->number_of_mpiprocs_z,
-                       comm,
-                       myid,
-                       verbose);
-
-  MPI_Barrier(comm);
+  if(par->source_itype == CONST_SOURCE_POINTS) 
+  {
+    src_read_locate_file(gdinfo, gdcurv, md, src,
+                         par->source_input_file,
+                         t0,
+                         dt,
+                         fd->num_rk_stages, fd->rk_rhs_time,
+                         fd->fdx_max_half_len,
+                         par->number_of_mpiprocs_z,
+                         comm,
+                         myid,
+                         verbose);
+    MPI_Barrier(comm);
+  }
+  if(par->source_itype == CONST_SOURCE_RUPTURE)
+  {
+    init_fault_coef(); 
+    init_fault()
+    MPI_Barrier(comm);
+  }
   time_t t_end_src = time(NULL);
   
   if (myid==0 && verbose>0) {

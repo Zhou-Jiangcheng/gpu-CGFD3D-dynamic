@@ -72,9 +72,9 @@ typedef struct
   float *rho_f;
 
   //
-  float *vec_n; //normal direction
-  float *vec_s1;
-  float *vec_s2;
+  float *vec_n; //normal 
+  float *vec_s1; //strike
+  float *vec_s2; //dip
   float *x_et;
   float *y_et;
   float *z_et;

@@ -26,6 +26,9 @@ typedef struct {
   int fdy_nghosts;
   int fdz_nghosts;
 
+  int npoint_x; 
+  int npoint_y; 
+  int npoint_z; 
   // global index
   int gni1, gnj1, gnk1; // global index, do not accout ghost point
   int gni2, gnj2, gnk2; // global index
@@ -37,23 +40,6 @@ typedef struct {
   int nj2_to_glob_phys0;
   int nk2_to_glob_phys0;
 
-  //int nj1_to_glob_ghost0;
-  //int ni1_to_glob_ghost0;
-  //int nk1_to_glob_ghost0;
-
-  //int nx1_to_glob_phys0;
-  //int nx1_to_glob_ghost0;
-  //int ny1_to_glob_phys0;
-  //int ny1_to_glob_ghost0;
-  //int nz1_to_glob_phys0;
-  //int nz1_to_glob_ghost0;
-
-  //int glob_phys_ix1; // gloabl start index along x this thread
-  //int glob_phys_ix2; // gloabl end index along x
-  //int glob_phys_iy1;
-  //int glob_phys_iy2;
-  //int glob_phys_iz1;
-  //int glob_phys_iz2;
 
   // size of a single var
   //  the following two naming are same
