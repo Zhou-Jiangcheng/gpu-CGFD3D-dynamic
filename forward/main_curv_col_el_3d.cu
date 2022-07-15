@@ -110,7 +110,7 @@ int main(int argc, char** argv)
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
-  fault_coef_t    *fault_coef    = blk->fault_coef;
+  fault_coef_t    *FC            = blk->fault_coef;
 
   // set up fd_t
   //    not support selection scheme by par file yet
@@ -557,47 +557,13 @@ int main(int argc, char** argv)
   }
 
 //-------------------------------------------------------------------------------
-//-- source import or locate on fly
+//-- fault init
 //-------------------------------------------------------------------------------
-      
-  time_t t_start_src = time(NULL);
-  if(par->source_itype == CONST_SOURCE_POINTS) 
-  {
-    src_read_locate_file(gdinfo, gdcurv, md, src,
-                         par->source_input_file,
-                         t0,
-                         dt,
-                         fd->num_rk_stages, fd->rk_rhs_time,
-                         fd->fdx_max_half_len,
-                         par->number_of_mpiprocs_z,
-                         comm,
-                         myid,
-                         verbose);
-    MPI_Barrier(comm);
-  }
-  if(par->source_itype == CONST_SOURCE_RUPTURE)
-  {
-    init_fault_coef(); 
-    init_fault()
-    MPI_Barrier(comm);
-  }
-  time_t t_end_src = time(NULL);
-  
-  if (myid==0 && verbose>0) {
-    fprintf(stdout,"src Time of time :%f s \n", difftime(t_end_src,t_start_src));
-  }
 
-  // print basic info for QC
-  if (verbose>1000) {
-    fprintf(stdout,"src info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1], mympi->topoid[2]); 
-    src_print(src, verbose);
-  }
-  /*
-  if (par->is_export_source==1)
-  {
-      ierr = src_export();
-  }
-  */
+  init_fault_coef(); 
+  init_fault()
+  MPI_Barrier(comm);
+
 //-------------------------------------------------------------------------------
 //-- allocate main var
 //-------------------------------------------------------------------------------

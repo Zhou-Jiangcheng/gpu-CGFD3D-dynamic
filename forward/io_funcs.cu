@@ -857,6 +857,58 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 }
 
 int
+io_fault_nc_create(gdinfo_t *gdinfo, 
+                   iofault_nc_t *iofault_nc,
+                   int  *topoid,
+                   char *output_fname_part,
+                   char *output_dir)
+{
+  int ierr = 0;
+  int num_of_var = 20;
+  ioslice_nc->varid = (int *)malloc(num_of_var*sizeof(int));
+  int dimid[3];
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+  int npoint_x = gdinfo->npoint_x;
+  int i0 = npoint_x/2; 
+  char fault_fname[1024];
+  if(gd_info_gindx_is_inner_i(i0, gdinfo)==1)
+  {
+    int fault_local_indx  = gd_info_ind_glphy2lcext_i(i0, gdinfo);
+    sprintf(fault_fname,"%s/fault_%d_%s.nc",output_dir,i0,output_fname_part);
+
+    // fault slice
+    if (nc_create(fault_fname, NC_CLOBBER, &(iofault_nc->ncid))) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "k"   , nk          , &dimid[1])) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2])) M_NCERR;
+    int dimid2[2] = {dimid[1], dimid[2]};
+    // time var
+    if (nc_def_var(iofault_nc->ncid, "time", NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0]))) M_NCERR;
+    // define variables
+    if (nc_def_var(iofault_nc->ncid, "Vs1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[1]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[2]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Tn"   , NC_FLOAT, 3, dimid, &(iofault_nc->varid[3]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Ts1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[4]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Ts2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[5]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us0"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[6]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[7]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Us2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[8]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "init_t0", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[9]))) M_NCERR;   
+
+    // attribute: index info for plot
+    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
+                   NC_INT,1,fault_local_indx);
+    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"coords_of_mpi_topo",
+                   NC_INT,3,topoid);
+
+    ierr = nc_enddef(iofault_nc->ncid); handle_nc_err(ierr);
+  }
+
+  return ierr;
+}
+
+int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
                 gdinfo_t     *gdinfo,
@@ -1162,6 +1214,76 @@ io_snap_nc_put(iosnap_t *iosnap,
 }
 
 int
+io_fault_nc_put(iofault_nc_t *iofault_nc,
+                gdinfo_t     *gdinfo,
+                fault_t *F_d,
+                float *buff,
+                int   it,
+                float time)
+{
+  int ierr = 0;
+
+  int   ni1 = gdinfo->ni1;
+  int   ni2 = gdinfo->ni2;
+  int   nj1 = gdinfo->nj1;
+  int   nj2 = gdinfo->nj2;
+  int   nk1 = gdinfo->nk1;
+  int   nk2 = gdinfo->nk2;
+  int   ni  = gdinfo->ni ;
+  int   nj  = gdinfo->nj ;
+  int   nk  = gdinfo->nk ;
+  size_t   siz_line = gdinfo->siz_iy;
+  size_t   siz_slice= gdinfo->siz_iz;
+  size_t   siz_volume = gdinfo->siz_icmp;
+
+  //-- slice x, 
+  size_t startp[] = { it, 0, 0 };
+  size_t countp[] = { 1, nk, nj};
+  size_t start_tdim = it;
+
+  nc_put_var1_float(iofault_nc->ncid,iofault_nc->varid[0],&start_tdim, &time);
+
+  size_t size = sizeof(float) * nj * nk; 
+
+  cudaMemcpy(buff, F_d->Vs1, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[1],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->Vs2, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[2],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->Tn, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[3],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->Ts1, size , cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[4],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->Ts2, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[5],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->slip, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[6],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->slip1, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[7],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->slip2, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[8],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->init_t0, size, cudaMemcpyDeviceToHost); 
+  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[9], buff);
+
+  return ierr;
+}
+
+int
 io_snap_stress_to_strain_eliso(float *lam3d,
                                float *mu3d,
                                float *Txx,
@@ -1322,6 +1444,14 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc)
   }
 
   return 0;
+}
+
+int
+io_fault_nc_close(iofault_nc_t *iofault_nc)
+{
+    nc_close(iofault_nc->ncid);
+
+    retutn 0;
 }
 
 int
@@ -1795,11 +1925,7 @@ PG_slice_output(float *PG, gdinfo_t *gdinfo, char *output_dir, char *frame_coord
   int dimid[2];
   int varid[CONST_NDIM_5], ncid;
   int i,ierr;
-  ierr = nc_create(out_file, NC_CLOBBER, &ncid);
-  if (ierr != NC_NOERR){
-      fprintf(stderr,"creat PGV nc error: %s\n", nc_strerror(ierr));
-      exit(-1);
-     }
+  ierr = nc_create(out_file, NC_CLOBBER, &ncid); handle_nc_err(ierr);
 
   if(nc_def_dim(ncid, "j", ny, &dimid[0])) M_NCERR;
   if(nc_def_dim(ncid, "i", nx, &dimid[1])) M_NCERR;
@@ -1827,11 +1953,7 @@ PG_slice_output(float *PG, gdinfo_t *gdinfo, char *output_dir, char *frame_coord
   ierr = nc_put_var_float(ncid,varid[i],ptr);
   }
   // close file
-  ierr = nc_close(ncid);
-  if(ierr != NC_NOERR){
-    fprintf(stderr,"nc error: %s\n", nc_strerror(ierr));
-    exit(-1);
-    }
+  ierr = nc_close(ncid); handle_nc_err(ierr);
 
   return 0;
 }

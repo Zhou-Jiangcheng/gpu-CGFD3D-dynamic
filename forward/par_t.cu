@@ -305,9 +305,6 @@ par_read_from_str(const char *str, par_t *par)
   //-- grid
   //
 
-  // default output grid
-
-  par->grid_generation_itype = PAR_GRID_IMPORT;
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
@@ -655,39 +652,6 @@ par_read_from_str(const char *str, par_t *par)
     if (subitem = cJSON_GetObjectItem(item, "Qs_freq")) {
         par->visco_Qs_freq = subitem->valuedouble;
     }
-  }
-
-  //
-  //-- source
-  //
-  if (item = cJSON_GetObjectItem(root, "source"))
-  {
-    // source type is rupture and points src
-    if (subitem = cJSON_GetObjectItem(item, "type")) {
-        sprintf(par->source_type, "%s", subitem->valuestring);
-        if (strcmp(par->source_type, "rupture")==0) {
-          par->source_itype = CONST_SOURCE_RUPTURE;
-        } else if (strcmp(par->source_type, "point_src")==0) {
-          par->source_itype = CONST_SOURCE_POINTS;
-        } else {
-          fprintf(stderr,"ERROR: source_type=%s is unknown\n",par->source_type);
-          MPI_Abort(MPI_COMM_WORLD,9);
-        }
-      }
-    if (subitem = cJSON_GetObjectItem(item, "point_src")) 
-    {
-        if (thirditem = cJSON_GetObjectItem(subitem, "in_source_file")) {
-          sprintf(par->source_input_file, "%s", thirditem->valuestring);
-        }
-    }
-  }
-
-  par->is_export_source = 1;
-  if (item = cJSON_GetObjectItem(root, "is_export_source")) {
-     par->is_export_source = item->valueint;
-  }
-  if (item = cJSON_GetObjectItem(root, "source_export_dir")) {
-      sprintf(par->source_export_dir,"%s",item->valuestring);
   }
 
   //-- output dir

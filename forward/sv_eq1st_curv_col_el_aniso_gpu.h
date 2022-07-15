@@ -7,7 +7,6 @@
 #include "gd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "src_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
 #include "io_funcs.h"
@@ -28,7 +27,6 @@ sv_eq1st_curv_col_el_aniso_onestage(
   md_t md_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
-  src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
   int num_of_fdy_op, fd_op_t *fdy_op,

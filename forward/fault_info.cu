@@ -1,24 +1,107 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void
+fault_coef_init(fault_coef_t *FC
+                gdinfo_t *gdinfo)
+{
+  int ny = gdinfo->ny;
+  int nz = gdinfo->nz;
+  int npoint_z = gdinfo->npoint_z;
+  FC->rho_f = (float *) malloc(sizeof(float)*ny*nz*2);
+  FC->mu_f  = (float *) malloc(sizeof(float)*ny*nz*2);
+  FC->lam_f = (float *) malloc(sizeof(float)*ny*nz*2);
 
+  FC->D11_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D12_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D13_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D21_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D22_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D23_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D31_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D32_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D33_1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+
+  FC->D11_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D12_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D13_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D21_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D22_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D23_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D31_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D32_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->D33_2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+
+  FC->matMin2Plus1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matMin2Plus2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matMin2Plus3 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matMin2Plus4 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matMin2Plus5 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+
+  FC->matPlus2Min1 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matPlus2Min2 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matPlus2Min3 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matPlus2Min4 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matPlus2Min5 = (float *) malloc(sizeof(float)*ny*nz*3*3);
+
+  FC->matT1toVx_Min  = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matVytoVx_Min  = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matVztoVx_Min  = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matT1toVx_Plus = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matVytoVx_Plus = (float *) malloc(sizeof(float)*ny*nz*3*3);
+  FC->matVztoVx_Plus = (float *) malloc(sizeof(float)*ny*nz*3*3);
+
+  FC->vec_n  = (float *) malloc(sizeof(float)*ny*nz*3);
+  FC->vec_s1 = (float *) malloc(sizeof(float)*ny*nz*3);
+  FC->vec_s2 = (float *) malloc(sizeof(float)*ny*nz*3);
+  FC->x_et   = (float *) malloc(sizeof(float)*ny*nz);
+  FC->y_et   = (float *) malloc(sizeof(float)*ny*nz);
+  FC->z_et   = (float *) malloc(sizeof(float)*ny*nz);
+
+  // free surface
+  if (gnk2 == npoint_z-1) // free surface global index, index start 0
+  {
+    FC->matVx2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVy2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVx2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVy2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVx1_free   = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVy1_free   = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVx2_free   = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVy2_free   = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matPlus2Min1f = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matPlus2Min2f = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matPlus2Min3f = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matMin2Plus1f = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matMin2Plus2f = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matMin2Plus3f = (float *) malloc(sizeof(float)*ny*3*3);
+
+    FC->matT1toVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVytoVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matT1toVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
+    FC->matVytoVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
+  }
+
+  return;
+}
 
 
 void 
-init_fault_coef(gdinfo_t *gdinfo, 
-                gdcurv_metric_t *metric, 
-                md_t *md, 
-                fault_coef_t *FC)
+fault_coef_cal(gdinfo_t *gdinfo, 
+               gdcurv_metric_t *metric, 
+               md_t *md, 
+               fault_coef_t *FC)
 {
   int nx = gdinfo->nx;
   int ny = gdinfo->ny;
   int nz = gdinfo->nz;
   size_t siz_line = gdinfo->siz_line;
   size_t siz_slice = gdinfo->siz_slice;
-  // x direction only has 1 mpi. npoint_x = nx
+  // x direction only has 1 mpi. npoint_x = nx-6
   int npoint_x = gdinfo->npoint_x;
   int npoint_z = gdinfo->npoint_z;
-  int i0 = npoint_x/2; //fault plane x index
+  int gnk1 = gdinfo->gnk1;
+  int i0 = npoint_x/2 + 3; //fault plane x index with ghost
   size_t iptr, iptr_f;
   float rho, mu, lam, lam2mu;
   // point to each var
@@ -33,7 +116,7 @@ init_fault_coef(gdinfo_t *gdinfo,
   float *zt_y  = metric->zeta_y;
   float *zt_z  = metric->zeta_z;
   float *lam3d = md->lambda;
-  float  *mu3d = md->mu;
+  float *mu3d = md->mu;
   float *rho3d = md->rho;
   float e11, e12, e13, e21, e22, e23, e31, e32, e33;
   float jac;
@@ -72,6 +155,7 @@ init_fault_coef(gdinfo_t *gdinfo,
     {
       iptr = i0 + j * siz_line + k * siz_slice;  
       iptr_f = (j + k * ny);
+      rho = rho3d[iptr];
       mu = mu3d[iptr];
       lam = lam3d[iptr];
       lam2mu = lam + 2.0*mu;
@@ -85,6 +169,14 @@ init_fault_coef(gdinfo_t *gdinfo,
       e31 = zt_x[iptr];
       e32 = zt_y[iptr];
       e33 = zt_z[iptr];
+      //mimus media
+      FC->rho_f[iptr_f+0*ny*nz] = rho;
+      FC->lam_f[iptr_f+0*ny*nz] = lam;
+      FC->mu_f [iptr_f+0*ny*nz] = mu;
+      //plus media
+      FC->rho_f[iptr_f+1*ny*nz] = rho;
+      FC->lam_f[iptr_f+1*ny*nz] = lam;
+      FC->mu_f [iptr_f+1*ny*nz] = mu;
       // minus -
       FC->D11_1[iptr_f*9+0] = lam2mu*e11*e11+mu*(e12*e12+e13*e13);
       FC->D11_1[iptr_f*9+1] = lam*e11*e12+mu*e12*e11;
@@ -524,7 +616,7 @@ init_fault_coef(gdinfo_t *gdinfo,
           FC->vec_s2[iptr_f*3+i] = vec_s2[i];
       }
 
-      if (k-3 == npoint_z-1) // free surface global index, index start 0
+      if ((k-3+gnk1) == npoint_z-1) // free surface global index, index start 0
       {
         for (int ii = 0; ii < 3; ii++) {
           for (int jj = 0; jj < 3; jj++) {
@@ -675,5 +767,233 @@ init_fault_coef(gdinfo_t *gdinfo,
   }
   return;
 }  
+
+void
+fault_init(fault_t *F
+           gdinfo_t *gdinfo)
+{
+  int ny = gdinfo->ny;
+  int nz = gdinfo->nz;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+
+  F-> W   = (float *) malloc(sizeof(float)*2*ny*nz*FSIZE);
+  F->Ws   = (float *) malloc(sizeof(float)*2*ny*nz*FSIZE);
+  F->mW   = (float *) malloc(sizeof(float)*2*ny*nz*FSIZE);
+  F->hW   = (float *) malloc(sizeof(float)*2*ny*nz*FSIZE);
+  F->tW   = (float *) malloc(sizeof(float)*2*ny*nz*FSIZE);
+  F->T11  = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->T12  = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->T13  = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->mT11 = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->mT12 = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->mT13 = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->hT11 = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->hT12 = (float *) malloc(sizeof(float)*7*ny*nz);
+  F->hT13 = (float *) malloc(sizeof(float)*7*ny*nz);
+
+  F->friction = (float *) malloc(sizeof(float)*nj*nk);
+
+  // for output
+  F->str_init_x = (float *) malloc(sizeof(float)*nj*nk);
+  F->str_init_y = (float *) malloc(sizeof(float)*nj*nk);
+  F->str_init_z = (float *) malloc(sizeof(float)*nj*nk);
+  F->T0x        = (float *) malloc(sizeof(float)*nj*nk);
+  F->T0y        = (float *) malloc(sizeof(float)*nj*nk);
+  F->T0z        = (float *) malloc(sizeof(float)*nj*nk);
+  F->dT0x       = (float *) malloc(sizeof(float)*nj*nk);
+  F->dT0y       = (float *) malloc(sizeof(float)*nj*nk);
+  F->dT0z       = (float *) malloc(sizeof(float)*nj*nk);
+  F->Tn         = (float *) malloc(sizeof(float)*nj*nk);
+  F->Ts1        = (float *) malloc(sizeof(float)*nj*nk);
+  F->Ts2        = (float *) malloc(sizeof(float)*nj*nk);
+  F->tTn        = (float *) malloc(sizeof(float)*nj*nk);
+  F->tTs1       = (float *) malloc(sizeof(float)*nj*nk);
+  F->tTs2       = (float *) malloc(sizeof(float)*nj*nk);
+  F->mu_s       = (float *) malloc(sizeof(float)*nj*nk);
+  F->mu_d       = (float *) malloc(sizeof(float)*nj*nk);
+  F->Dc         = (float *) malloc(sizeof(float)*nj*nk);
+  F->C0         = (float *) malloc(sizeof(float)*nj*nk);
+  F->slip       = (float *) malloc(sizeof(float)*nj*nk);
+  F->slip1      = (float *) malloc(sizeof(float)*nj*nk); 
+  F->slip2      = (float *) malloc(sizeof(float)*nj*nk);  
+  F->Vs1        = (float *) malloc(sizeof(float)*nj*nk);
+  F->Vs2        = (float *) malloc(sizeof(float)*nj*nk);
+
+  F->united       = (int *) malloc(sizeof(int)*nj*nk);
+  F->faultgrid    = (int *) malloc(sizeof(int)*nj*nk);
+  F->rup_index_y  = (int *) malloc(sizeof(int)*nj*nk);
+  F->rup_index_z  = (int *) malloc(sizeof(int)*nj*nk);
+  F->flag_rup     = (int *) malloc(sizeof(int)*nj*nk);
+  F->first_rup    = (int *) malloc(sizeof(int)*nj*nk);
+  F->init_t0_flag = (int *) malloc(sizeof(int)*nj*nk);
+  F->init_t0      = (float *) malloc(sizeof(float)*nj*nk);
+
+  memset(F->init_t0_flag, 0, sizeof(int)  *nj*nk);
+  memset(F->init_t0,      0, sizeof(float)*nj*nk);
+  memset(F->slip,         0, sizeof(float)*nj*nk);
+  memset(F->hslip,        0, sizeof(float)*nj*nk);
+  memset(F->slip1,        0, sizeof(float)*nj*nk); 
+  memset(F->slip2,        0, sizeof(float)*nj*nk); 
+
+  return;
+}
+
+void
+fault_set(fault_t *F
+          fault_coef_t *FC,
+          gdinfo_t *gdinfo,
+          int bdry_has_free,
+          float *fault_grid,
+          char *init_stress_nc)
+{
+  int nj1 = gdinfo->nj1;
+  int nk1 = gdinfo->nk1;
+  int nj2 = gdinfo->nj2;
+  int nk2 = gdinfo->nk2;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+  int ny = gdinfo->ny;
+  int nz = gdinfo->nz;
+  int gnj1 = gdinfo->gnj1;
+  int gnk1 = gdinfo->gnk1;
+  int npoint_y = gdinfo->npoint_y;
+  int npoint_z = gdinfo->npoint_z;
+  int gj, gk;
+  size_t iptr, iptr_g; 
+  float vec_n[3], vec_s1[3], vec_s2[3];
+
+  nc_read_init_stress(F, gdinfo,init_stress_nc);
+
+  for (int k=0; k<nk; k++)
+  {
+    for (int j=0; j<nj; j++)
+    {
+      iptr   = j + k * nj;
+      iptr_g = (j+3) + (k+3) * ny; //with ghost
+
+      vec_n [0] = FC->vec_n [iptr_g*3 + 0];
+      vec_n [1] = FC->vec_n [iptr_g*3 + 1];
+      vec_n [2] = FC->vec_n [iptr_g*3 + 2];
+      vec_s1[0] = FC->vec_s1[iptr_g*3 + 0];
+      vec_s1[1] = FC->vec_s1[iptr_g*3 + 1];
+      vec_s1[2] = FC->vec_s1[iptr_g*3 + 2];
+      vec_s2[0] = FC->vec_s2[iptr_g*3 + 0];
+      vec_s2[1] = FC->vec_s2[iptr_g*3 + 1];
+      vec_s2[2] = FC->vec_s2[iptr_g*3 + 2];
+
+
+      // transform init stress to local coordinate, not nessessary,
+      // only for output 
+      F->Tn [iptr] = F->T0x[iptr] * vec_n[0]
+                   + F->T0y[iptr] * vec_n[1]
+                   + F->T0z[iptr] * vec_n[2];
+      F->Ts1[iptr] = F->T0x[iptr] * vec_s1[0]
+                   + F->T0y[iptr] * vec_s1[1]
+                   + F->T0z[iptr] * vec_s1[2];
+      F->Ts2[iptr] = F->T0x[iptr] * vec_s2[0]
+                   + F->T0y[iptr] * vec_s2[1]
+                   + F->T0z[iptr] * vec_s2[2];
+
+      gj = gnj1 + j;
+      gk = gnk1 + k;
+      // fault grid read from out jason, index start 1.
+      // so gj need +1, C index from 0
+      // rup_index = 0 means points out of falut.
+      // NOTE: boundry 3 points out of fault, due to use different fd stencil
+      if( gj+1 <= fault_grid[0]+3 || gj+1 >= fault_grid[1]-3 ){
+        F->rup_index_y[iptr] = 0;
+      }else{
+        F->rup_index_y[iptr] = 1;
+      }
+
+      if( gk+1 <= fault_grid[2]+3 || gk+1 >= fault_grid[3]-3 ){
+        F->rup_index_z[iptr] = 0;
+      }else{
+        F->rup_index_z[iptr] = 1;
+      }
+      
+      // united is used for pml, pml with fault easy write code
+      // united == 1, means contain pml and strong boundry 
+      // usually unilateral pml < 30 and strong boundry >= 50
+      if(bdry_has_free == 1) 
+      {
+        if( gj+1 > 30 && gj+1 < npoint_y - 30 && gk+1 > 30) {
+          F.united[iptr] = 0;
+        }else{
+          F.united[iptr] = 1;
+        }
+      } 
+      else if(bdry_has_free == 0)
+      {
+        if( gj+1 > 30 && gj+1 < npoint_y - 30 && gk+1 > 30 
+            && gk+1 < npoint_z - 30) {
+          F->united[iptr] = 0;
+        }else{
+          F->united[iptr] = 1;
+        }
+      }
+      if( gj1 >= fault_grid[0]+3 && gj1 <= fault_grid[1]-3 &&
+          gk1 >= fault_grid[2]+3 && gk1 <= fault_grid[3]-3 ) {
+        F->faultgrid[iptr] = 1;
+      }else{
+        F->faultgrid[iptr] = 0;
+      }
+
+      F->init_t0[iptr] = -9999.9;
+      F->flag_rup   [iptr] = 0;
+      F->first_rup  [iptr] = 1;
+  }
+}
+
+void 
+nc_read_init_stress(fault_t *F, gdinfo_t *gdinfo, char *init_stress_nc)
+{
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+  int gnj1 = gdinfo->gnj1;
+  int gnk1 = gdinfo->gnk1;
+  int ierr;
+  int ncid;
+  int varid;
+  int start[] = {gnk1, gnj1};
+  int count[] = {nk, nj}; // y vary first
+
+  ierr = nc_open(init_stress_nc, NC_NOWRITE, &ncid); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "Tx", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->T0x); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "Ty", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count,F->T0y); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "Tz", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->T0z); handle_nc_err(ierr); 
+
+  err = nc_inq_varid(ncid, "dTx", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->dT0x); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "dTy", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->dT0y); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "dTz", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->dT0z); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "mu_s", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->mu_s); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "mu_d", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->mu_d); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "Dc", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->Dc); handle_nc_err(ierr);
+
+  err = nc_inq_varid(ncid, "C0", &varid); handle_nc_err(ierr);
+  err = nc_get_vara_real_t(ncid, varid, start, count, F->C0); handle_nc_err(ierr);
+
+  err = nc_close(ncid);handle_nc_err(ierr);
+
+  return;
+}
 
 

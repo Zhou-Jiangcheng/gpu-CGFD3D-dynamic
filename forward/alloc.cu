@@ -191,56 +191,6 @@ int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
 //  return 0;
 //}
 
-
-
-
-
-int init_src_device(src_t *src, src_t *src_d)
-{
-  int total_number = src->total_number;
-  int max_ext      = src->max_ext;
-  size_t temp_all     = (src->total_number) * (src->max_nt) * (src->max_stage);
-
-  memcpy(src_d,src,sizeof(src_t));
-  if(src->force_actived == 1) {
-    src_d->Fx  = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Fy  = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Fz  = (float *) cuda_malloc(sizeof(float)*temp_all);
-    CUDACHECK( cudaMemcpy(src_d->Fx,  src->Fx,  sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Fy,  src->Fy,  sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Fz,  src->Fz,  sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-  }
-  if(src->moment_actived == 1) {
-    src_d->Mxx = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Myy = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Mzz = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Mxz = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Myz = (float *) cuda_malloc(sizeof(float)*temp_all);
-    src_d->Mxy = (float *) cuda_malloc(sizeof(float)*temp_all);
-    CUDACHECK( cudaMemcpy(src_d->Mxx, src->Mxx, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Myy, src->Myy, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Mzz, src->Mzz, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Mxz, src->Mxz, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Myz, src->Myz, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->Mxy, src->Mxy, sizeof(float)*temp_all, cudaMemcpyHostToDevice));
-  }
-  if(total_number>0)
-  {
-    src_d->ext_num  = (int *) cuda_malloc(sizeof(int)*total_number);
-    src_d->it_begin = (int *) cuda_malloc(sizeof(int)*total_number);
-    src_d->it_end   = (int *) cuda_malloc(sizeof(int)*total_number);
-    src_d->ext_indx = (int *) cuda_malloc(sizeof(int)*total_number*max_ext);
-    src_d->ext_coef = (float *) cuda_malloc(sizeof(float)*total_number*max_ext);
-
-    CUDACHECK( cudaMemcpy(src_d->ext_num,  src->ext_num,  sizeof(int)*total_number, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->it_begin, src->it_begin, sizeof(int)*total_number, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->it_end,   src->it_end,   sizeof(int)*total_number, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->ext_indx, src->ext_indx, sizeof(int)*total_number*max_ext, cudaMemcpyHostToDevice));
-    CUDACHECK( cudaMemcpy(src_d->ext_coef, src->ext_coef, sizeof(float)*total_number*max_ext, cudaMemcpyHostToDevice));
-  }
-  return 0;
-}
-
 int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
 {
   int nx = gdinfo->nx;
@@ -430,34 +380,6 @@ int dealloc_metric_device(gdcurv_metric_t metric_d)
   CUDACHECK(cudaFree(metric_d.zeta_x)); 
   CUDACHECK(cudaFree(metric_d.zeta_y)); 
   CUDACHECK(cudaFree(metric_d.zeta_z)); 
-  return 0;
-}
-
-int dealloc_src_device(src_t src_d)
-{
-  if(src_d.force_actived == 1)
-  {
-    CUDACHECK(cudaFree(src_d.Fx)); 
-    CUDACHECK(cudaFree(src_d.Fy)); 
-    CUDACHECK(cudaFree(src_d.Fz)); 
-  }
-  if(src_d.moment_actived == 1)
-  {
-    CUDACHECK(cudaFree(src_d.Mxx)); 
-    CUDACHECK(cudaFree(src_d.Myy)); 
-    CUDACHECK(cudaFree(src_d.Mzz)); 
-    CUDACHECK(cudaFree(src_d.Mxz)); 
-    CUDACHECK(cudaFree(src_d.Myz)); 
-    CUDACHECK(cudaFree(src_d.Mxy)); 
-  }
-  if(src_d.total_number > 0)
-  {
-    CUDACHECK(cudaFree(src_d.ext_num )); 
-    CUDACHECK(cudaFree(src_d.ext_indx)); 
-    CUDACHECK(cudaFree(src_d.ext_coef)); 
-    CUDACHECK(cudaFree(src_d.it_begin)); 
-    CUDACHECK(cudaFree(src_d.it_end  )); 
-  }
   return 0;
 }
 

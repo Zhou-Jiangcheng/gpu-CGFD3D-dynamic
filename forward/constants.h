@@ -1,6 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include "netcdf.h"
 // consts
 #define CONST_NDIM   3
 #define CONST_NDIM_2 6  // 2 * ndim
@@ -22,11 +23,15 @@
 #define CONST_MEDIUM_ELASTIC_VTI   3
 #define CONST_MEDIUM_ELASTIC_ANISO 4
 
-// source type
-#define CONST_SOURCE_RUPTURE  1
-#define CONST_SOURCE_POINTS   2
-
 // visco type
 #define CONST_VISCO_GRAVES_QS  1
+
+#define handle_nc_err(err)                       \
+{                                                \
+  if (err != NC_NOERR) {                         \
+     fprintf(stderr,"nc error: %s\n", nc_strerror(err)); \
+     exit(-1);                                   \
+  }                                              \
+}
 
 #endif

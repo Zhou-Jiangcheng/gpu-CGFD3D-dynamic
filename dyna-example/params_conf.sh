@@ -14,7 +14,6 @@ PROJDIR=`pwd`/../project1
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
-SOURCE_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
 
 #-- create dir
@@ -88,7 +87,7 @@ cat << ieof > $PAR_FILE
   "grid_generation_method" : {
       "fault_plane" : {
         "fault_geometry" : "${INPUTDIR}/fault_coord.nc",
-        "#fault_init_stress" : "${INPUTDIR}/init_stress.nc",
+        "fault_init_stress" : "${INPUTDIR}/init_stress.nc",
         "fault_inteval" : 100.0
       }
   },
@@ -132,16 +131,6 @@ cat << ieof > $PAR_FILE
       "type" : "graves_Qs",
       "Qs_freq" : 1.0
   },
-
-  "source" : {
-      "type" : "point_src", 
-      "#type" : "rupture", 
-      "point_src" : {
-        "in_source_file" : "$INPUTDIR/prep_source/test_source.src"
-      }
-  },
-  "is_export_source" : 1,
-  "source_export_dir"  : "$SOURCE_DIR",
 
   "output_dir" : "$OUTPUT_DIR",
 

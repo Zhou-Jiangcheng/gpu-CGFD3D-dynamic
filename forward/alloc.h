@@ -7,7 +7,6 @@
 #include "fd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "src_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
 
@@ -26,9 +25,6 @@ init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d);
 
 int
 init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d);
-
-int
-init_src_device(src_t *src, src_t *src_d);
 
 int 
 init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
@@ -59,9 +55,6 @@ dealloc_fd_device(fd_wav_t fd_wav_d);
 
 int
 dealloc_metric_device(gdcurv_metric_t metric_d);
-
-int 
-dealloc_src_device(src_t src_d);
 
 int 
 dealloc_bdryfree_device(bdryfree_t bdryfree_d);

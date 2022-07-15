@@ -7,7 +7,6 @@
 #include "gd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "src_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
 #include "io_funcs.h"
@@ -28,7 +27,6 @@ sv_eq1st_curv_col_el_iso_onestage(
   md_t mdeliso_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
-  src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
   int num_of_fdy_op, fd_op_t *fdy_op,
@@ -126,15 +124,6 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu(
     int fdy_len, size_t * fdy_shift, float * fdy_coef,
     int fdz_len, size_t * fdz_shift, float * fdz_coef,
     bdrypml_t bdrypml, bdryfree_t bdryfree,
-    const int myid, const int verbose);
-
-__global__ void
-sv_eq1st_curv_col_el_iso_rhs_src_gpu(
-    float * hVx , float * hVy , float * hVz ,
-    float * hTxx, float * hTyy, float * hTzz,
-    float * hTxz, float * hTyz, float * hTxy,
-    float * jac3d, float * slw3d,
-    src_t src, // short nation for reference member
     const int myid, const int verbose);
 
 __global__ void

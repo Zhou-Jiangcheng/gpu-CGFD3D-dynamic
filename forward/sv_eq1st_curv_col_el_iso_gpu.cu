@@ -30,7 +30,6 @@ sv_eq1st_curv_col_el_iso_onestage(
   md_t md_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
-  src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
   int num_of_fdy_op, fd_op_t *fdy_op,
@@ -261,22 +260,6 @@ sv_eq1st_curv_col_el_iso_onestage(
                                         fdz_len, lfdz_shift_d, lfdz_coef_d,
                                         bdrypml_d, bdryfree_d,
                                         myid, verbose);
-  }
-
-  // add source term
-  if (src_d.total_number > 0)
-  {
-    {
-      dim3 block(256);
-      dim3 grid;
-      grid.x = (src_d.total_number+block.x-1) / block.x;
-      sv_eq1st_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
-                        hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
-                        jac3d, slw3d, 
-                        src_d,
-                        myid, verbose);
-      CUDACHECK( cudaDeviceSynchronize() );
-    }
   }
   
   // end func
@@ -1313,85 +1296,6 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
     }
   } // if which dim
-
-  return;
-}
-/*******************************************************************************
- * add source terms
- ******************************************************************************/
-
-__global__ void
-sv_eq1st_curv_col_el_iso_rhs_src_gpu(
-    float * hVx , float * hVy , float * hVz ,
-    float * hTxx, float * hTyy, float * hTzz,
-    float * hTxz, float * hTyz, float * hTxy,
-    float * jac3d, float * slw3d,
-    src_t src, // short nation for reference member
-    const int myid, const int verbose)
-{
-  // for easy coding and efficiency
-  int max_ext = src.max_ext;
-
-  // get fi / mij
-  float fx, fy, fz;
-  float Mxx,Myy,Mzz,Mxz,Myz,Mxy;
-
-  int it     = src.it;
-  int istage = src.istage;
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-
-  // add src; ix is a commont iterater var
-  if(ix<src.total_number)
-  {
-    int   it_start = src.it_begin[ix];
-    int   it_end   = src.it_end  [ix];
-
-    if (it >= it_start && it <= it_end)
-    {
-      int   *ptr_ext_indx = src.ext_indx + ix * max_ext;
-      float *ptr_ext_coef = src.ext_coef + ix * max_ext;
-      int it_to_it_start = it - it_start;
-      size_t iptr_cur_stage =   ix * src.max_nt * src.max_stage // skip other src
-                           + it_to_it_start * src.max_stage // skip other time step
-                           + istage;
-      if (src.force_actived == 1) {
-        fx  = src.Fx [iptr_cur_stage];
-        fy  = src.Fy [iptr_cur_stage];
-        fz  = src.Fz [iptr_cur_stage];
-      }
-      if (src.moment_actived == 1) {
-        Mxx = src.Mxx[iptr_cur_stage];
-        Myy = src.Myy[iptr_cur_stage];
-        Mzz = src.Mzz[iptr_cur_stage];
-        Mxz = src.Mxz[iptr_cur_stage];
-        Myz = src.Myz[iptr_cur_stage];
-        Mxy = src.Mxy[iptr_cur_stage];
-      }
-      
-      // for extend points
-      for (int i_ext=0; i_ext < src.ext_num[ix]; i_ext++)
-      {
-        int   iptr = ptr_ext_indx[i_ext];
-        float coef = ptr_ext_coef[i_ext];
-        if (src.force_actived == 1) {
-          float V = coef * slw3d[iptr] / jac3d[iptr];
-          atomicAdd(&hVx[iptr], fx * V);
-          atomicAdd(&hVy[iptr], fy * V);
-          atomicAdd(&hVz[iptr], fz * V);
-        }
-
-        if (src.moment_actived == 1) {
-          float rjac = coef / jac3d[iptr];
-          atomicAdd(&hTxx[iptr], -Mxx * rjac);
-          atomicAdd(&hTyy[iptr], -Myy * rjac);
-          atomicAdd(&hTzz[iptr], -Mzz * rjac);
-          atomicAdd(&hTxz[iptr], -Mxz * rjac);
-          atomicAdd(&hTyz[iptr], -Myz * rjac);
-          atomicAdd(&hTxy[iptr], -Mxy * rjac);
-        }
-      } // i_ext
-    } // it
-  }
 
   return;
 }

@@ -8,7 +8,6 @@
 #include "gd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "src_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
 #include "io_funcs.h"
@@ -46,9 +45,6 @@ typedef struct
 
   // wavefield:
   wav_t *wav;
-  
-  // source term
-  src_t *src;
   
   // free surface
   bdryfree_t *bdryfree;

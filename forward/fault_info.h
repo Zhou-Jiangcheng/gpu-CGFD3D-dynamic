@@ -4,6 +4,10 @@
 #include "gd_info.h"
 #include "constants.h"
 
+/*************************************************
+ * structure
+ *************************************************/
+
 typedef struct
 {
   //Fault coefs
@@ -71,7 +75,6 @@ typedef struct
   float *mu_f;
   float *rho_f;
 
-  //
   float *vec_n; //normal 
   float *vec_s1; //strike
   float *vec_s2; //dip
@@ -97,7 +100,6 @@ typedef struct
   float *hT11;
   float *hT12;
   float *hT13;
-
 } fault_wav_t;
 
 typedef struct
@@ -105,7 +107,6 @@ typedef struct
   float *str_init_x;
   float *str_init_y;
   float *str_init_z;
-  float *str_peak;
   float *friction;
   float *T0x;
   float *T0y;
@@ -119,27 +120,15 @@ typedef struct
   float *tTn;
   float *tTs1;
   float *tTs2;
-  //friction 2,3
-  float *a;
-  float *b;
-  float *L;
-  float *Vw;
-  //friction 1
+  float *mu_s;
   float *mu_d;
   float *Dc;
   float *C0;
   float *slip;
-  float *hslip;
-  float *mslip;
-  float *tslip;
   float *slip1;
   float *slip2;
   float *Vs1;
   float *Vs2;
-  float *State;
-  float *mState;
-  float *hState;
-  float *tState;
   float *init_t0;
   int *init_t0_flag;
   int *united;
@@ -149,12 +138,20 @@ typedef struct
   int *flag_rup;
   int *first_rup;
   int *faultgrid;
-  // for friction_type == 3
-  float *TP_T;
-  float *TP_P;
-  float *TP_dT;
-  float *TP_dP;
-  float *TP_hy;
-} fault_io_info_t;
+} fault_t;
+
+/*************************************************
+ * function prototype
+ *************************************************/
+
+void 
+fault_coef_cal(gdinfo_t *gdinfo, 
+               gdcurv_metric_t *metric, 
+               md_t *md, 
+               fault_coef_t *FC);
+
+void
+fault_coef_init(fault_coef_t *FC
+                gdinfo_t *gdinfo);
 
 #endif

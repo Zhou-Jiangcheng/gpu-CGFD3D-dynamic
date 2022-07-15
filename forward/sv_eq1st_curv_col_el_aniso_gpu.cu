@@ -31,7 +31,6 @@ sv_eq1st_curv_col_el_aniso_onestage(
   md_t md_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
-  src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
   int num_of_fdy_op, fd_op_t *fdy_op,
@@ -295,22 +294,6 @@ sv_eq1st_curv_col_el_aniso_onestage(
                                         fdz_len, lfdz_shift_d, lfdz_coef_d,
                                         bdrypml_d, bdryfree_d,
                                         myid, verbose);
-  }
-
-  // add source term
-  if (src_d.total_number > 0)
-  {
-    {
-      dim3 block(256);
-      dim3 grid;
-      grid.x = (src_d.total_number+block.x-1) / block.x;
-      sv_eq1st_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
-                        hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
-                        jac3d, slw3d, 
-                        src_d,
-                        myid, verbose);
-      CUDACHECK( cudaDeviceSynchronize() );
-    }
   }
 
   return;

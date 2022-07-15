@@ -113,6 +113,12 @@ typedef struct
 
 typedef struct
 {
+  int ncid; // only one fault slice
+  int *varid;
+}
+iofault_nc_t;
+typedef struct
+{
   int num_of_slice_x;
   int num_of_slice_y;
   int num_of_slice_z;

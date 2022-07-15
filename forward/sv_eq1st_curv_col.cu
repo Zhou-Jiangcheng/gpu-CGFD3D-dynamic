@@ -31,7 +31,6 @@ sv_eq1st_curv_col_allstep(
   gdinfo_t        *gdinfo,
   gdcurv_metric_t *metric,
   md_t      *md,
-  src_t      *src,
   bdryfree_t *bdryfree,
   bdrypml_t  *bdrypml,
   wav_t  *wav,
@@ -71,7 +70,6 @@ sv_eq1st_curv_col_allstep(
   char ou_file[CONST_MAX_STRLEN];
   gdinfo_t   gdinfo_d;
   md_t   md_d;
-  src_t  src_d;
   wav_t  wav_d;
   bdryfree_t bdryfree_d;
   bdrypml_t  bdrypml_d;
@@ -82,7 +80,6 @@ sv_eq1st_curv_col_allstep(
   init_gdinfo_device(gdinfo, &gdinfo_d);
   init_md_device(md, &md_d);
   init_fd_device(fd, &fd_wav_d);
-  init_src_device(src, &src_d);
   init_metric_device(metric, &metric_d);
   init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
   init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
@@ -234,9 +231,6 @@ sv_eq1st_curv_col_allstep(
         }
       }
 
-      // set src_t time
-      src_set_time(&src_d, it, istage);
-
       // compute rhs
       switch (md_d.medium_type)
       {
@@ -244,7 +238,7 @@ sv_eq1st_curv_col_allstep(
 
           sv_eq1st_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -257,7 +251,7 @@ sv_eq1st_curv_col_allstep(
 
           sv_eq1st_curv_col_el_vti_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -270,7 +264,7 @@ sv_eq1st_curv_col_allstep(
 
           sv_eq1st_curv_col_el_aniso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -497,7 +491,6 @@ sv_eq1st_curv_col_allstep(
   dealloc_md_device(md_d);
   dealloc_fd_device(fd_wav_d);
   dealloc_metric_device(metric_d);
-  dealloc_src_device(src_d);
   dealloc_bdryfree_device(bdryfree_d);
   dealloc_bdrypml_device(bdrypml_d);
   dealloc_wave_device(wav_d);

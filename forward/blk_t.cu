@@ -26,7 +26,6 @@ blk_init(blk_t *blk,
   blk->gdcurv_metric = (gdcurv_metric_t *)malloc(sizeof(gdcurv_metric_t));
   blk->md            = (md_t      *)malloc(sizeof(md_t     ));
   blk->wav           = (wav_t      *)malloc(sizeof(wav_t     ));
-  blk->src           = (src_t      *)malloc(sizeof(src_t     ));
   blk->bdryfree      = (bdryfree_t *)malloc(sizeof(bdryfree_t ));
   blk->bdrypml       = (bdrypml_t  *)malloc(sizeof(bdrypml_t ));
   blk->iorecv        = (iorecv_t   *)malloc(sizeof(iorecv_t ));
