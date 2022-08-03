@@ -86,72 +86,51 @@ typedef struct
 
 typedef struct
 {
-  float *W;
-  float *Ws;
-  float *mW;
-  float *hW;
-  float *tW;
-  float *T11;
-  float *T12;
-  float *T13;
-  float *mT11;
-  float *mT12;
-  float *mT13;
-  float *hT11;
-  float *hT12;
-  float *hT13;
-} fault_wav_t;
-
-typedef struct
-{
-  float *str_init_x;
-  float *str_init_y;
-  float *str_init_z;
-  float *friction;
   float *T0x;
   float *T0y;
   float *T0z;
-  float *dT0x;
-  float *dT0y;
-  float *dT0z;
-  float *Tn;
-  float *Ts1;
-  float *Ts2;
-  float *tTn;
-  float *tTs1;
-  float *tTs2;
   float *mu_s;
   float *mu_d;
   float *Dc;
   float *C0;
+
+  float *Tn;
+  float *Ts1;
+  float *Ts2;
   float *slip;
   float *slip1;
   float *slip2;
   float *Vs1;
   float *Vs2;
   float *init_t0;
-  int *init_t0_flag;
+
   int *united;
+  int *faultgrid;
   int *rup_index_y;
   int *rup_index_z;
-  int *Faultgrid;
   int *flag_rup;
   int *first_rup;
-  int *faultgrid;
+  int *init_t0_flag;
 } fault_t;
 
 /*************************************************
  * function prototype
  *************************************************/
 
-void 
+int
+fault_coef_init(fault_coef_t *FC
+                gdinfo_t *gdinfo);
+
+int 
 fault_coef_cal(gdinfo_t *gdinfo, 
                gdcurv_metric_t *metric, 
                md_t *md, 
                fault_coef_t *FC);
 
-void
-fault_coef_init(fault_coef_t *FC
-                gdinfo_t *gdinfo);
+int
+fault_init(fault_t *F
+           gdinfo_t *gdinfo)
+
+
 
 #endif

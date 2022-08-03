@@ -110,7 +110,9 @@ int main(int argc, char** argv)
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
+  fault_t         *F             = blk->fault;
   fault_coef_t    *FC            = blk->fault_coef;
+  fault_wav_t     *FW            = blk->fault_wav;
 
   // set up fd_t
   //    not support selection scheme by par file yet
@@ -125,9 +127,6 @@ int main(int argc, char** argv)
             par->number_of_mpiprocs_z,
             comm,
             myid, verbose);
-
-  //reset myid number after mympi_set, general myid not changed
-  myid = mympi->myid;
 
   // set gdinfo
   gd_info_set(gdinfo, mympi,
@@ -170,7 +169,6 @@ int main(int argc, char** argv)
         break;
     }
     case PAR_GRID_FAULT_PLANE : {
-
 
         if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
         gd_curv_gen_fault(gdcurv, gdinfo, par->number_of_total_grid_points_x, par->dh, par->fault_coord_nc);
@@ -560,9 +558,11 @@ int main(int argc, char** argv)
 //-- fault init
 //-------------------------------------------------------------------------------
 
-  init_fault_coef(); 
-  init_fault()
-  MPI_Barrier(comm);
+  fault_coef_init(FC, gdinfo); 
+  fault_coef_cal(gdinfo, gdcurv_metric, md, FC);
+  fault_init(F, gdinfo);
+  fault_set(F, FC, gdinfo, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
+  fault_wav_init(gdinfo, FW, fd->num_rk_stages);
 
 //-------------------------------------------------------------------------------
 //-- allocate main var

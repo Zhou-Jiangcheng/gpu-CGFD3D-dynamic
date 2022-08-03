@@ -26,21 +26,17 @@ mympi_set(mympi_t *mympi,
   mympi->nprocy = number_of_mpiprocs_y;
   mympi->nprocz = number_of_mpiprocs_z;
 
-  int old_myid = myid;
+  mympi->myid = myid;
   mympi->comm = comm;
 
   // mpi topo
   int ndims[3]   = {number_of_mpiprocs_x, number_of_mpiprocs_y, number_of_mpiprocs_z};
   int periods[3] = {0,0,0};
-  int reorder = 1; 
+  int reorder = 0; 
 
   // create Cartesian topology
   MPI_Cart_create(comm, 3, ndims, periods, reorder, &(mympi->topocomm));
   
-  MPI_Comm_rank(mympi->topocomm,&(mympi->myid));
-  if(mympi->myid != old_myid){
-    printf("myid has change: from %d to %d\n", old_myid, mympi->myid);
-  }
 
   // get my local x,y coordinates
   MPI_Cart_coords(mympi->topocomm, mympi->myid, 3, mympi->topoid);

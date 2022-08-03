@@ -32,7 +32,9 @@ blk_init(blk_t *blk,
   blk->ioline        = (ioline_t   *)malloc(sizeof(ioline_t ));
   blk->ioslice       = (ioslice_t  *)malloc(sizeof(ioslice_t ));
   blk->iosnap        = (iosnap_t   *)malloc(sizeof(iosnap_t ));
-  blk->fault_coef    = (fault_coef_t   *)malloc(sizeof(fault_coef_t ));
+  blk->fault         = (fault_t    *)malloc(sizeof(fault_t ));
+  blk->fault_coef    = (fault_coef_t  *)malloc(sizeof(fault_coef_t ));
+  blk->fault_wav     = (fault_wav_t   *)malloc(sizeof(fault_wav_t ));
 
   sprintf(blk->name, "%s", "single");
 
