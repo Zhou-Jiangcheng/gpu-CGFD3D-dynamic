@@ -22,9 +22,9 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   md->ny   = gdinfo->ny;
   md->nz   = gdinfo->nz;
 
-  md->siz_iy   = md->nx;
-  md->siz_iz   = md->nx * md->ny;
-  md->siz_icmp = md->nx * md->ny * md->nz;
+  md->siz_line   = md->nx;
+  md->siz_slice   = md->nx * md->ny;
+  md->siz_volume = md->nx * md->ny * md->nz;
 
   // media type
   md->medium_type = media_type;
@@ -52,7 +52,7 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   
   // vars
   md->v4d = (float *) fdlib_mem_calloc_1d_float(
-                          md->siz_icmp * md->ncmp,
+                          md->siz_volume * md->ncmp,
                           0.0, "md_init");
   if (md->v4d == NULL) {
       fprintf(stderr,"Error: failed to alloc medium_el_iso\n");
@@ -72,7 +72,7 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   // set pos
   for (int icmp=0; icmp < md->ncmp; icmp++)
   {
-    cmp_pos[icmp] = icmp * md->siz_icmp;
+    cmp_pos[icmp] = icmp * md->siz_volume;
   }
 
   // init
@@ -338,8 +338,8 @@ md_gen_test_ac_iso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_line  = md->siz_line;
+  size_t siz_slice = md->siz_slice;
 
   float *kappa3d = md->kappa;
   float *rho3d = md->rho;
@@ -371,8 +371,8 @@ md_gen_test_el_iso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_line  = md->siz_line;
+  size_t siz_slice = md->siz_slice;
 
   float *lam3d = md->lambda;
   float  *mu3d = md->mu;
@@ -408,8 +408,8 @@ md_gen_test_Qs(md_t *md, float Qs_freq)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_line  = md->siz_line;
+  size_t siz_slice = md->siz_slice;
 
   md->visco_Qs_freq = Qs_freq;
 
@@ -438,8 +438,8 @@ md_gen_test_el_vti(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_line  = md->siz_line;
+  size_t siz_slice = md->siz_slice;
 
   for (size_t k=0; k<nz; k++)
   {
@@ -475,8 +475,8 @@ md_gen_test_el_aniso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_line  = md->siz_line;
+  size_t siz_slice = md->siz_slice;
 
   for (size_t k=0; k<nz; k++)
   {

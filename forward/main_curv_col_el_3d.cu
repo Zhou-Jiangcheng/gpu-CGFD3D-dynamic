@@ -1,9 +1,5 @@
 /*******************************************************************************
- * Curvilinear Grid Finite Difference Seismic Wave Propagation Simulation 
- *
- * Copyright (c) 2020 ZHANG Wei. All rights reserved.
- *
- * Author(s): ZHANG Wei <zhangwei@sustech.edu.cn>
+ * Curvilinear Grid Finite Difference Fault Dynamic Simulation 
  ******************************************************************************/
 
 #include <stdio.h>
@@ -16,7 +12,6 @@
 
 #include "constants.h"
 #include "par_t.h"
-// blk_t.h contains most other headers
 #include "blk_t.h"
 
 #include "media_discrete_model.h"
@@ -103,16 +98,15 @@ int main(int argc, char** argv)
   gdcurv_metric_t *gdcurv_metric = blk->gdcurv_metric;
   md_t            *md            = blk->md;
   wav_t           *wav           = blk->wav;
-  src_t           *src           = blk->src;
   bdryfree_t      *bdryfree      = blk->bdryfree;
   bdrypml_t       *bdrypml       = blk->bdrypml;
   iorecv_t        *iorecv        = blk->iorecv;
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
-  fault_t         *F             = blk->fault;
-  fault_coef_t    *FC            = blk->fault_coef;
-  fault_wav_t     *FW            = blk->fault_wav;
+  fault_t         *fault         = blk->fault;
+  fault_coef_t    *f_coef        = blk->fault_coef;
+  fault_wav_t     *f_wav         = blk->fault_wav;
 
   // set up fd_t
   //    not support selection scheme by par file yet
@@ -186,9 +180,6 @@ int main(int argc, char** argv)
     fflush(stdout);
   }
 
-  // generate topo over all the domain
-  //ierr = gd_curv_topoall_generate();
-
   // output
   if (par->is_export_grid==1)
   {
@@ -209,10 +200,7 @@ int main(int argc, char** argv)
         if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
         gd_curv_metric_cal(gdinfo,
                            gdcurv,
-                           gdcurv_metric,
-                           fd->fdc_len,
-                           fd->fdc_indx,
-                           fd->fdc_coef);
+                           gdcurv_metric)
 
         if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
         gd_curv_exchange(gdinfo,gdcurv_metric->v4d,gdcurv_metric->ncmp,mympi->neighid,mympi->topocomm);
@@ -243,6 +231,7 @@ int main(int argc, char** argv)
   // print basic info for QC
   fprintf(stdout,"gdcurv info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]); 
   //gd_print(gdcurv);
+
 //-------------------------------------------------------------------------------
 //-- media generation or import
 //-------------------------------------------------------------------------------
@@ -558,11 +547,11 @@ int main(int argc, char** argv)
 //-- fault init
 //-------------------------------------------------------------------------------
 
-  fault_coef_init(FC, gdinfo); 
-  fault_coef_cal(gdinfo, gdcurv_metric, md, FC);
-  fault_init(F, gdinfo);
-  fault_set(F, FC, gdinfo, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
-  fault_wav_init(gdinfo, FW, fd->num_rk_stages);
+  fault_coef_init(f_coef, gdinfo); 
+  fault_coef_cal(gdinfo, gdcurv_metric, md, f_coef);
+  fault_init(fault, gdinfo);
+  fault_set(fault, f_coef, gdinfo, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
+  fault_wav_init(gdinfo, f_wav, fd->num_rk_stages);
 
 //-------------------------------------------------------------------------------
 //-- allocate main var
@@ -660,8 +649,6 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 //-- qc
 //-------------------------------------------------------------------------------
-  
-  fd_print(fd);
 
   mympi_print(mympi);
 
@@ -678,7 +665,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
   
   // convert rho to 1 / rho to reduce number of arithmetic cal
-  md_rho_to_slow(md->rho, md->siz_icmp);
+  md_rho_to_slow(md->rho, md->siz_volume);
 
   if (myid==0 && verbose>0) fprintf(stdout,"start solver ...\n"); 
   

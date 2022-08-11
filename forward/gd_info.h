@@ -43,9 +43,6 @@ typedef struct {
 
   // size of a single var
   //  the following two naming are same
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
 
   size_t siz_line;
   size_t siz_slice;

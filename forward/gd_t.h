@@ -70,9 +70,9 @@ typedef struct {
   float tile_zmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
   float tile_zmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
 
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
+  size_t siz_line;
+  size_t siz_slice;
+  size_t siz_volume;
 
   size_t *cmp_pos;
   char  **cmp_name;
@@ -95,9 +95,9 @@ typedef struct {
   float *zeta_y;
   float *zeta_z;
 
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
+  size_t siz_line;
+  size_t siz_slice;
+  size_t siz_volume;
 
   size_t *cmp_pos;
   char  **cmp_name;
@@ -117,8 +117,7 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
 void
 gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
-                   gdcurv_metric_t *metric,
-                   int fd_len, int *fd_indx, float *fd_coef);
+                   gdcurv_metric_t *metric)
 
 void
 gd_curv_exchange(gdinfo_t *gdinfo,

@@ -64,114 +64,6 @@ blk_set_output(blk_t *blk,
   return 0;
 }
 
-int
-blk_print(blk_t *blk)
-{    
-  int ierr = 0;
-
-  fprintf(stdout, "\n-------------------------------------------------------\n");
-  fprintf(stdout, "print blk %s:\n", blk->name);
-  fprintf(stdout, "-------------------------------------------------------\n\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> ESTIMATE MEMORY INFO.\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "total memory size Byte: %20.5f  B\n", PSV->total_memory_size_Byte);
-  //fprintf(stdout, "total memory size KB  : %20.5f KB\n", PSV->total_memory_size_KB  );
-  //fprintf(stdout, "total memory size MB  : %20.5f MB\n", PSV->total_memory_size_MB  );
-  //fprintf(stdout, "total memory size GB  : %20.5f GB\n", PSV->total_memory_size_GB  );
-  //fprintf(stdout, "\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> FOLDER AND FILE INFO.\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "   OutFolderName: %s\n", OutFolderName);
-  //fprintf(stdout, "       EventName: %s\n", OutPrefix);
-  //fprintf(stdout, "     LogFilename: %s\n", LogFilename);
-  //fprintf(stdout, " StationFilename: %s\n", StationFilename);
-  //fprintf(stdout, "  SourceFilename: %s\n", SourceFilename);
-  //fprintf(stdout, "   MediaFilename: %s\n", MediaFilename);
-  //fprintf(stdout, "\n");
-
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> media info.\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //if (blk->media_type == MEDIA_TYPE_LAYER)
-  //{
-  //    strcpy(str, "layer");
-  //}
-  //else if (blk->media_type == MEDIA_TYPE_GRID)
-  //{
-  //    strcpy(str, "grid");
-  //}
-  //fprintf(stdout, " media_type = %s\n", str);
-  //if(blk->media_type == MEDIA_TYPE_GRID)
-  //{
-  //    fprintf(stdout, "\n --> the media filename is:\n");
-  //    fprintf(stdout, " velp_file  = %s\n", blk->fnm_velp);
-  //    fprintf(stdout, " vels_file  = %s\n", blk->fnm_vels);
-  //    fprintf(stdout, " rho_file   = %s\n", blk->fnm_rho);
-  //}
-  //fprintf(stdout, "\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> source info.\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, " number_of_force  = %d\n", blk->number_of_force);
-  //if(blk->number_of_force > 0)
-  //{
-  //    fprintf(stdout, " force_source           x           z     x_shift     z_shift           i           k:\n");
-  //    for(n=0; n<blk->number_of_force; n++)
-  //    {
-  //        indx = 2*n;
-  //        fprintf(stdout, "         %04d  %10.4e  %10.4e  %10.4e  %10.4e  %10d  %10d\n", n+1, 
-  //                blk->force_coord[indx], blk->force_coord[indx+1],
-  //                blk->force_shift[indx], blk->force_shift[indx+1],
-  //                blk->force_indx [indx], blk->force_indx [indx+1]);
-  //    }
-  //    fprintf(stdout, "\n");
-  //}
-
-  //fprintf(stdout, "\n");
-  //fprintf(stdout, " number_of_moment = %d\n", blk->number_of_moment);
-  //if(blk->number_of_moment > 0)
-  //{
-  //    fprintf(stdout, " moment_source          x           z     x_shift     z_shift           i           k:\n");
-  //    for(n=0; n<blk->number_of_moment; n++)
-  //    {
-  //        indx = 2*n;
-  //        fprintf(stdout, "         %04d  %10.4e  %10.4e  %10.4e  %10.4e  %10d  %10d\n", n+1, 
-  //                blk->moment_coord[indx], blk->moment_coord[indx+1],
-  //                blk->moment_shift[indx], blk->moment_shift[indx+1],
-  //                blk->moment_indx [indx], blk->moment_indx [indx+1]);
-  //    }
-  //    fprintf(stdout, "\n");
-  //}
-
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //fprintf(stdout, "--> boundary layer information:\n");
-  //fprintf(stdout, "-------------------------------------------------------\n");
-  //ierr = boundary_id2type(type1, blk->boundary_type[0], errorMsg);
-  //ierr = boundary_id2type(type2, blk->boundary_type[1], errorMsg);
-  //ierr = boundary_id2type(type3, blk->boundary_type[2], errorMsg);
-  //ierr = boundary_id2type(type4, blk->boundary_type[3], errorMsg);
-  //fprintf(stdout, " boundary_type         = %10s%10s%10s%10s\n", 
-  //        type1, type2, type3, type4);
-  //fprintf(stdout, " boundary_layer_number = %10d%10d%10d%10d\n", 
-  //        blk->boundary_layer_number[0], blk->boundary_layer_number[1], 
-  //        blk->boundary_layer_number[2], blk->boundary_layer_number[3]);
-  //fprintf(stdout, "\n");
-  //fprintf(stdout, " absorb_velocity       = %10.2f%10.2f%10.2f%10.2f\n", 
-  //        blk->absorb_velocity[0], blk->absorb_velocity[1], blk->absorb_velocity[2], 
-  //        blk->absorb_velocity[3]);
-  //fprintf(stdout, "\n");
-  //fprintf(stdout, " CFS_alpha_max         = %10.2f%10.2f%10.2f%10.2f\n", 
-  //        blk->CFS_alpha_max[0], blk->CFS_alpha_max[1], blk->CFS_alpha_max[2], 
-  //        blk->CFS_alpha_max[3]);
-  //fprintf(stdout, " CFS_beta_max          = %10.2f%10.2f%10.2f%10.2f\n", 
-  //        blk->CFS_beta_max[0], blk->CFS_beta_max[1], blk->CFS_beta_max[2], 
-  //        blk->CFS_beta_max[3]);
-  
-  return ierr;
-}
-
 
 /*********************************************************************
  * mpi message for macdrp scheme with rk
@@ -945,7 +837,7 @@ blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
     {
       for (int i = gdinfo->ni1; i < gdinfo->ni2; i++)
       {
-        size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
+        size_t iptr = i + j * gdinfo->siz_line + k * gdinfo->siz_slice;
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
           Vp = sqrt( (md->lambda[iptr] + 2.0 * md->mu[iptr]) / md->rho[iptr] );
@@ -970,12 +862,12 @@ blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
               if (ii != 0 && jj !=0 && kk != 0)
               {
                 float p1[] = { x3d[iptr-ii], y3d[iptr-ii], z3d[iptr-ii] };
-                float p2[] = { x3d[iptr-jj*gdinfo->siz_iy],
-                               y3d[iptr-jj*gdinfo->siz_iy],
-                               z3d[iptr-jj*gdinfo->siz_iy] };
-                float p3[] = { x3d[iptr-kk*gdinfo->siz_iz],
-                               y3d[iptr-kk*gdinfo->siz_iz],
-                               z3d[iptr-kk*gdinfo->siz_iz] };
+                float p2[] = { x3d[iptr-jj*gdinfo->siz_line],
+                               y3d[iptr-jj*gdinfo->siz_line],
+                               z3d[iptr-jj*gdinfo->siz_line] };
+                float p3[] = { x3d[iptr-kk*gdinfo->siz_slice],
+                               y3d[iptr-kk*gdinfo->siz_slice],
+                               z3d[iptr-kk*gdinfo->siz_slice] };
 
                 float L = fdlib_math_dist_point2plane(p0, p1, p2, p3);
 

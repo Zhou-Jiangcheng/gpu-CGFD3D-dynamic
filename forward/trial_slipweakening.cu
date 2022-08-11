@@ -5,8 +5,8 @@
 #include "macdrp.h"
 
 __global__ void 
-trial_sw_gpu(Wave w, Fault f, real_t *M,
-    int it, int irk, int FlagX, int FlagY, int FlagZ)
+trial_sw_gpu(
+    )
 {
   int j = blockIdx.x * blockDim.x + threadIdx.x;
   int k = blockIdx.y * blockDim.y + threadIdx.y;
@@ -23,7 +23,7 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
   size_t siz_line   = gdinfo_d.siz_line;
   size_t siz_slice  = gdinfo_d.siz_slice;
   size_t siz_volume = gdinfo_d.siz_volume;
-  int siz_slice_yz = ny * nz;
+  size_t siz_slice_yz = ny * nz;
   float xix, xiy, xiz;
   float jac;
   float vec_n0;
@@ -50,15 +50,15 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
   float *Tyz   = w_cur_d + wav_d.Tyz_pos;
   float *Txy   = w_cur_d + wav_d.Txy_pos;
 
-  float *f_Vx  = F_d.W + 0 * (2*siz_slice_yz);
-  float *f_Vy  = F_d.W + 1 * (2*siz_slice_yz);
-  float *f_Vz  = F_d.W + 2 * (2*siz_slice_yz);
-  float *f_T21 = F_d.W + 3 * (2*siz_slice_yz);
-  float *f_T22 = F_d.W + 4 * (2*siz_slice_yz);
-  float *f_T23 = F_d.W + 5 * (2*siz_slice_yz);
-  float *f_T31 = F_d.W + 6 * (2*siz_slice_yz);
-  float *f_T32 = F_d.W + 7 * (2*siz_slice_yz);
-  float *f_T33 = F_d.W + 8 * (2*siz_slice_yz);
+  float *f_Vx    = f_cur_d + f_wav_d.Vx_pos ;
+  float *f_Vy    = f_cur_d + f_wav_d.Vy_pos ;
+  float *f_Vz    = f_cur_d + f_wav_d.Vz_pos ;
+  float *f_T21   = f_cur_d + f_wav_d.T21_pos;
+  float *f_T22   = f_cur_d + f_wav_d.T22_pos;
+  float *f_T23   = f_cur_d + f_wav_d.T23_pos;
+  float *f_T31   = f_cur_d + f_wav_d.T31_pos;
+  float *f_T32   = f_cur_d + f_wav_d.T32_pos;
+  float *f_T33   = f_cur_d + f_wav_d.T33_pos;
 
   float *f_mVx  = F_d.mW + 0 * (2*siz_slice_yz);
   float *f_mVy  = F_d.mW + 1 * (2*siz_slice_yz);
@@ -68,23 +68,12 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
   float *f_tVy  = F_d.tW + 1 * (2*siz_slice_yz);
   float *f_tVz  = F_d.tW + 2 * (2*siz_slice_yz);
 
-
-
-  if ( j < nj && k < nk && F_d.united[j + k * nj] == 0)
+  if ( j < nj && k < nk && fault.united[j + k * nj] == 0)
   { 
-    // T11 -3 +3, fault is medium, =0
-    iptr_t = (j+3) + (k+3) * ny + 3 * siz_slice_yz;
-    if(irk == 0){
-      f.mT11[iptr_t] = f.T11[iptr_t];
-      f.mT12[iptr_t] = f.T12[iptr_t];
-      f.mT13[iptr_t] = f.T13[iptr_t];
-    }
-
     for (int m = 0; m < 2; m++)
     {
-      //int i = i0 + 2*m - 1; // i0-1, i0+1
-      // m = 0 -> i0-1, minus
-      // m = 1 -> i0+1, plus
+      // m = 0 -> minus
+      // m = 1 -> plus
       iptr = i0 + (j+3) * siz_line + (k+3) * siz_slice; 
       xix = xi_x [iptr];
       xiy = xi_y [iptr];
@@ -92,8 +81,9 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
       jac = jac3d[iptr];
       rho = f.rho_f[(j+3) + (k+3) * ny + m * ny * nz];
 
-      iptr_f = (j+3) + (k+3) * ny;
-      for (int l = 1; l <= 3; l++){
+      iptr_f = (j+3) + (k+3) * ny; 
+      for (int l = 1; l <= 3; l++)
+      {
         iptr = (i0+(2*m-1)*l) + (j+3) * siz_line + (k+3) * siz_slice;
         xix = xi_x[iptr];
         xiy = xi_y[iptr];
@@ -102,22 +92,27 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
         T11 = jac*(xix * Txx[iptr] + xiy * Txy[iptr] + xiz * Txz[iptr]);
         T12 = jac*(xix * Txy[iptr] + xiy * Tyy[iptr] + xiz * Tyz[iptr]);
         T13 = jac*(xix * Txz[iptr] + xiy * Tyz[iptr] + xiz * Tzz[iptr]);
-        f.T11[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T11;
-        f.T12[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T12;
-        f.T13[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T13;
+        f_wav_d.T11[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T11;
+        f_wav_d.T12[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T12;
+        f_wav_d.T13[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T13;
       }
 
-      float *t21 = f_T21 + m*siz_slice_yz;
-      float *t22 = f_T22 + m*siz_slice_yz;
-      float *t23 = f_T23 + m*siz_slice_yz;
-      if(f.rup_index_y[j + k * nj] % 7){
-        DyT21 = L22(t21, pos_f, 1, FlagY) * rDH;
-        DyT22 = L22(t22, pos_f, 1, FlagY) * rDH;
-        DyT23 = L22(t23, pos_f, 1, FlagY) * rDH;
-      }else{
-        DyT21 = L(t21, pos_f, 1, FlagY) * rDH;
-        DyT22 = L(t22, pos_f, 1, FlagY) * rDH;
-        DyT23 = L(t23, pos_f, 1, FlagY) * rDH;
+      float *T21 = f_T21 + m*siz_slice_yz;
+      float *T22 = f_T22 + m*siz_slice_yz;
+      float *T23 = f_T23 + m*siz_slice_yz;
+      // fault point use short stencil
+      // due to slip change sharp
+      if(fault.rup_index_y[j + k * nj] == 1)
+      {
+        M_FD_SHIFT(DyT21, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT(DyT22, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT(DyT23, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+      }
+      if(fault.rup_index_y[j + k * nj] == 0)
+      {
+        M_FD_SHIFT(DyT21, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT(DyT22, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT(DyT23, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
       }
 
       for (int l = -3; l <=3 ; l++){
@@ -148,14 +143,6 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
         DzT33 = vec_L(vecT33, 3, FlagZ) * rDH;
       }
 
-      T11 = f.T11[(3+2*m-1)*nyz+pos_f];
-      T12 = f.T12[(3+2*m-1)*nyz+pos_f];
-      T13 = f.T13[(3+2*m-1)*nyz+pos_f];
-
-      Rx[m] = 0.5f*( (2*m-1)*T11 + (DyT21 + DzT31)*DH )*DH2;
-      Ry[m] = 0.5f*( (2*m-1)*T12 + (DyT22 + DzT32)*DH )*DH2;
-      Rz[m] = 0.5f*( (2*m-1)*T13 + (DyT23 + DzT33)*DH )*DH2;
-      if(method2)
       if (m == 0){ // "-" side
         Rx[m] =
           a_1 * f.T11[2*nyz+pos_f] +
@@ -200,43 +187,17 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
     }else{
       t = (it+1)*DT;
     }
-    if (1 == par.INPORT_STRESS_TYPE){
-      pos = j + k * nj;
-      real_t Gt = Gt_func(t, 1.0);
-      Gt = Gt_func(t, par.smooth_load_T);
-      f.str_init_x[pos] = f.T0x[pos] + Gt * f.dT0x[pos];
-      f.str_init_y[pos] = f.T0y[pos] + Gt * f.dT0y[pos];
-      f.str_init_z[pos] = f.T0z[pos] + Gt * f.dT0z[pos];
-    }
     pos = j1 + k1 * ny;
     real_t dVx = f_mVx[pos + nyz] - f_mVx[pos];
     real_t dVy = f_mVy[pos + nyz] - f_mVy[pos];
     real_t dVz = f_mVz[pos + nyz] - f_mVz[pos];
-#ifdef RKtrial
-    if (irk == 3){
-      dVx = f_tVx[pos + nyz] - f_tVx[pos];
-      dVy = f_tVy[pos + nyz] - f_tVy[pos];
-      dVz = f_tVz[pos + nyz] - f_tVz[pos];
-    }
-#endif
 
     real_t Trial[3]; // stress variation
     real_t Trial_local[3]; // + init background stress
     real_t Trial_s[3]; // shear stress
 
     real_t dt1 = DT;
-#ifdef RKtrial
-    if(irk == 0 || irk == 1){
-      dt1 *= 0.5;
-    }else if (irk == 3){
-      dt1 /= 6.0;
-    }
-#endif
 
-    Trial[0] = (Mrho[0]*Mrho[1]*dVx/dt1 + Mrho[0]*Rx[1] - Mrho[1]*Rx[0])/(DH2*(Mrho[0]+Mrho[1]))*2.0f;
-    Trial[1] = (Mrho[0]*Mrho[1]*dVy/dt1 + Mrho[0]*Ry[1] - Mrho[1]*Ry[0])/(DH2*(Mrho[0]+Mrho[1]))*2.0f;
-    Trial[2] = (Mrho[0]*Mrho[1]*dVz/dt1 + Mrho[0]*Rz[1] - Mrho[1]*Rz[0])/(DH2*(Mrho[0]+Mrho[1]))*2.0f;
-#ifdef TractionImg
     real_t a0p,a0m;
     if(FlagX==FWD){
       a0p = a_0pF;
@@ -248,7 +209,6 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
     Trial[0] = -(Mrho[0]*Mrho[1]*dVx/dt1 + Mrho[0]*Rx[1] - Mrho[1]*Rx[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
     Trial[1] = -(Mrho[0]*Mrho[1]*dVy/dt1 + Mrho[0]*Ry[1] - Mrho[1]*Ry[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
     Trial[2] = -(Mrho[0]*Mrho[1]*dVz/dt1 + Mrho[0]*Rz[1] - Mrho[1]*Rz[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
-#endif
 
     real_t vec_n [3];
     real_t vec_s1[3];
@@ -304,30 +264,6 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
       Tau_n = Trial_n;
     }
 
-#ifdef Regularize
-
-    pos = j + k * nj;
-
-    // Prakash-Clifton #1
-    real_t V_ref = 0.2;
-    real_t delta_L = 0.2 * f.Dc[pos];
-
-    real_t T_sigma = delta_L / V_ref;
-    real_t coef = exp(-par.DT/T_sigma);
-    real_t Tau_n_eff = Tau_n + coef * (f.tTn[pos] - Tau_n);
-
-    real_t Vs1 = f.Vs1[pos];
-    real_t Vs2 = f.Vs2[pos];
-    real_t rate = sqrt(Vs1*Vs1+Vs2*Vs2);
-
-    // Prakash-Clifton #2
-    coef = par.DT / delta_L;
-    Tau_n_eff = Tau_n + exp(-(rate + V_ref)*coef) * (f.tTn[pos] - Tau_n);
-
-    // using effective normal stress
-    //if(irk == 0) Tau_n = Tau_n_eff;
-    if(rate >1e-2) Tau_n = Tau_n_eff;
-#endif
 
 
     pos = j + k * nj;
@@ -443,26 +379,6 @@ trial_sw_gpu(Wave w, Fault f, real_t *M,
         f.flag_rup[pos] = 1;
       }
     }
-
-#ifdef SelectStencil
-    pos = j + k*nj;
-    if(f.flag_rup[pos] && f.first_rup[pos]){
-      for (int l = -3; l <=3; l++){
-        int jj1 = j+l;
-        jj1 = max(0, jj1);
-        jj1 = min(nj-1, jj1);
-        int pos2 = (jj1+k*nj);
-        f.rup_index_y[pos2] += 1;
-        int kk1 = k+l;
-        kk1 = max(0, kk1);
-        kk1 = min(nk-1, kk1);
-        pos2 = (j+kk1*nj);
-        f.rup_index_z[pos2] += 1;
-      }
-      f.first_rup[pos] = 0;
-    }
-#endif
-
   } // end j k
   return;
 }

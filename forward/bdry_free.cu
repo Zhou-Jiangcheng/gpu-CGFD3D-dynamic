@@ -25,7 +25,7 @@ bdry_free_set(gdinfo_t        *gdinfo,
 {
   int ierr = 0;
 
-  size_t siz_slice  = gdinfo->siz_iz;
+  size_t siz_slice  = gdinfo->siz_slice;
 
   // default disable
   bdryfree->is_enable = 0;

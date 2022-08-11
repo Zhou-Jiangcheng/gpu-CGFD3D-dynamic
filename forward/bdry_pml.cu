@@ -81,8 +81,8 @@ bdry_pml_set(gdinfo_t *gdinfo,
   int    nx  = gdinfo->nx ;
   int    ny  = gdinfo->ny ;
   int    nz  = gdinfo->nz ;
-  int    siz_line = gdinfo->siz_iy;
-  int    siz_slice = gdinfo->siz_iz;
+  int    siz_line = gdinfo->siz_line;
+  int    siz_slice = gdinfo->siz_slice;
 
   // default disable
   bdrypml->is_enable = 0;
@@ -257,8 +257,8 @@ bdry_pml_set_stg(gdinfo_t *gdinfo,
   int    nx  = gdinfo->nx ;
   int    ny  = gdinfo->ny ;
   int    nz  = gdinfo->nz ;
-  int    siz_line = gdinfo->siz_iy;
-  int    siz_slice = gdinfo->siz_iz;
+  int    siz_line = gdinfo->siz_line;
+  int    siz_slice = gdinfo->siz_slice;
 
   // default disable
   bdrypml->is_enable = 0;
@@ -453,24 +453,24 @@ bdry_pml_auxvar_init(int nx, int ny, int nz,
   auxvar->ncmp = wav->ncmp;
   auxvar->nlevel = wav->nlevel;
 
-  auxvar->siz_iy   = auxvar->nx;
-  auxvar->siz_iz   = auxvar->nx * auxvar->ny;
-  auxvar->siz_icmp = auxvar->nx * auxvar->ny * auxvar->nz;
-  auxvar->siz_ilevel = auxvar->siz_icmp * auxvar->ncmp;
+  auxvar->siz_line   = auxvar->nx;
+  auxvar->siz_slice   = auxvar->nx * auxvar->ny;
+  auxvar->siz_volume = auxvar->nx * auxvar->ny * auxvar->nz;
+  auxvar->siz_ilevel = auxvar->siz_volume * auxvar->ncmp;
 
-  auxvar->Vx_pos  = wav->Vx_seq  * auxvar->siz_icmp;
-  auxvar->Vy_pos  = wav->Vy_seq  * auxvar->siz_icmp;
-  auxvar->Vz_pos  = wav->Vz_seq  * auxvar->siz_icmp;
-  auxvar->Txx_pos = wav->Txx_seq * auxvar->siz_icmp;
-  auxvar->Tyy_pos = wav->Tyy_seq * auxvar->siz_icmp;
-  auxvar->Tzz_pos = wav->Tzz_seq * auxvar->siz_icmp;
-  auxvar->Tyz_pos = wav->Tyz_seq * auxvar->siz_icmp;
-  auxvar->Txz_pos = wav->Txz_seq * auxvar->siz_icmp;
-  auxvar->Txy_pos = wav->Txy_seq * auxvar->siz_icmp;
+  auxvar->Vx_pos  = wav->Vx_seq  * auxvar->siz_volume;
+  auxvar->Vy_pos  = wav->Vy_seq  * auxvar->siz_volume;
+  auxvar->Vz_pos  = wav->Vz_seq  * auxvar->siz_volume;
+  auxvar->Txx_pos = wav->Txx_seq * auxvar->siz_volume;
+  auxvar->Tyy_pos = wav->Tyy_seq * auxvar->siz_volume;
+  auxvar->Tzz_pos = wav->Tzz_seq * auxvar->siz_volume;
+  auxvar->Tyz_pos = wav->Tyz_seq * auxvar->siz_volume;
+  auxvar->Txz_pos = wav->Txz_seq * auxvar->siz_volume;
+  auxvar->Txy_pos = wav->Txy_seq * auxvar->siz_volume;
 
   // vars
   // contain all vars at each side, include rk scheme 4 levels vars
-  if (auxvar->siz_icmp > 0 ) { // valid pml layer
+  if (auxvar->siz_volume > 0 ) { // valid pml layer
     auxvar->var = (float *) fdlib_mem_calloc_1d_float( 
                  auxvar->siz_ilevel * auxvar->nlevel,
                  0.0, "bdry_pml_auxvar_init");
@@ -493,8 +493,8 @@ bdry_pml_cal_len_dh(gd_t *gd,
 {
   int ierr = 0;
 
-  int siz_line  = gd->siz_iy;
-  int siz_slice = gd->siz_iz;
+  int siz_line  = gd->siz_line;
+  int siz_slice = gd->siz_slice;
 
   // cartesian grid is simple
   if (gd->type == GD_TYPE_CART)

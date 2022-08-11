@@ -304,6 +304,11 @@ par_read_from_str(const char *str, par_t *par)
   //
   //-- grid
   //
+  if (item = cJSON_GetObjectItem(root, "fault_grid")) {
+    for(int i=0; i<4; i++) {
+      par->fault_grid[i] = cJSON_GetArrayItem(item, i)->valueint;
+    }
+  }
 
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import

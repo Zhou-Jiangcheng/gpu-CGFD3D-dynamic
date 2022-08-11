@@ -248,14 +248,14 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
       this_recv->dj = ry_inc;
       this_recv->dk = rz_inc;
 
-      this_recv->indx1d[0] = i_local   + j_local     * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[1] = i_local+1 + j_local     * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[2] = i_local   + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[4] = i_local   + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[5] = i_local+1 + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[6] = i_local   + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
+      this_recv->indx1d[0] = i_local   + j_local     * gd->siz_line + k_local * gd->siz_slice;
+      this_recv->indx1d[1] = i_local+1 + j_local     * gd->siz_line + k_local * gd->siz_slice;
+      this_recv->indx1d[2] = i_local   + (j_local+1) * gd->siz_line + k_local * gd->siz_slice;
+      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gd->siz_line + k_local * gd->siz_slice;
+      this_recv->indx1d[4] = i_local   + j_local     * gd->siz_line + (k_local+1) * gd->siz_slice;
+      this_recv->indx1d[5] = i_local+1 + j_local     * gd->siz_line + (k_local+1) * gd->siz_slice;
+      this_recv->indx1d[6] = i_local   + (j_local+1) * gd->siz_line + (k_local+1) * gd->siz_slice;
+      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gd->siz_line + (k_local+1) * gd->siz_slice;
 
       //fprintf(stdout,"== ir_this=%d,name=%s,i=%d,j=%d,k=%d\n",
       //      nr_this,sta_name[nr_this],i_local,j_local,k_local); fflush(stdout);
@@ -385,7 +385,7 @@ io_line_locate(gdinfo_t *gdinfo,
         int j = gd_info_ind_glphy2lcext_j(gj,gdinfo);
         int k = gd_info_ind_glphy2lcext_k(gk,gdinfo);
 
-        int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+        int iptr = i + j * gd->siz_line + k * gd->siz_slice;
 
         ioline->recv_seq [m][ir] = ipt;
         ioline->recv_iptr[m][ir] = iptr;
@@ -884,17 +884,18 @@ io_fault_nc_create(gdinfo_t *gdinfo,
     if (nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2])) M_NCERR;
     int dimid2[2] = {dimid[1], dimid[2]};
     // time var
-    if (nc_def_var(iofault_nc->ncid, "time", NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0]))) M_NCERR;
     // define variables
-    if (nc_def_var(iofault_nc->ncid, "Vs1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[1]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Vs2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[2]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "time", NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "init_t0", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[1]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "peak_rate", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[2]))) M_NCERR;   
     if (nc_def_var(iofault_nc->ncid, "Tn"   , NC_FLOAT, 3, dimid, &(iofault_nc->varid[3]))) M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[4]))) M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[5]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us0"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[6]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[7]))) M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "Us2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[8]))) M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "init_t0", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[9]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Vs1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[6]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[7]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us0"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[8]))) M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[9]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Us2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[10]))) M_NCERR;   
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
@@ -930,9 +931,9 @@ io_slice_nc_put(ioslice_t    *ioslice,
   int   ni  = gdinfo->ni ;
   int   nj  = gdinfo->nj ;
   int   nk  = gdinfo->nk ;
-  size_t   siz_line = gdinfo->siz_iy;
-  size_t   siz_slice= gdinfo->siz_iz;
-  size_t   siz_icmp = gdinfo->siz_icmp;
+  size_t   siz_line = gdinfo->siz_line;
+  size_t   siz_slice= gdinfo->siz_slice;
+  size_t   siz_volume = gdinfo->siz_volume;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
 
@@ -956,7 +957,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     grid.y = (nk+block.y-1)/block.y;
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_end_d + ivar * siz_volume;
       io_slice_pack_buff_x<<<grid, block>>>(i,nj,nk,siz_line,siz_slice,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -986,7 +987,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     grid.y = (nk+block.y-1)/block.y;
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_end_d + ivar * siz_volume;
       io_slice_pack_buff_y<<<grid, block>>>(j,ni,nk,siz_line,siz_slice,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -1017,7 +1018,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     grid.y = (nj+block.y-1)/block.y;
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_end_d + ivar * siz_volume;
       io_slice_pack_buff_z<<<grid, block>>>(k,ni,nj,siz_line,siz_slice,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -1053,9 +1054,9 @@ io_snap_nc_put(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_line  = gdinfo->siz_iy;
-  size_t siz_slice = gdinfo->siz_iz;
-  size_t siz_volume = gdinfo->siz_icmp;
+  size_t siz_line  = gdinfo->siz_line;
+  size_t siz_slice = gdinfo->siz_slice;
+  size_t siz_volume = gdinfo->siz_volume;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1216,7 +1217,7 @@ io_snap_nc_put(iosnap_t *iosnap,
 int
 io_fault_nc_put(iofault_nc_t *iofault_nc,
                 gdinfo_t     *gdinfo,
-                fault_t *F_d,
+                fault_t *F,
                 float *buff,
                 int   it,
                 float time)
@@ -1232,9 +1233,9 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
   int   ni  = gdinfo->ni ;
   int   nj  = gdinfo->nj ;
   int   nk  = gdinfo->nk ;
-  size_t   siz_line = gdinfo->siz_iy;
-  size_t   siz_slice= gdinfo->siz_iz;
-  size_t   siz_volume = gdinfo->siz_icmp;
+  size_t   siz_line = gdinfo->siz_line;
+  size_t   siz_slice= gdinfo->siz_slice;
+  size_t   siz_volume = gdinfo->siz_volume;
 
   //-- slice x, 
   size_t startp[] = { it, 0, 0 };
@@ -1244,14 +1245,6 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
   nc_put_var1_float(iofault_nc->ncid,iofault_nc->varid[0],&start_tdim, &time);
 
   size_t size = sizeof(float) * nj * nk; 
-
-  cudaMemcpy(buff, F_d->Vs1, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[1],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->Vs2, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[2],
-                    startp, countp, buff);
 
   cudaMemcpy(buff, F_d->Tn, size, cudaMemcpyDeviceToHost);
   nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[3],
@@ -1264,21 +1257,25 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
   cudaMemcpy(buff, F_d->Ts2, size, cudaMemcpyDeviceToHost);
   nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[5],
                     startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->slip, size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(buff, F_d->Vs1, size, cudaMemcpyDeviceToHost);
   nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[6],
                     startp, countp, buff);
 
-  cudaMemcpy(buff, F_d->slip1, size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(buff, F_d->Vs2, size, cudaMemcpyDeviceToHost);
   nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[7],
                     startp, countp, buff);
 
-  cudaMemcpy(buff, F_d->slip2, size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(buff, F_d->slip, size, cudaMemcpyDeviceToHost);
   nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[8],
                     startp, countp, buff);
 
-  cudaMemcpy(buff, F_d->init_t0, size, cudaMemcpyDeviceToHost); 
-  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[9], buff);
+  cudaMemcpy(buff, F_d->slip1, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[9],
+                    startp, countp, buff);
+
+  cudaMemcpy(buff, F_d->slip2, size, cudaMemcpyDeviceToHost);
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[10],
+                    startp, countp, buff);
 
   return ierr;
 }
@@ -1456,7 +1453,7 @@ io_fault_nc_close(iofault_nc_t *iofault_nc)
 
 int
 io_recv_keep(iorecv_t *iorecv, float *w_end_d, 
-             float *buff, int it, int ncmp, size_t siz_icmp)
+             float *buff, int it, int ncmp, size_t siz_volume)
 {
   float Lx1, Lx2, Ly1, Ly2, Lz1, Lz2;
   //CONST_2_NDIM = 8, use 8 points interp
@@ -1477,7 +1474,7 @@ io_recv_keep(iorecv_t *iorecv, float *w_end_d,
     Ly2 = this_recv->dj; Ly1 = 1.0 - Ly2;
     Lz2 = this_recv->dk; Lz1 = 1.0 - Lz2;
 
-    io_recv_line_interp_pack_buff<<<grid, block>>> (w_end_d, buff_d, ncmp, siz_icmp, indx1d_d);
+    io_recv_line_interp_pack_buff<<<grid, block>>> (w_end_d, buff_d, ncmp, siz_volume, indx1d_d);
     CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
     for (int icmp=0; icmp < ncmp; icmp++)
     {
@@ -1500,7 +1497,7 @@ io_recv_keep(iorecv_t *iorecv, float *w_end_d,
 
 int
 io_line_keep(ioline_t *ioline, float *w_end_d,
-             float *buff, int it, int ncmp, size_t siz_icmp)
+             float *buff, int it, int ncmp, size_t siz_volume)
 {
   int size = sizeof(float)*ncmp;
   float *buff_d = (float *) cuda_malloc(size);
@@ -1516,7 +1513,7 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
     {
       int iptr = this_line_iptr[ir];
       float *this_seismo = this_line_seismo + ir * ioline->max_nt * ncmp;
-      io_recv_line_pack_buff<<<grid, block>>>(w_end_d, buff_d, ncmp, siz_icmp, iptr);
+      io_recv_line_pack_buff<<<grid, block>>>(w_end_d, buff_d, ncmp, siz_volume, iptr);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
       for (int icmp=0; icmp < ncmp; icmp++)
       {
@@ -1583,30 +1580,30 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
 }
 
 __global__ void
-io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, size_t *indx1d_d)
+io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_volume, size_t *indx1d_d)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   //indx1d_d size is CONST_2_NDIM = 8
   if(ix < ncmp)
   {
-   buff_d[8*ix+0] = var[ix*siz_icmp + indx1d_d[0] ];
-   buff_d[8*ix+1] = var[ix*siz_icmp + indx1d_d[1] ];
-   buff_d[8*ix+2] = var[ix*siz_icmp + indx1d_d[2] ];
-   buff_d[8*ix+3] = var[ix*siz_icmp + indx1d_d[3] ];
-   buff_d[8*ix+4] = var[ix*siz_icmp + indx1d_d[4] ];
-   buff_d[8*ix+5] = var[ix*siz_icmp + indx1d_d[5] ];
-   buff_d[8*ix+6] = var[ix*siz_icmp + indx1d_d[6] ];
-   buff_d[8*ix+7] = var[ix*siz_icmp + indx1d_d[7] ];
+   buff_d[8*ix+0] = var[ix*siz_volume + indx1d_d[0] ];
+   buff_d[8*ix+1] = var[ix*siz_volume + indx1d_d[1] ];
+   buff_d[8*ix+2] = var[ix*siz_volume + indx1d_d[2] ];
+   buff_d[8*ix+3] = var[ix*siz_volume + indx1d_d[3] ];
+   buff_d[8*ix+4] = var[ix*siz_volume + indx1d_d[4] ];
+   buff_d[8*ix+5] = var[ix*siz_volume + indx1d_d[5] ];
+   buff_d[8*ix+6] = var[ix*siz_volume + indx1d_d[6] ];
+   buff_d[8*ix+7] = var[ix*siz_volume + indx1d_d[7] ];
   }
 }
 
 __global__ void
-io_recv_line_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, int iptr)
+io_recv_line_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_volume, int iptr)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   if(ix < ncmp)
   {
-   buff_d[ix] = var[ix*siz_icmp + iptr];
+   buff_d[ix] = var[ix*siz_volume + iptr];
   }
 }
 

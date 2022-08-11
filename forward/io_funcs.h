@@ -299,11 +299,11 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc);
 
 int
 io_recv_keep(iorecv_t *iorecv, float *w_end_d,
-             float* buff, int it, int ncmp, size_t siz_icmp);
+             float* buff, int it, int ncmp, size_t siz_volume);
 
 int
 io_line_keep(ioline_t *ioline, float *w_end_d,
-             float *buff, int it, int ncmp, size_t siz_icmp);
+             float *buff, int it, int ncmp, size_t siz_volume);
 
 __global__ void
 recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
@@ -317,11 +317,11 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
 
 //use trilinear interpolation 
 __global__ void
-io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, size_t *indx1d_d);
+io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_volume, size_t *indx1d_d);
 
 __global__ void
 io_recv_line_pack_buff(float *var, float *buff_d, int ncmp,
-                  size_t siz_icmp, int iptr);
+                  size_t siz_volume, int iptr);
 
 int
 io_recv_output_sac(iorecv_t *iorecv,

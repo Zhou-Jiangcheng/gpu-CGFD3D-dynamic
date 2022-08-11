@@ -94,10 +94,6 @@ typedef struct
  * function prototype
  ******************************************************************************/
 
-int
-blk_init(blk_t *blk,
-         const int myid, const int verbose);
-
 // set str
 int
 blk_set_output(blk_t *blk,

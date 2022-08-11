@@ -90,6 +90,7 @@ typedef struct{
   int   bdry_has_free;
 
   // grid
+  int fault_grid[4];
   int grid_generation_itype;
   int is_export_grid;
   char grid_export_dir[PAR_MAX_STRLEN];

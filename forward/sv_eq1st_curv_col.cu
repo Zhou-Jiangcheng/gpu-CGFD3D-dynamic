@@ -51,10 +51,7 @@ sv_eq1st_curv_col_allstep(
   int num_rk_stages = fd->num_rk_stages;
   float *rk_a = fd->rk_a;
   float *rk_b = fd->rk_b;
-
   int num_of_pairs     = fd->num_of_pairs;
-  int fdz_max_len      = fd->fdz_max_len;
-  int num_of_fdz_op    = fd->num_of_fdz_op;
   
   //gdinfo
   int ni = gdinfo->ni;
@@ -74,19 +71,17 @@ sv_eq1st_curv_col_allstep(
   bdryfree_t bdryfree_d;
   bdrypml_t  bdrypml_d;
   gdcurv_metric_t metric_d;
-  fd_wav_t fd_wav_d;
 
   // init device struct, and copy data from host to device
   init_gdinfo_device(gdinfo, &gdinfo_d);
   init_md_device(md, &md_d);
-  init_fd_device(fd, &fd_wav_d);
   init_metric_device(metric, &metric_d);
   init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
   init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
   init_wave_device(wav, &wav_d);
 
   // get device wavefield 
-  float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
+  float *w_buff = wav->v5d; // size number is V->siz_volume * (V->ncmp+6)
   // GPU local pointer
   float * w_cur_d;
   float * w_pre_d;
@@ -237,38 +232,11 @@ sv_eq1st_curv_col_allstep(
         case CONST_MEDIUM_ELASTIC_ISO : {
 
           sv_eq1st_curv_col_el_iso_onestage(
-              w_cur_d,w_rhs_d,wav_d,fd_wav_d,
+              w_cur_d,w_rhs_d,wav_d,
               gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
-              fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
-              fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
-              fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
-              fd->fdz_max_len,
-              myid, verbose);
-          break;
-        }
-
-        case CONST_MEDIUM_ELASTIC_VTI : {
-
-          sv_eq1st_curv_col_el_vti_onestage(
-              w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
-              fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
-              fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
-              fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
-              fd->fdz_max_len,
-              myid, verbose);
-          break;
-        }
-
-        case CONST_MEDIUM_ELASTIC_ANISO : {
-
-          sv_eq1st_curv_col_el_aniso_onestage(
-              w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
-              fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
-              fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
-              fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
-              fd->fdz_max_len,
+              fd->pair_fdx_op[ipair][istage],
+              fd->pair_fdy_op[ipair][istage],
+              fd->pair_fdz_op[ipair][istage],
               myid, verbose);
           break;
         }
@@ -458,10 +426,10 @@ sv_eq1st_curv_col_allstep(
     }
 
     //-- recv by interp
-    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
 
     //-- line values
-    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
 
     // write slice, use w_rhs as buff
     io_slice_nc_put(ioslice,&ioslice_nc,gdinfo,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
@@ -514,7 +482,7 @@ sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md
 
   for (int icmp=0; icmp<ncmp; icmp++)
   {
-    float *var = w + icmp * gdinfo->siz_icmp;
+    float *var = w + icmp * gdinfo->siz_volume;
 
     for (int k = gdinfo->nk1; k <= gdinfo->nk2; k++)
     {
@@ -522,7 +490,7 @@ sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md
       {
         for (int i = gdinfo->ni1; i <= gdinfo->ni2; i++)
         {
-          size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
+          size_t iptr = i + j * gdinfo->siz_line + k * gdinfo->siz_slice;
 
           float Qatt = expf( coef / md->Qs[iptr] );
 

@@ -16,9 +16,6 @@
 #include "fd_t.h"
 #include "gd_t.h"
 
-// used in read grid file
-#define M_gd_INDEX( i, j, k, ni, nj ) ( ( i ) + ( j ) * ( ni ) + ( k ) * ( ni ) * ( nj ) )
-
 void 
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
 {
@@ -33,13 +30,13 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
   gdcurv->nz   = gdinfo->nz;
   gdcurv->ncmp = CONST_NDIM;
 
-  gdcurv->siz_iy   = gdcurv->nx;
-  gdcurv->siz_iz   = gdcurv->nx * gdcurv->ny;
-  gdcurv->siz_icmp = gdcurv->nx * gdcurv->ny * gdcurv->nz;
+  gdcurv->siz_line   = gdcurv->nx;
+  gdcurv->siz_slice  = gdcurv->nx * gdcurv->ny;
+  gdcurv->siz_volume = gdcurv->nx * gdcurv->ny * gdcurv->nz;
   
   // vars
   gdcurv->v4d = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp * gdcurv->ncmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume * gdcurv->ncmp, 0.0, "gd_curv_init");
   if (gdcurv->v4d == NULL) {
       fprintf(stderr,"Error: failed to alloc coord vars\n");
       fflush(stderr);
@@ -57,17 +54,17 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
   
   // set value
   int icmp = 0;
-  cmp_pos[icmp] = icmp * gdcurv->siz_icmp;
+  cmp_pos[icmp] = icmp * gdcurv->siz_volume;
   sprintf(cmp_name[icmp],"%s","x");
   gdcurv->x3d = gdcurv->v4d + cmp_pos[icmp];
 
   icmp += 1;
-  cmp_pos[icmp] = icmp * gdcurv->siz_icmp;
+  cmp_pos[icmp] = icmp * gdcurv->siz_volume;
   sprintf(cmp_name[icmp],"%s","y");
   gdcurv->y3d = gdcurv->v4d + cmp_pos[icmp];
 
   icmp += 1;
-  cmp_pos[icmp] = icmp * gdcurv->siz_icmp;
+  cmp_pos[icmp] = icmp * gdcurv->siz_volume;
   sprintf(cmp_name[icmp],"%s","z");
   gdcurv->z3d = gdcurv->v4d + cmp_pos[icmp];
   
@@ -77,17 +74,17 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
 
   // alloc AABB vars
   gdcurv->cell_xmin = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   gdcurv->cell_xmax = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   gdcurv->cell_ymin = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   gdcurv->cell_ymax = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   gdcurv->cell_zmin = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   gdcurv->cell_zmax = (float *) fdlib_mem_calloc_1d_float(
-                  gdcurv->siz_icmp, 0.0, "gd_curv_init");
+                  gdcurv->siz_volume, 0.0, "gd_curv_init");
   if (gdcurv->cell_zmax == NULL) {
       fprintf(stderr,"Error: failed to alloc coord AABB vars\n");
       fflush(stderr);
@@ -112,13 +109,13 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
   metric->nz   = gdinfo->nz;
   metric->ncmp = num_grid_vars;
 
-  metric->siz_iy   = metric->nx;
-  metric->siz_iz   = metric->nx * metric->ny;
-  metric->siz_icmp = metric->nx * metric->ny * metric->nz;
+  metric->siz_line   = metric->nx;
+  metric->siz_slice  = metric->nx * metric->ny;
+  metric->siz_volume = metric->nx * metric->ny * metric->nz;
   
   // vars
   metric->v4d = (float *) fdlib_mem_calloc_1d_float(
-                  metric->siz_icmp * metric->ncmp, 0.0, "gd_curv_init_g4d");
+                  metric->siz_volume * metric->ncmp, 0.0, "gd_curv_init_g4d");
   if (metric->v4d == NULL) {
       fprintf(stderr,"Error: failed to alloc metric vars\n");
       fflush(stderr);
@@ -137,7 +134,7 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
   // set value
   for (int icmp=0; icmp < metric->ncmp; icmp++)
   {
-    cmp_pos[icmp] = icmp * metric->siz_icmp;
+    cmp_pos[icmp] = icmp * metric->siz_volume;
   }
 
   int icmp = 0;
@@ -191,8 +188,7 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
 void
 gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
-                   gdcurv_metric_t *metric,
-                   int fd_len, int *fd_indx, float *fd_coef)
+                   gdcurv_metric_t *metric)
 {
   int ni1 = gdinfo->ni1;
   int ni2 = gdinfo->ni2;
@@ -203,9 +199,9 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
   int nx  = gdinfo->nx;
   int ny  = gdinfo->ny;
   int nz  = gdinfo->nz;
-  size_t siz_line   = gdinfo->siz_iy;
-  size_t siz_slice  = gdinfo->siz_iz;
-  size_t siz_volume = gdinfo->siz_icmp;
+  size_t siz_line   = gdinfo->siz_line;
+  size_t siz_slice  = gdinfo->siz_slice;
+  size_t siz_volume = gdinfo->siz_volume;
 
   // point to each var
   float *x3d  = gdcurv->x3d;
@@ -221,26 +217,14 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
   float *zt_x = metric->zeta_x;
   float *zt_y = metric->zeta_y;
   float *zt_z = metric->zeta_z;
-
+  float *x3d_ptr;
+  float *y3d_ptr;
+  float *z3d_ptr; 
   float x_xi, x_et, x_zt;
   float y_xi, y_et, y_zt;
   float z_xi, z_et, z_zt;
   float jac;
   float vec1[3], vec2[3], vec3[3], vecg[3];
-  int n_fd;
-
-  // use local stack array for speedup
-  float  lfd_coef [fd_len];
-  int    lfdx_shift[fd_len];
-  int    lfdy_shift[fd_len];
-  int    lfdz_shift[fd_len];
-  // put fd op into local array
-  for (int k=0; k < fd_len; k++) {
-    lfd_coef [k] = fd_coef[k];
-    lfdx_shift[k] = fd_indx[k]            ;
-    lfdy_shift[k] = fd_indx[k] * siz_line ;
-    lfdz_shift[k] = fd_indx[k] * siz_slice;
-  }
 
   for (size_t k = nk1; k <= nk2; k++){
     for (size_t j = nj1; j <= nj2; j++) {
@@ -252,17 +236,21 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
         y_xi = 0.0; y_et = 0.0; y_zt = 0.0;
         z_xi = 0.0; z_et = 0.0; z_zt = 0.0;
 
-        M_FD_SHIFT(x_xi, x3d, iptr, fd_len, lfdx_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(y_xi, y3d, iptr, fd_len, lfdx_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(z_xi, z3d, iptr, fd_len, lfdx_shift, lfd_coef, n_fd);
+        x3d_ptr = x3d + iptr;
+        y3d_ptr = y3d + iptr;
+        z3d_ptr = z3d + iptr;
 
-        M_FD_SHIFT(x_et, x3d, iptr, fd_len, lfdy_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(y_et, y3d, iptr, fd_len, lfdy_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(z_et, z3d, iptr, fd_len, lfdy_shift, lfd_coef, n_fd);
+        M_FD_SHIFT_PTR_CENTER(x_xi, x3d_ptr, 1);
+        M_FD_SHIFT_PTR_CENTER(y_xi, y3d_ptr, 1);
+        M_FD_SHIFT_PTR_CENTER(z_xi, z3d_ptr, 1);
 
-        M_FD_SHIFT(x_zt, x3d, iptr, fd_len, lfdz_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(y_zt, y3d, iptr, fd_len, lfdz_shift, lfd_coef, n_fd);
-        M_FD_SHIFT(z_zt, z3d, iptr, fd_len, lfdz_shift, lfd_coef, n_fd);
+        M_FD_SHIFT_PTR_CENTER(x_et, x3d_ptr, siz_line);
+        M_FD_SHIFT_PTR_CENTER(y_et, y3d_ptr, siz_line);
+        M_FD_SHIFT_PTR_CENTER(z_et, z3d_ptr, siz_line);
+
+        M_FD_SHIFT_PTR_CENTER(x_zt, x3d_ptr, siz_slice);
+        M_FD_SHIFT_PTR_CENTER(y_zt, y3d_ptr, siz_slice);
+        M_FD_SHIFT_PTR_CENTER(z_zt, z3d_ptr, siz_slice);
 
         vec1[0] = x_xi; vec1[1] = y_xi; vec1[2] = z_xi;
         vec2[0] = x_et; vec2[1] = y_et; vec2[2] = z_et;
@@ -423,9 +411,9 @@ gd_curv_exchange(gdinfo_t *gdinfo,
   int nk1 = gdinfo->nk1;
   int nk2 = gdinfo->nk2;
 
-  size_t siz_line   = gdinfo->siz_iy;
-  size_t siz_slice  = gdinfo->siz_iz;
-  size_t siz_volume = gdinfo->siz_icmp;
+  size_t siz_line   = gdinfo->siz_line;
+  size_t siz_slice  = gdinfo->siz_slice;
+  size_t siz_volume = gdinfo->siz_volume;
 
   // extend to ghosts, using mpi exchange
   // NOTE in different myid, nx(or ny) may not equal
@@ -887,7 +875,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
   float xmin = gdcurv->x3d[0], xmax = gdcurv->x3d[0];
   float ymin = gdcurv->y3d[0], ymax = gdcurv->y3d[0];
   float zmin = gdcurv->z3d[0], zmax = gdcurv->z3d[0];
-  for (size_t i = 0; i < gdcurv->siz_icmp; i++){
+  for (size_t i = 0; i < gdcurv->siz_volume; i++){
       xmin = xmin < gdcurv->x3d[i] ? xmin : gdcurv->x3d[i];
       xmax = xmax > gdcurv->x3d[i] ? xmax : gdcurv->x3d[i];
       ymin = ymin < gdcurv->y3d[i] ? ymin : gdcurv->y3d[i];
@@ -1200,8 +1188,8 @@ gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
   int nj2 = gdinfo->nj2;
   int nk1 = gdinfo->nk1;
   int nk2 = gdinfo->nk2;
-  size_t siz_line  = gdinfo->siz_iy;
-  size_t siz_slice = gdinfo->siz_iz;
+  size_t siz_line  = gdinfo->siz_line;
+  size_t siz_slice = gdinfo->siz_slice;
   
   float *x3d = gd->x3d;
   float *y3d = gd->y3d;
@@ -1660,7 +1648,7 @@ gd_coord_get_x(gd_t *gd, int i, int j, int k)
 
   if (gd->type == GD_TYPE_CURV)
   {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+    size_t iptr = i + j * gd->siz_line + k * gd->siz_slice;
     var = gd->x3d[iptr];
   }
 
@@ -1674,7 +1662,7 @@ gd_coord_get_y(gd_t *gd, int i, int j, int k)
 
   if (gd->type == GD_TYPE_CURV)
   {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+    size_t iptr = i + j * gd->siz_line + k * gd->siz_slice;
     var = gd->y3d[iptr];
   }
 
@@ -1688,7 +1676,7 @@ gd_coord_get_z(gd_t *gd, int i, int j, int k)
 
   if (gd->type == GD_TYPE_CURV)
   {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+    size_t iptr = i + j * gd->siz_line + k * gd->siz_slice;
     var = gd->z3d[iptr];
   }
 
