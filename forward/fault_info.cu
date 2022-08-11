@@ -928,7 +928,7 @@ fault_set(fault_t *F
 
       gj = gnj1 + j;
       gk = gnk1 + k;
-      // fault grid read from out jason, index start 1.
+      // fault grid read from out json, index start 1.
       // so gj need +1, C index from 0
       // rup_index = 0 means points out of falut.
       // NOTE: boundry 3 points out of fault, due to use different fd stencil

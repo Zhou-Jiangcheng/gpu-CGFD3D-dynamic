@@ -27,8 +27,8 @@ fault_wav_init(gdinfo_t *gdinfo,
   
   // i0-3 i0-2 i0-1 i0 i0+1 i0+2 i0+3
   // i0 is fault plane x index
-  // this is for zhang wenqaing method
-  // zhang zhengguo methid only need i0-1 i0 i0+1
+  // this is for zhang wenqiang method
+  // zhang zhenguo method only need i0-1 i0 i0+1
   V->T11 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
                         0.0, "T11, ft_wav_el3d_1st");
   V->T12 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
@@ -51,7 +51,7 @@ fault_wav_init(gdinfo_t *gdinfo,
   // set value
   for (int icmp=0; icmp < V->ncmp; icmp++)
   {
-    cmp_pos[icmp] = icmp * 2 * ny * nz;;
+    cmp_pos[icmp] = icmp * 2 * ny * nz;
   }
 
   // set values

@@ -64,7 +64,6 @@ sv_eq1st_curv_col_allstep(
   MPI_Comm comm = mympi->comm;
   int *neighid_d = init_neighid_device(mympi->neighid);
   // local allocated array
-  char ou_file[CONST_MAX_STRLEN];
   gdinfo_t   gdinfo_d;
   md_t   md_d;
   wav_t  wav_d;

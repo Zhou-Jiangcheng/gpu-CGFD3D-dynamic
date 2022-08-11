@@ -89,6 +89,7 @@ typedef struct{
   int   free_is_sides[CONST_NDIM][2];
   int   bdry_has_free;
 
+  int imethod;
   // grid
   int fault_grid[4];
   int grid_generation_itype;

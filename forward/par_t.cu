@@ -300,7 +300,10 @@ par_read_from_str(const char *str, par_t *par)
       par->bdry_has_free = 1;
     }
   }
-
+  //method
+  if (item = cJSON_GetObjectItem(root, "dynamic_method")) {
+    par->imethod = item->valueint;
+  }
   //
   //-- grid
   //

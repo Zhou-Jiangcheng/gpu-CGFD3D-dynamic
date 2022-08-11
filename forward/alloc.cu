@@ -149,25 +149,25 @@ int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
   return 0;
 }
 
-//int init_fault_coef_device(fault_coef_t *fault_coef, fault_coef_t *fault_coef_d)
-//{
-//  memcpy(fault_d,fault,sizeof(fault_t));
-//  if(method == 1) //zhangzhengguo
-//  {
-//
-//
-//  }
-//  if(method == 2) //zhangwenqiang
-//  {
-//
-//
-//  }
-//
-//
-//
-//
-//  return 0;
-//}
+int init_fault_coef_device(fault_coef_t *fault_coef, fault_coef_t *fault_coef_d)
+{
+  memcpy(fault_d,fault,sizeof(fault_t));
+  if(method == 1) //zhangzhengguo
+  {
+
+
+  }
+  if(method == 2) //zhangwenqiang
+  {
+
+
+  }
+
+
+
+
+  return 0;
+}
 
 int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
 {
