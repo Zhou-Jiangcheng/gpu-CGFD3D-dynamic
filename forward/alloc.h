@@ -13,18 +13,26 @@
 int
 init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d);
 
-int init_gdcart_device(gd_t *gdcart, gd_t *gdcart_d);
+int 
+init_gdcart_device(gd_t *gdcart, gd_t *gdcart_d);
 
-int init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d);
+int 
+init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d);
 
 int
 init_md_device(md_t *md, md_t *md_d);
 
 int
-init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d);
-
-int
 init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d);
+
+int 
+init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_d);
+
+int 
+init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d);
+
+int 
+init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d);
 
 int 
 init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
@@ -50,11 +58,17 @@ dealloc_gdcurv_device(gd_t gdcurv_d);
 int 
 dealloc_md_device(md_t md_d);
 
-int 
-dealloc_fd_device(fd_wav_t fd_wav_d);
-
 int
 dealloc_metric_device(gdcurv_metric_t metric_d);
+
+int 
+dealloc_fault_coef_device(fault_coef_t FC_d);
+
+int 
+dealloc_fault_device(fault_t F_d);
+
+int 
+dealloc_fault_wav_device(fault_wav_t FW);
 
 int 
 dealloc_bdryfree_device(bdryfree_t bdryfree_d);

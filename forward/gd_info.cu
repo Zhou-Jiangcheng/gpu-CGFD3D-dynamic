@@ -181,6 +181,9 @@ gd_info_set(gdinfo_t *const gdinfo,
   gdinfo->siz_slice  = nx * ny; 
   gdinfo->siz_volume = nx * ny * nz;
 
+  gdinfo->siz_slice_yz = ny * nz;
+  gdinfo->siz_slice_yz2 = 2 * ny * nz;
+
   // set npoint_ghosts according to fdz_nghosts
   gdinfo->npoint_ghosts = fdz_nghosts;
 

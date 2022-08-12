@@ -139,9 +139,6 @@ par_read_from_str(const char *str, par_t *par)
   par->number_of_mpiprocs_y = 1;
   par->number_of_mpiprocs_z = 1;
 
-  if (item = cJSON_GetObjectItem(root, "number_of_mpiprocs_x")) {
-    par->number_of_mpiprocs_x = item->valueint;
-  }
   if (item = cJSON_GetObjectItem(root, "number_of_mpiprocs_y")) {
     par->number_of_mpiprocs_y = item->valueint;
   }
@@ -315,6 +312,7 @@ par_read_from_str(const char *str, par_t *par)
 
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
+    par->fault_global_indx = par->number_of_total_grid_points_x/2;
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
        par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
        if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry")) {

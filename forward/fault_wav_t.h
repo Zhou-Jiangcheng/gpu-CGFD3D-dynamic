@@ -8,10 +8,10 @@
  *************************************************/
 
 /*
- * wavefield structure
+ * fault wavefield structure
  */
 
-// wavefield variables elastic 1st eqn: vel + stress
+// fault wavefield variables elastic 1st eqn: vel + stress
 typedef struct {
   float *v5d; // allocated var
   float *T11;
@@ -20,6 +20,7 @@ typedef struct {
   int nx, ny, nz, ncmp, nlevel;
 
   size_t siz_slice_yz;
+  size_t siz_slice_yz_2;
 
   size_t *cmp_pos;
   char  **cmp_name;

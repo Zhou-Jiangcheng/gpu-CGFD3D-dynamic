@@ -35,8 +35,12 @@ sv_eq1st_curv_col_allstep(
   bdrypml_t  *bdrypml,
   wav_t  *wav,
   mympi_t    *mympi,
+  fault_coef_t *fault_coef,
+  fault_t *fault,
+  fault_wav_t *fault_wav,
   iorecv_t   *iorecv,
   ioline_t   *ioline,
+  iofault_t  *iofault,
   ioslice_t  *ioslice,
   iosnap_t   *iosnap,
   // time
@@ -70,6 +74,9 @@ sv_eq1st_curv_col_allstep(
   bdryfree_t bdryfree_d;
   bdrypml_t  bdrypml_d;
   gdcurv_metric_t metric_d;
+  fault_coef_t fault_coef_d;
+  fault_t fault_d;
+  fault_wav_t fault_wav_d;
 
   // init device struct, and copy data from host to device
   init_gdinfo_device(gdinfo, &gdinfo_d);
@@ -78,6 +85,9 @@ sv_eq1st_curv_col_allstep(
   init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
   init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
   init_wave_device(wav, &wav_d);
+  init_fault_coef_device(gdinfo, fault_coef, &fault_coef_d);
+  intit_fault_device(gdinfo, fault, &fault_d);
+  init_fault_wav_device(fault_wav, &fault_wav_d);
 
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_volume * (V->ncmp+6)
@@ -88,30 +98,48 @@ sv_eq1st_curv_col_allstep(
   float * w_end_d;
   float * w_tmp_d;
 
+  float * fw_cur_d;
+  float * fw_pre_d;
+  float * fw_rhs_d;
+  float * fw_end_d;
+  float * fw_tmp_d;
+
   // get wavefield
   w_pre_d = wav_d.v5d + wav_d.siz_ilevel * 0; // previous level at n
   w_tmp_d = wav_d.v5d + wav_d.siz_ilevel * 1; // intermidate value
   w_rhs_d = wav_d.v5d + wav_d.siz_ilevel * 2; // for rhs
   w_end_d = wav_d.v5d + wav_d.siz_ilevel * 3; // end level at n+1
+
+  fw_pre_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 0; // previous level at n
+  fw_tmp_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 1; // intermidate value
+  fw_rhs_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 2; // for rhs
+  fw_end_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 3; // end level at n+1
+
   int   ipair, istage;
   float t_cur;
   float t_end; // time after this loop for nc output
   // for mpi message
   int   ipair_mpi, istage_mpi;
+  // create fault slice nc output files
+  if (myid==0 && verbose>0) fprintf(stdout,"prepare fault slice nc output ...\n"); 
+  iofault_nc_t iofault_nc;
+  io_fault_nc_create(iofault,
+                     gdinfo->ni, gdinfo->nj, gdinfo->nk, topoid,
+                     &iofault_nc);
   // create slice nc output files
   if (myid==0 && verbose>0) fprintf(stdout,"prepare slice nc output ...\n"); 
   ioslice_nc_t ioslice_nc;
-  io_slice_nc_create(ioslice, wav_d.ncmp, wav_d.cmp_name,
-                     gdinfo_d.ni, gdinfo_d.nj, gdinfo_d.nk, topoid,
+  io_slice_nc_create(ioslice, wav->ncmp, wav->cmp_name,
+                     gdinfo->ni, gdinfo->nj, gdinfo->nk, topoid,
                      &ioslice_nc);
   // create snapshot nc output files
   if (myid==0 && verbose>0) fprintf(stdout,"prepare snap nc output ...\n"); 
   iosnap_nc_t  iosnap_nc;
   io_snap_nc_create(iosnap, &iosnap_nc, topoid);
 
-  // only x/y mpi
-  int num_of_r_reqs = 6;
-  int num_of_s_reqs = 6;
+  // only y/z mpi
+  int num_of_r_reqs = 8;
+  int num_of_s_reqs = 8;
   
 
   // set pml for rk
@@ -229,7 +257,7 @@ sv_eq1st_curv_col_allstep(
       switch (md_d.medium_type)
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
-
+          //trial_cal();
           sv_eq1st_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,
               gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
@@ -237,6 +265,8 @@ sv_eq1st_curv_col_allstep(
               fd->pair_fdy_op[ipair][istage],
               fd->pair_fdz_op[ipair][istage],
               myid, verbose);
+          //fault_wav_iso_onestage();
+          //fault2wave();
           break;
         }
       //  synchronize onestage device func.

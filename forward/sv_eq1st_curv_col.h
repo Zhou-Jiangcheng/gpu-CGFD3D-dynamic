@@ -29,6 +29,7 @@ sv_eq1st_curv_col_allstep(
   mympi_t    *mympi,
   iorecv_t   *iorecv,
   ioline_t   *ioline,
+  iofault_t  *iofault,
   ioslice_t  *ioslice,
   iosnap_t   *iosnap,
   // time

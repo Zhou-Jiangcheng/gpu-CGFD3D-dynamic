@@ -25,24 +25,30 @@ typedef struct {
   size_t siz_rbuff;
   float *sbuff;
   float *rbuff;
-
-  // for col scheme
-  MPI_Request r_reqs[6];
-  MPI_Request s_reqs[6];
+  float *sbuff_fault;
+  float *rbuff_fault;
 
   // for macdrp
-  size_t **pair_siz_sbuff_x1;
-  size_t **pair_siz_sbuff_x2;
   size_t **pair_siz_sbuff_y1;
   size_t **pair_siz_sbuff_y2;
   size_t **pair_siz_sbuff_z1;
   size_t **pair_siz_sbuff_z2;
-  size_t **pair_siz_rbuff_x1;
-  size_t **pair_siz_rbuff_x2;
+
   size_t **pair_siz_rbuff_y1;
   size_t **pair_siz_rbuff_y2;
   size_t **pair_siz_rbuff_z1;
   size_t **pair_siz_rbuff_z2;
+
+  size_t **pair_siz_sbuff_y1_fault;
+  size_t **pair_siz_sbuff_y2_fault;
+  size_t **pair_siz_sbuff_z1_fault;
+  size_t **pair_siz_sbuff_z2_fault;
+
+  size_t **pair_siz_rbuff_y1_fault;
+  size_t **pair_siz_rbuff_y2_fault;
+  size_t **pair_siz_rbuff_z1_fault;
+  size_t **pair_siz_rbuff_z2_fault;
+
   MPI_Request ***pair_r_reqs;
   MPI_Request ***pair_s_reqs;
 

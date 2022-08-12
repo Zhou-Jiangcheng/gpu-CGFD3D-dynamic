@@ -7,8 +7,7 @@ fault_coef_init(fault_coef_t *FC
 {
   int ny = gdinfo->ny;
   int nz = gdinfo->nz;
-  int gnk2 = gdinfo->gnk2;
-  int npoint_z = gdinfo->npoint_z;
+
   FC->rho_f = (float *) malloc(sizeof(float)*ny*nz*2);
   FC->mu_f  = (float *) malloc(sizeof(float)*ny*nz*2);
   FC->lam_f = (float *) malloc(sizeof(float)*ny*nz*2);
@@ -53,29 +52,30 @@ fault_coef_init(fault_coef_t *FC
   FC->y_et   = (float *) malloc(sizeof(float)*ny*nz);
   FC->z_et   = (float *) malloc(sizeof(float)*ny*nz);
 
-  // free surface
-  if (gnk2 == npoint_z-1) // free surface global index, index start 0
-  {
-    FC->matVx2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVy2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVx2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVy2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVx1_free   = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVy1_free   = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVx2_free   = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVy2_free   = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matPlus2Min1f = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matPlus2Min2f = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matPlus2Min3f = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matMin2Plus1f = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matMin2Plus2f = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matMin2Plus3f = (float *) malloc(sizeof(float)*ny*3*3);
+  // fault with free surface coef
+  // NOTE: even this thread without free surface, still malloc 
+  // this is because easy coding. this coef not used, if without free surface
+   
+  FC->matVx2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVy2Vz1     = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVx2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVy2Vz2     = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVx1_free   = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVy1_free   = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVx2_free   = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVy2_free   = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matPlus2Min1f = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matPlus2Min2f = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matPlus2Min3f = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matMin2Plus1f = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matMin2Plus2f = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matMin2Plus3f = (float *) malloc(sizeof(float)*ny*3*3);
 
-    FC->matT1toVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVytoVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matT1toVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
-    FC->matVytoVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
-  }
+  FC->matT1toVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVytoVxf_Min  = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matT1toVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
+  FC->matVytoVxf_Plus = (float *) malloc(sizeof(float)*ny*3*3);
+  
 
   return 0;
 }
@@ -851,7 +851,7 @@ fault_init(fault_t *F
   F->Vs1        = (float *) malloc(sizeof(float)*nj*nk);
   F->Vs2        = (float *) malloc(sizeof(float)*nj*nk);
   F->init_t0    = (float *) malloc(sizeof(float)*nj*nk);
-
+  // for inner
   F->united       = (int *) malloc(sizeof(int)*nj*nk);
   F->faultgrid    = (int *) malloc(sizeof(int)*nj*nk);
   F->rup_index_y  = (int *) malloc(sizeof(int)*nj*nk);

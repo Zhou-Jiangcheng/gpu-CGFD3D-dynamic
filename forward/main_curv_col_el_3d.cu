@@ -102,6 +102,7 @@ int main(int argc, char** argv)
   bdrypml_t       *bdrypml       = blk->bdrypml;
   iorecv_t        *iorecv        = blk->iorecv;
   ioline_t        *ioline        = blk->ioline;
+  iofault_t       *iofault       = blk->iofault;
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
   fault_t         *fault         = blk->fault;
@@ -583,6 +584,12 @@ int main(int argc, char** argv)
                  par->receiver_line_count,
                  par->receiver_line_name);
   
+  // fault slice
+  io_fault_locate(gdinfo,iofault,
+                  par->fault_global_indx, 
+                  blk->output_fname_part,
+                  blk->output_dir);
+                  
   // slice
   io_slice_locate(gdinfo, ioslice,
                   par->number_of_slice_x,
@@ -644,7 +651,7 @@ int main(int argc, char** argv)
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
   blk_macdrp_mesg_init(mympi, fd, gdinfo->ni, gdinfo->nj, gdinfo->nk,
-                  wav->ncmp);
+                  wav->ncmp, f_wav->ncmp);
 
 //-------------------------------------------------------------------------------
 //-- qc
@@ -674,7 +681,7 @@ int main(int argc, char** argv)
   sv_eq1st_curv_col_allstep(fd,gdinfo,gdcurv_metric,md,
                             src,bdryfree,bdrypml,
                             wav, mympi,
-                            iorecv,ioline,ioslice,iosnap,
+                            iorecv,ioline,iofault,ioslice,iosnap,
                             dt,nt_total,t0,
                             blk->output_fname_part,
                             blk->output_dir,

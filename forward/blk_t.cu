@@ -30,6 +30,7 @@ blk_init(blk_t *blk,
   blk->bdrypml       = (bdrypml_t  *)malloc(sizeof(bdrypml_t ));
   blk->iorecv        = (iorecv_t   *)malloc(sizeof(iorecv_t ));
   blk->ioline        = (ioline_t   *)malloc(sizeof(ioline_t ));
+  blk->iofault       = (iofault_t  *)malloc(sizeof(iofault_t ));
   blk->ioslice       = (ioslice_t  *)malloc(sizeof(ioslice_t ));
   blk->iosnap        = (iosnap_t   *)malloc(sizeof(iosnap_t ));
   blk->fault         = (fault_t    *)malloc(sizeof(fault_t ));
@@ -71,51 +72,65 @@ blk_set_output(blk_t *blk,
 
 void
 blk_macdrp_mesg_init(mympi_t *mympi,
-                fd_t *fd,
-                int ni,
-                int nj,
-                int nk,
-                int num_of_vars)
+                     fd_t *fd,
+                     int ni,
+                     int nj,
+                     int nk,
+                     int num_of_vars,
+                     int num_of_vars_fault)
 {
   // alloc
-  mympi->pair_siz_sbuff_x1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
-  mympi->pair_siz_sbuff_x2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_sbuff_y1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_sbuff_y2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_sbuff_z1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_sbuff_z2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
 
-  mympi->pair_siz_rbuff_x1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
-  mympi->pair_siz_rbuff_x2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_rbuff_y1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_rbuff_y2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_rbuff_z1 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
   mympi->pair_siz_rbuff_z2 = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
 
+  mympi->pair_siz_sbuff_y1_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_sbuff_y2_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_sbuff_z1_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_sbuff_z2_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+
+  mympi->pair_siz_rbuff_y1_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_rbuff_y2_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_rbuff_z1_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+  mympi->pair_siz_rbuff_z2_fault = (size_t **)malloc(fd->num_of_pairs * sizeof(size_t *));
+
   mympi->pair_s_reqs       = (MPI_Request ***)malloc(fd->num_of_pairs * sizeof(MPI_Request **));
   mympi->pair_r_reqs       = (MPI_Request ***)malloc(fd->num_of_pairs * sizeof(MPI_Request **));
   for (int ipair = 0; ipair < fd->num_of_pairs; ipair++)
   {
-    mympi->pair_siz_sbuff_x1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
-    mympi->pair_siz_sbuff_x2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_sbuff_y1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_sbuff_y2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_sbuff_z1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_sbuff_z2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
 
-    mympi->pair_siz_rbuff_x1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
-    mympi->pair_siz_rbuff_x2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_rbuff_y1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_rbuff_y2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_rbuff_z1[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
     mympi->pair_siz_rbuff_z2[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+
+    mympi->pair_siz_sbuff_y1_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_sbuff_y2_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_sbuff_z1_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_sbuff_z2_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+
+    mympi->pair_siz_rbuff_y1_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_rbuff_y2_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_rbuff_z1_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+    mympi->pair_siz_rbuff_z2_fault[ipair] = (size_t *)malloc(fd->num_rk_stages * sizeof(size_t));
+
     mympi->pair_s_reqs[ipair] = (MPI_Request **)malloc(fd->num_rk_stages * sizeof(MPI_Request *));
     mympi->pair_r_reqs[ipair] = (MPI_Request **)malloc(fd->num_rk_stages * sizeof(MPI_Request *));
 
     for (int istage = 0; istage < fd->num_rk_stages; istage++)
     {
-      mympi->pair_s_reqs[ipair][istage] = (MPI_Request *)malloc(6 * sizeof(MPI_Request));
-      mympi->pair_r_reqs[ipair][istage] = (MPI_Request *)malloc(6 * sizeof(MPI_Request));
+      mympi->pair_s_reqs[ipair][istage] = (MPI_Request *)malloc(8 * sizeof(MPI_Request));
+      mympi->pair_r_reqs[ipair][istage] = (MPI_Request *)malloc(8 * sizeof(MPI_Request));
     }
   }
 
@@ -126,45 +141,57 @@ blk_macdrp_mesg_init(mympi_t *mympi,
   {
     for (int istage = 0; istage < fd->num_rk_stages; istage++)
     {
-      fd_op_t *fdx_op = fd->pair_fdx_op[ipair][istage] + fd->num_of_fdx_op-1;
-      fd_op_t *fdy_op = fd->pair_fdy_op[ipair][istage] + fd->num_of_fdy_op-1;
-      fd_op_t *fdz_op = fd->pair_fdz_op[ipair][istage] + fd->num_of_fdz_op-1;
+      fd_op_t *fdy_op = fd->pair_fdy_op[ipair][istage];
+      fd_op_t *fdz_op = fd->pair_fdz_op[ipair][istage];
 
-      // to x1, depends on right_len of x1 proc
-      mympi->pair_siz_sbuff_x1[ipair][istage] = (nj * nk * fdx_op->right_len) * num_of_vars;
-      // to x2, depends on left_len of x2 proc
-      mympi->pair_siz_sbuff_x2[ipair][istage] = (nj * nk * fdx_op->left_len ) * num_of_vars;
-
+      // wave exchange
+      // y1 side, depends on right_len of y1 proc
       mympi->pair_siz_sbuff_y1[ipair][istage] = (ni * nk * fdy_op->right_len) * num_of_vars;
+      // y2 side, depends on left_len of y2 proc
       mympi->pair_siz_sbuff_y2[ipair][istage] = (ni * nk * fdy_op->left_len ) * num_of_vars;
 
       mympi->pair_siz_sbuff_z1[ipair][istage] = (ni * nj * fdz_op->right_len) * num_of_vars;
       mympi->pair_siz_sbuff_z2[ipair][istage] = (ni * nj * fdz_op->left_len ) * num_of_vars;
 
-      // from x1, depends on left_len of cur proc
-      mympi->pair_siz_rbuff_x1[ipair][istage] = (nj * nk * fdx_op->left_len ) * num_of_vars;
-      // from x2, depends on right_len of cur proc
-      mympi->pair_siz_rbuff_x2[ipair][istage] = (nj * nk * fdx_op->right_len) * num_of_vars;
-
+      // y1 side, depends on left_len of cur proc
       mympi->pair_siz_rbuff_y1[ipair][istage] = (ni * nk * fdy_op->left_len ) * num_of_vars;
+      // y2 side, depends on right_len of cur proc
       mympi->pair_siz_rbuff_y2[ipair][istage] = (ni * nk * fdy_op->right_len) * num_of_vars;
 
       mympi->pair_siz_rbuff_z1[ipair][istage] = (ni * nj * fdz_op->left_len ) * num_of_vars;
       mympi->pair_siz_rbuff_z2[ipair][istage] = (ni * nj * fdz_op->right_len) * num_of_vars;
 
-      size_t siz_s =  mympi->pair_siz_sbuff_x1[ipair][istage]
-                    + mympi->pair_siz_sbuff_x2[ipair][istage]
-                    + mympi->pair_siz_sbuff_y1[ipair][istage]
+      // fault wave exchange
+      // minus and plus, multiply 2
+      mympi->pair_siz_sbuff_y1_fault[ipair][istage] = (nk * fdy_op->right_len) * 2 * num_of_vars_fault;
+      mympi->pair_siz_sbuff_y2_fault[ipair][istage] = (nk * fdy_op->left_len ) * 2 * num_of_vars_fault;
+
+      mympi->pair_siz_sbuff_z1_fault[ipair][istage] = (nj * fdz_op->right_len) * 2 *  num_of_vars_fault;
+      mympi->pair_siz_sbuff_z2_fault[ipair][istage] = (nj * fdz_op->left_len ) * 2 *  num_of_vars_fault;
+
+      mympi->pair_siz_rbuff_y1_fault[ipair][istage] = (nk * fdy_op->left_len ) * 2 * num_of_vars_fault;
+      mympi->pair_siz_rbuff_y2_fault[ipair][istage] = (nk * fdy_op->right_len) * 2 * num_of_vars_fault;
+
+      mympi->pair_siz_rbuff_z1_fault[ipair][istage] = (nj * fdz_op->left_len ) * 2 * num_of_vars_fault;
+      mympi->pair_siz_rbuff_z2_fault[ipair][istage] = (nj * fdz_op->right_len) * 2 * num_of_vars_fault;
+
+      size_t siz_s =  mympi->pair_siz_sbuff_y1[ipair][istage]
                     + mympi->pair_siz_sbuff_y2[ipair][istage]
                     + mympi->pair_siz_sbuff_z1[ipair][istage]
-                    + mympi->pair_siz_sbuff_z2[ipair][istage];
+                    + mympi->pair_siz_sbuff_z2[ipair][istage]
+                    + mympi->pair_siz_sbuff_y1_fault[ipair][istage]
+                    + mympi->pair_siz_sbuff_y2_fault[ipair][istage]
+                    + mympi->pair_siz_sbuff_z1_fault[ipair][istage]
+                    + mympi->pair_siz_sbuff_z2_fault[ipair][istage];
 
-      size_t siz_r =  mympi->pair_siz_rbuff_x1[ipair][istage]
-                    + mympi->pair_siz_rbuff_x2[ipair][istage]
-                    + mympi->pair_siz_rbuff_y1[ipair][istage]
+      size_t siz_r =  mympi->pair_siz_rbuff_y1[ipair][istage]
                     + mympi->pair_siz_rbuff_y2[ipair][istage]
                     + mympi->pair_siz_rbuff_z1[ipair][istage]
-                    + mympi->pair_siz_rbuff_z2[ipair][istage];
+                    + mympi->pair_siz_rbuff_z2[ipair][istage]
+                    + mympi->pair_siz_rbuff_y1_fault[ipair][istage]
+                    + mympi->pair_siz_rbuff_y2_fault[ipair][istage]
+                    + mympi->pair_siz_rbuff_z1_fault[ipair][istage]
+                    + mympi->pair_siz_rbuff_z2_fault[ipair][istage];
 
       if (siz_s > mympi->siz_sbuff) mympi->siz_sbuff = siz_s;
       if (siz_r > mympi->siz_rbuff) mympi->siz_rbuff = siz_r;
@@ -174,61 +201,74 @@ blk_macdrp_mesg_init(mympi_t *mympi,
   mympi->sbuff = (float *) cuda_malloc(mympi->siz_sbuff * sizeof(MPI_FLOAT));
   mympi->rbuff = (float *) cuda_malloc(mympi->siz_rbuff * sizeof(MPI_FLOAT));
 
-  //set_buff_value<<<(mympi->siz_sbuff+127)/128,128>>>(mympi->sbuff,mympi->siz_sbuff,500.2);
-  //set_buff_value<<<(mympi->siz_rbuff+127)/128,128>>>(mympi->rbuff,mympi->siz_rbuff,1.2);
   // set up pers communication
   for (int ipair = 0; ipair < fd->num_of_pairs; ipair++)
   {
     for (int istage = 0; istage < fd->num_rk_stages; istage++)
     {
-      size_t siz_s_x1 = mympi->pair_siz_sbuff_x1[ipair][istage];
-      size_t siz_s_x2 = mympi->pair_siz_sbuff_x2[ipair][istage];
       size_t siz_s_y1 = mympi->pair_siz_sbuff_y1[ipair][istage];
       size_t siz_s_y2 = mympi->pair_siz_sbuff_y2[ipair][istage];
       size_t siz_s_z1 = mympi->pair_siz_sbuff_z1[ipair][istage];
       size_t siz_s_z2 = mympi->pair_siz_sbuff_z2[ipair][istage];
+      size_t siz_s_y1_fault = mympi->pair_siz_sbuff_y1_fault[ipair][istage];
+      size_t siz_s_y2_fault = mympi->pair_siz_sbuff_y2_fault[ipair][istage];
+      size_t siz_s_z1_fault = mympi->pair_siz_sbuff_z1_fault[ipair][istage];
+      size_t siz_s_z2_fault = mympi->pair_siz_sbuff_z2_fault[ipair][istage];
 
-      float *sbuff_x1 = mympi->sbuff;
-      float *sbuff_x2 = sbuff_x1 + siz_s_x1;
-      float *sbuff_y1 = sbuff_x2 + siz_s_x2;
+      float *sbuff_y1 = mympi->sbuff;
       float *sbuff_y2 = sbuff_y1 + siz_s_y1;
       float *sbuff_z1 = sbuff_y2 + siz_s_y2;
       float *sbuff_z2 = sbuff_z1 + siz_s_z1;
-
+      float *sbuff_y1_fault = sbuff_z2 + siz_s_z2;
+      float *sbuff_y2_fault = sbuff_y1_fault + siz_s_y1_fault;
+      float *sbuff_z1_fault = sbuff_y2_fault + siz_s_y2_fault;
+      float *sbuff_z2_fault = sbuff_z1_fault + siz_s_z1_fault;
+      
+      float mympi->sbuff_fault = sbuff_y1_fault;
       // npair: xx, nstage: x, 
       int tag_pair_stage = ipair * 1000 + istage * 100;
-      int tag[6] = { tag_pair_stage+11, tag_pair_stage+12, tag_pair_stage+21, tag_pair_stage+22, tag_pair_stage+31, tag_pair_stage+32};
+      int tag[8] = { tag_pair_stage+21, tag_pair_stage+22, tag_pair_stage+31, tag_pair_stage+32, 
+                     tag_pair_stage+210, tag_pair_stage+220, tag_pair_stage+310, tag_pair_stage+320};
 
       // send
-      MPI_Send_init(sbuff_x1, siz_s_x1, MPI_FLOAT, mympi->neighid[0], tag[0], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][0]));
-      MPI_Send_init(sbuff_x2, siz_s_x2, MPI_FLOAT, mympi->neighid[1], tag[1], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][1]));
-      MPI_Send_init(sbuff_y1, siz_s_y1, MPI_FLOAT, mympi->neighid[2], tag[2], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][2]));
-      MPI_Send_init(sbuff_y2, siz_s_y2, MPI_FLOAT, mympi->neighid[3], tag[3], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][3]));
-      MPI_Send_init(sbuff_z1, siz_s_z1, MPI_FLOAT, mympi->neighid[4], tag[4], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][4]));
-      MPI_Send_init(sbuff_z2, siz_s_z2, MPI_FLOAT, mympi->neighid[5], tag[5], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][5]));
+      MPI_Send_init(sbuff_y1, siz_s_y1, MPI_FLOAT, mympi->neighid[2], tag[0], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][0]));
+      MPI_Send_init(sbuff_y2, siz_s_y2, MPI_FLOAT, mympi->neighid[3], tag[1], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][1]));
+      MPI_Send_init(sbuff_z1, siz_s_z1, MPI_FLOAT, mympi->neighid[4], tag[2], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][2]));
+      MPI_Send_init(sbuff_z2, siz_s_z2, MPI_FLOAT, mympi->neighid[5], tag[3], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][3]));
+      MPI_Send_init(sbuff_y1_fault, siz_s_y1_fault, MPI_FLOAT, mympi->neighid[2], tag[4], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][4]));
+      MPI_Send_init(sbuff_y2_fault, siz_s_y2_fault, MPI_FLOAT, mympi->neighid[3], tag[5], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][5]));
+      MPI_Send_init(sbuff_z1_fault, siz_s_z1_fault, MPI_FLOAT, mympi->neighid[4], tag[6], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][6]));
+      MPI_Send_init(sbuff_z2_fault, siz_s_z2_fault, MPI_FLOAT, mympi->neighid[5], tag[7], mympi->topocomm, &(mympi->pair_s_reqs[ipair][istage][7]));
 
       // recv
-      size_t siz_r_x1 = mympi->pair_siz_rbuff_x1[ipair][istage];
-      size_t siz_r_x2 = mympi->pair_siz_rbuff_x2[ipair][istage];
       size_t siz_r_y1 = mympi->pair_siz_rbuff_y1[ipair][istage];
       size_t siz_r_y2 = mympi->pair_siz_rbuff_y2[ipair][istage];
       size_t siz_r_z1 = mympi->pair_siz_rbuff_z1[ipair][istage];
       size_t siz_r_z2 = mympi->pair_siz_rbuff_z2[ipair][istage];
+      size_t siz_r_y1_fault = mympi->pair_siz_rbuff_y1_fault[ipair][istage];
+      size_t siz_r_y2_fault = mympi->pair_siz_rbuff_y2_fault[ipair][istage];
+      size_t siz_r_z1_fault = mympi->pair_siz_rbuff_z1_fault[ipair][istage];
+      size_t siz_r_z2_fault = mympi->pair_siz_rbuff_z2_fault[ipair][istage];
 
-      float *rbuff_x1 = mympi->rbuff;
-      float *rbuff_x2 = rbuff_x1 + siz_r_x1;
-      float *rbuff_y1 = rbuff_x2 + siz_r_x2;
+      float *rbuff_y1 = mympi->rbuff;
       float *rbuff_y2 = rbuff_y1 + siz_r_y1;
       float *rbuff_z1 = rbuff_y2 + siz_r_y2;
       float *rbuff_z2 = rbuff_z1 + siz_r_z1;
+      float *rbuff_y1_fault = rbuff_z2 + siz_r_z2;
+      float *rbuff_y2_fault = rbuff_y1_fault + siz_r_y1_fault;
+      float *rbuff_z1_fault = rbuff_y2_fault + siz_r_y2_fault;
+      float *rbuff_z2_fault = rbuff_z1_fault + siz_r_z1_fault;
 
+      float mympi->rbuff_fault = rbuff_y1_fault;
       // recv
-      MPI_Recv_init(rbuff_x1, siz_r_x1, MPI_FLOAT, mympi->neighid[0], tag[1], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][0]));
-      MPI_Recv_init(rbuff_x2, siz_r_x2, MPI_FLOAT, mympi->neighid[1], tag[0], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][1]));
-      MPI_Recv_init(rbuff_y1, siz_r_y1, MPI_FLOAT, mympi->neighid[2], tag[3], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][2]));
-      MPI_Recv_init(rbuff_y2, siz_r_y2, MPI_FLOAT, mympi->neighid[3], tag[2], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][3]));
-      MPI_Recv_init(rbuff_z1, siz_r_z1, MPI_FLOAT, mympi->neighid[4], tag[5], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][4]));
-      MPI_Recv_init(rbuff_z2, siz_r_z2, MPI_FLOAT, mympi->neighid[5], tag[4], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][5]));
+      MPI_Recv_init(rbuff_y1, siz_r_y1, MPI_FLOAT, mympi->neighid[2], tag[1], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][0]));
+      MPI_Recv_init(rbuff_y2, siz_r_y2, MPI_FLOAT, mympi->neighid[3], tag[0], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][1]));
+      MPI_Recv_init(rbuff_z1, siz_r_z1, MPI_FLOAT, mympi->neighid[4], tag[3], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][2]));
+      MPI_Recv_init(rbuff_z2, siz_r_z2, MPI_FLOAT, mympi->neighid[5], tag[2], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][3]));
+      MPI_Recv_init(rbuff_y1_fault, siz_r_y1_fault, MPI_FLOAT, mympi->neighid[2], tag[5], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][4]));
+      MPI_Recv_init(rbuff_y2_fault, siz_r_y2_fault, MPI_FLOAT, mympi->neighid[3], tag[4], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][5]));
+      MPI_Recv_init(rbuff_z1_fault, siz_r_z1_fault, MPI_FLOAT, mympi->neighid[4], tag[7], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][6]));
+      MPI_Recv_init(rbuff_z2_fault, siz_r_z2_fault, MPI_FLOAT, mympi->neighid[5], tag[6], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][7]));
     }
   }
 
@@ -242,6 +282,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
                          mympi_t *mympi, 
                          int ipair_mpi,
                          int istage_mpi,
+                         int num_of_vars,
                          int myid)
 {
   //
@@ -263,48 +304,21 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
   int nj = nj2-nj1+1;
   int nk = nk2-nk1+1;
 
-
+  fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
+  fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
   // ghost point
-  int nx1_g = fd->pair_fdx_op[ipair_mpi][istage_mpi][fd->num_of_fdx_op-1].right_len;
-  int nx2_g = fd->pair_fdx_op[ipair_mpi][istage_mpi][fd->num_of_fdx_op-1].left_len;
-  int ny1_g = fd->pair_fdy_op[ipair_mpi][istage_mpi][fd->num_of_fdy_op-1].right_len;
-  int ny2_g = fd->pair_fdy_op[ipair_mpi][istage_mpi][fd->num_of_fdy_op-1].left_len;
-  int nz1_g = fd->pair_fdz_op[ipair_mpi][istage_mpi][fd->num_of_fdz_op-1].right_len;
-  int nz2_g = fd->pair_fdz_op[ipair_mpi][istage_mpi][fd->num_of_fdz_op-1].left_len;
-  size_t siz_sbuff_x1 = mympi->pair_siz_sbuff_x1[ipair_mpi][istage_mpi];
-  size_t siz_sbuff_x2 = mympi->pair_siz_sbuff_x2[ipair_mpi][istage_mpi];
+  int ny1_g = fdy_op->right_len;
+  int ny2_g = fdy_op->left_len;
+  int nz1_g = fdz_op->right_len;
+  int nz2_g = fdz_op->left_len;
   size_t siz_sbuff_y1 = mympi->pair_siz_sbuff_y1[ipair_mpi][istage_mpi];
   size_t siz_sbuff_y2 = mympi->pair_siz_sbuff_y2[ipair_mpi][istage_mpi];
   size_t siz_sbuff_z1 = mympi->pair_siz_sbuff_z1[ipair_mpi][istage_mpi];
   
-  float *sbuff_x1 = mympi->sbuff;
-  float *sbuff_x2 = sbuff_x1 + siz_sbuff_x1;
-  float *sbuff_y1 = sbuff_x2 + siz_sbuff_x2;
+  float *sbuff_y1 = mympi->sbuff;
   float *sbuff_y2 = sbuff_y1 + siz_sbuff_y1;
   float *sbuff_z1 = sbuff_y2 + siz_sbuff_y2;
   float *sbuff_z2 = sbuff_z1 + siz_sbuff_z1;
-  {
-    dim3 block(nx1_g,8,8);
-    dim3 grid;
-    grid.x = (nx1_g + block.x -1) / block.x;
-    grid.y = (nj + block.y - 1) / block.y;
-    grid.z = (nk + block.z - 1) / block.z;
-    blk_macdrp_pack_mesg_x1<<<grid, block >>>(
-           w_cur, sbuff_x1, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk1, nx1_g, nj, nk);
-    CUDACHECK(cudaDeviceSynchronize());
-  }
-  {
-    dim3 block(nx2_g,8,8);
-    dim3 grid;
-    grid.x = (nx2_g + block.x -1) / block.x;
-    grid.y = (nj + block.y - 1) / block.y;
-    grid.z = (nk + block.z - 1) / block.z;
-    blk_macdrp_pack_mesg_x2<<<grid, block >>>(
-           w_cur, sbuff_x2, siz_line, siz_slice, siz_volume,
-           ni2, nj1, nk1, nx2_g, nj, nk);
-    CUDACHECK(cudaDeviceSynchronize());
-  }
   {
     dim3 block(8,ny1_g,8);
     dim3 grid;
@@ -312,7 +326,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.y = (ny1_g + block.y -1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y1<<<grid, block >>>(
-           w_cur, sbuff_y1, siz_line, siz_slice, siz_volume,
+           w_cur, sbuff_y1, siz_line, siz_slice, siz_volume, num_of_vars,
            ni1, nj1, nk1, ni, ny1_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -324,7 +338,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y2<<<grid, block >>>(
            w_cur, sbuff_y2, siz_line, siz_slice, siz_volume,
-           ni1, nj2, nk1, ni, ny2_g, nk);
+           num_of_vars, ni1, nj2, nk1, ni, ny2_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -335,7 +349,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nz1_g + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_z1<<<grid, block >>>(
            w_cur, sbuff_z1, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk1, ni, nj, nz1_g);
+           num_of_vars, ni1, nj1, nk1, ni, nj, nz1_g);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -346,7 +360,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nz2_g + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_z2<<<grid, block >>>(
            w_cur, sbuff_z2, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk2, ni, nj, nz2_g);
+           num_of_vars, ni1, nj1, nk2, ni, nj, nz2_g);
     CUDACHECK(cudaDeviceSynchronize());
   }
 
@@ -354,63 +368,9 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
 }
 
 __global__ void
-blk_macdrp_pack_mesg_x1(
-           float *w_cur, float *sbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int nx1_g, int nj, int nk)
-{
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  int iy = blockIdx.y * blockDim.y + threadIdx.y;
-  int iz = blockIdx.z * blockDim.z + threadIdx.z;
-  size_t iptr_b;
-  size_t iptr;
-  if(ix<nx1_g && iy<nj && iz<nk)
-  {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
-    iptr_b   = iz*nj*nx1_g + iy*nx1_g + ix;
-    sbuff_x1[iptr_b + 0*nx1_g*nj*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_x1[iptr_b + 1*nx1_g*nj*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_x1[iptr_b + 2*nx1_g*nj*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_x1[iptr_b + 3*nx1_g*nj*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_x1[iptr_b + 4*nx1_g*nj*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_x1[iptr_b + 5*nx1_g*nj*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_x1[iptr_b + 6*nx1_g*nj*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_x1[iptr_b + 7*nx1_g*nj*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_x1[iptr_b + 8*nx1_g*nj*nk] = w_cur[iptr + 8*siz_volume];
-  }
-  return;
-}
-
-__global__ void
-blk_macdrp_pack_mesg_x2(
-           float *w_cur, float *sbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni2, int nj1, int nk1, int nx2_g, int nj, int nk)
-{
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  int iy = blockIdx.y * blockDim.y + threadIdx.y;
-  int iz = blockIdx.z * blockDim.z + threadIdx.z;
-  size_t iptr_b;
-  size_t iptr;
-  if(ix<nx2_g && iy<nj && iz<nk)
-  {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni2-nx2_g+1);
-    iptr_b   = iz*nj*nx2_g + iy*nx2_g + ix;
-    sbuff_x2[iptr_b + 0*nx2_g*nj*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_x2[iptr_b + 1*nx2_g*nj*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_x2[iptr_b + 2*nx2_g*nj*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_x2[iptr_b + 3*nx2_g*nj*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_x2[iptr_b + 4*nx2_g*nj*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_x2[iptr_b + 5*nx2_g*nj*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_x2[iptr_b + 6*nx2_g*nj*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_x2[iptr_b + 7*nx2_g*nj*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_x2[iptr_b + 8*nx2_g*nj*nk] = w_cur[iptr + 8*siz_volume];
-  }
-  return;
-}
-
-__global__ void
 blk_macdrp_pack_mesg_y1(
            float *w_cur, float *sbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int ni, int ny1_g, int nk)
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int ny1_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -421,15 +381,10 @@ blk_macdrp_pack_mesg_y1(
   {
     iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
     iptr_b   = iz*ni*ny1_g + iy*ni + ix;
-    sbuff_y1[iptr_b + 0*ny1_g*ni*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_y1[iptr_b + 1*ny1_g*ni*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_y1[iptr_b + 2*ny1_g*ni*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_y1[iptr_b + 3*ny1_g*ni*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_y1[iptr_b + 4*ny1_g*ni*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_y1[iptr_b + 5*ny1_g*ni*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_y1[iptr_b + 6*ny1_g*ni*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_y1[iptr_b + 7*ny1_g*ni*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_y1[iptr_b + 8*ny1_g*ni*nk] = w_cur[iptr + 8*siz_volume];
+    for(int i=0; i<num_of_vars; i++)
+    {
+      sbuff_y1[iptr_b + i*ny1_g*ni*nk] = w_cur[iptr + i*siz_volume];
+    }
   }
 
   return;
@@ -438,7 +393,7 @@ blk_macdrp_pack_mesg_y1(
 __global__ void
 blk_macdrp_pack_mesg_y2(
            float *w_cur, float *sbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj2, int nk1, int ni, int ny2_g, int nk)
+           int num_of_vars, int ni1, int nj2, int nk1, int ni, int ny2_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -449,15 +404,10 @@ blk_macdrp_pack_mesg_y2(
   {
     iptr     = (iz+nk1) * siz_slice + (iy+nj2-ny2_g+1) * siz_line + (ix+ni1);
     iptr_b   = iz*ni*ny2_g + iy*ni + ix;
-    sbuff_y2[iptr_b + 0*ny2_g*ni*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_y2[iptr_b + 1*ny2_g*ni*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_y2[iptr_b + 2*ny2_g*ni*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_y2[iptr_b + 3*ny2_g*ni*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_y2[iptr_b + 4*ny2_g*ni*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_y2[iptr_b + 5*ny2_g*ni*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_y2[iptr_b + 6*ny2_g*ni*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_y2[iptr_b + 7*ny2_g*ni*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_y2[iptr_b + 8*ny2_g*ni*nk] = w_cur[iptr + 8*siz_volume];
+    for(int i=0; i<num_of_vars; i++)
+    {
+      sbuff_y2[iptr_b + i*ny2_g*ni*nk] = w_cur[iptr + i*siz_volume];
+    }
   }
   return;
 }
@@ -465,7 +415,7 @@ blk_macdrp_pack_mesg_y2(
 __global__ void
 blk_macdrp_pack_mesg_z1(
            float *w_cur, float *sbuff_z1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int ni, int nj, int nz1_g)
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int nj, int nz1_g)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -476,15 +426,10 @@ blk_macdrp_pack_mesg_z1(
   {
     iptr     = (iz+nk1) * siz_slice+ (iy+nj1) * siz_line + (ix+ni1);
     iptr_b   = iz*ni*nj + iy*ni + ix;
-    sbuff_z1[iptr_b + 0*nz1_g*ni*nj] = w_cur[iptr + 0*siz_volume];
-    sbuff_z1[iptr_b + 1*nz1_g*ni*nj] = w_cur[iptr + 1*siz_volume];
-    sbuff_z1[iptr_b + 2*nz1_g*ni*nj] = w_cur[iptr + 2*siz_volume];
-    sbuff_z1[iptr_b + 3*nz1_g*ni*nj] = w_cur[iptr + 3*siz_volume];
-    sbuff_z1[iptr_b + 4*nz1_g*ni*nj] = w_cur[iptr + 4*siz_volume];
-    sbuff_z1[iptr_b + 5*nz1_g*ni*nj] = w_cur[iptr + 5*siz_volume];
-    sbuff_z1[iptr_b + 6*nz1_g*ni*nj] = w_cur[iptr + 6*siz_volume];
-    sbuff_z1[iptr_b + 7*nz1_g*ni*nj] = w_cur[iptr + 7*siz_volume];
-    sbuff_z1[iptr_b + 8*nz1_g*ni*nj] = w_cur[iptr + 8*siz_volume];
+    for(int i=0; i<num_of_vars; i++)
+    {
+      sbuff_z1[iptr_b + i*nz1_g*ni*nj] = w_cur[iptr + i*siz_volume];
+    }
   }
   return;
 }
@@ -492,7 +437,7 @@ blk_macdrp_pack_mesg_z1(
 __global__ void
 blk_macdrp_pack_mesg_z2(
            float *w_cur, float *sbuff_z2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk2, int ni, int nj, int nz2_g)
+           int num_of_vars, int ni1, int nj1, int nk2, int ni, int nj, int nz2_g)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -503,15 +448,10 @@ blk_macdrp_pack_mesg_z2(
   {
     iptr     = (iz+nk2-nz2_g+1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
     iptr_b   = iz*ni*nj + iy*ni + ix;
-    sbuff_z2[iptr_b + 0*nz2_g*ni*nj] = w_cur[iptr + 0*siz_volume];
-    sbuff_z2[iptr_b + 1*nz2_g*ni*nj] = w_cur[iptr + 1*siz_volume];
-    sbuff_z2[iptr_b + 2*nz2_g*ni*nj] = w_cur[iptr + 2*siz_volume];
-    sbuff_z2[iptr_b + 3*nz2_g*ni*nj] = w_cur[iptr + 3*siz_volume];
-    sbuff_z2[iptr_b + 4*nz2_g*ni*nj] = w_cur[iptr + 4*siz_volume];
-    sbuff_z2[iptr_b + 5*nz2_g*ni*nj] = w_cur[iptr + 5*siz_volume];
-    sbuff_z2[iptr_b + 6*nz2_g*ni*nj] = w_cur[iptr + 6*siz_volume];
-    sbuff_z2[iptr_b + 7*nz2_g*ni*nj] = w_cur[iptr + 7*siz_volume];
-    sbuff_z2[iptr_b + 8*nz2_g*ni*nj] = w_cur[iptr + 8*siz_volume];
+    for(int i=0; i<num_of_vars; i++)
+    {
+      sbuff_z2[iptr_b + i*nz2_g*ni*nj] = w_cur[iptr + i*siz_volume];
+    }
   }
   return;
 }
@@ -523,6 +463,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
+                           int num_of_vars,
                            int *neighid)
 {
   //
@@ -545,48 +486,22 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
   int nj = nj2-nj1+1;
   int nk = nk2-nk1+1;
   
+  fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
+  fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
   // ghost point
-  int nx1_g = fd->pair_fdx_op[ipair_mpi][istage_mpi][fd->num_of_fdx_op-1].right_len;
-  int nx2_g = fd->pair_fdx_op[ipair_mpi][istage_mpi][fd->num_of_fdx_op-1].left_len;
-  int ny1_g = fd->pair_fdy_op[ipair_mpi][istage_mpi][fd->num_of_fdy_op-1].right_len;
-  int ny2_g = fd->pair_fdy_op[ipair_mpi][istage_mpi][fd->num_of_fdy_op-1].left_len;
-  int nz1_g = fd->pair_fdz_op[ipair_mpi][istage_mpi][fd->num_of_fdz_op-1].right_len;
-  int nz2_g = fd->pair_fdz_op[ipair_mpi][istage_mpi][fd->num_of_fdz_op-1].left_len;
+  int ny1_g = fdy_op->right_len;
+  int ny2_g = fdy_op->left_len;
+  int nz1_g = fdz_op->right_len;
+  int nz2_g = fdz_op->left_len;
 
-  size_t siz_rbuff_x1 = mympi->pair_siz_rbuff_x1[ipair_mpi][istage_mpi];
-  size_t siz_rbuff_x2 = mympi->pair_siz_rbuff_x2[ipair_mpi][istage_mpi];
   size_t siz_rbuff_y1 = mympi->pair_siz_rbuff_y1[ipair_mpi][istage_mpi];
   size_t siz_rbuff_y2 = mympi->pair_siz_rbuff_y2[ipair_mpi][istage_mpi];
   size_t siz_rbuff_z1 = mympi->pair_siz_rbuff_z1[ipair_mpi][istage_mpi];
 
-  float *rbuff_x1 = mympi->rbuff;
-  float *rbuff_x2 = rbuff_x1 + siz_rbuff_x1;
-  float *rbuff_y1 = rbuff_x2 + siz_rbuff_x2;
+  float *rbuff_y1 = mympi->rbuff;
   float *rbuff_y2 = rbuff_y1 + siz_rbuff_y1;
   float *rbuff_z1 = rbuff_y2 + siz_rbuff_y2;
   float *rbuff_z2 = rbuff_z1 + siz_rbuff_z1;
-  {
-    dim3 block(nx2_g,8,8);
-    dim3 grid;
-    grid.x = (nx2_g + block.x -1) / block.x;
-    grid.y = (nj + block.y - 1) / block.y;
-    grid.z = (nk + block.z - 1) / block.z;
-    blk_macdrp_unpack_mesg_x1<<< grid, block >>>(
-           w_cur, rbuff_x1, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk1, nx2_g, nj, nk, neighid);
-    CUDACHECK(cudaDeviceSynchronize());
-  }
-  {
-    dim3 block(nx1_g,8,8);
-    dim3 grid;
-    grid.x = (nx1_g + block.x -1) / block.x;
-    grid.y = (nj + block.y - 1) / block.y;
-    grid.z = (nk + block.z - 1) / block.z;
-    blk_macdrp_unpack_mesg_x2<<< grid, block >>>(
-           w_cur, rbuff_x2, siz_line, siz_slice, siz_volume,
-           ni2, nj1, nk1, nx1_g, nj, nk, neighid);
-    CUDACHECK(cudaDeviceSynchronize());
-  }
   {
     dim3 block(8,ny2_g,8);
     dim3 grid;
@@ -595,7 +510,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y1<<< grid, block >>>(
            w_cur, rbuff_y1, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk1, ni, ny2_g, nk, neighid);
+           num_of_vars, ni1, nj1, nk1, ni, ny2_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -606,7 +521,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y2<<< grid, block >>>(
            w_cur, rbuff_y2, siz_line, siz_slice, siz_volume,
-           ni1, nj2, nk1, ni, ny1_g, nk, neighid);
+           num_of_vars, ni1, nj2, nk1, ni, ny1_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -616,11 +531,10 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (nj + block.y -1) / block.y;
     grid.z = (nz2_g + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_z1<<< grid, block >>>(
-           w_cur, rbuff_z1, siz_line, siz_slice, siz_volume,
-           ni1, ni1, nk1, ni, nj, nz2_g, neighid);
+           w_cur, rbuff_z1, siz_line, siz_slice, siz_volume, 
+           num_of_vars, ni1, ni1, nk1, ni, nj, nz2_g, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
-
   {
     dim3 block(8,8,nz1_g);
     dim3 grid;
@@ -628,76 +542,19 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (nj + block.y -1) / block.y;
     grid.z = (nz1_g + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_z2<<< grid, block >>>(
-           w_cur, rbuff_z2, siz_line, siz_slice, siz_volume,
-           ni1, nj1, nk2, ni, nj, nz1_g, neighid);
+           w_cur, rbuff_z2, siz_line, siz_slice, siz_volume, 
+           num_of_vars, ni1, nj1, nk2, ni, nj, nz1_g, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
+
   return 0;
-}
-
-//from x2
-__global__ void
-blk_macdrp_unpack_mesg_x1(
-           float *w_cur, float *rbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int nx2_g, int nj, int nk, int *neighid)
-{
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  int iy = blockIdx.y * blockDim.y + threadIdx.y;
-  int iz = blockIdx.z * blockDim.z + threadIdx.z;
-  size_t iptr_b;
-  size_t iptr;
-  if (neighid[0] != MPI_PROC_NULL) {
-    if(ix<nx2_g && iy<nj && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1-nx2_g);
-      iptr_b = iz*nj*nx2_g + iy*nx2_g + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_x1[iptr_b+ 0*nx2_g*nj*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_x1[iptr_b+ 1*nx2_g*nj*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_x1[iptr_b+ 2*nx2_g*nj*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_x1[iptr_b+ 3*nx2_g*nj*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_x1[iptr_b+ 4*nx2_g*nj*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_x1[iptr_b+ 5*nx2_g*nj*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_x1[iptr_b+ 6*nx2_g*nj*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_x1[iptr_b+ 7*nx2_g*nj*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_x1[iptr_b+ 8*nx2_g*nj*nk];
-    }
-  }
-  return;
-}
-
-//from x1
-__global__ void
-blk_macdrp_unpack_mesg_x2(
-           float *w_cur, float *rbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni2, int nj1, int nk1, int nx1_g, int nj, int nk, int *neighid)
-{
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  int iy = blockIdx.y * blockDim.y + threadIdx.y;
-  int iz = blockIdx.z * blockDim.z + threadIdx.z;
-  size_t iptr_b;
-  size_t iptr;
-  if (neighid[1] != MPI_PROC_NULL) {
-    if(ix<nx1_g && iy<nj && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni2+1);
-      iptr_b = iz*nj*nx1_g + iy*nx1_g + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_x2[iptr_b+ 0*nx1_g*nj*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_x2[iptr_b+ 1*nx1_g*nj*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_x2[iptr_b+ 2*nx1_g*nj*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_x2[iptr_b+ 3*nx1_g*nj*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_x2[iptr_b+ 4*nx1_g*nj*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_x2[iptr_b+ 5*nx1_g*nj*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_x2[iptr_b+ 6*nx1_g*nj*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_x2[iptr_b+ 7*nx1_g*nj*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_x2[iptr_b+ 8*nx1_g*nj*nk];
-    }
-  }
-  return;
 }
 
 //from y2
 __global__ void
 blk_macdrp_unpack_mesg_y1(
            float *w_cur, float *rbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid)
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -708,15 +565,10 @@ blk_macdrp_unpack_mesg_y1(
     if(ix<ni && iy<ny2_g && iz<nk){
       iptr   = (iz+nk1) * siz_slice + (iy+nj1-ny2_g) * siz_line + (ix+ni1);
       iptr_b = iz*ni*ny2_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_y1[iptr_b+ 0*ny2_g*ni*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_y1[iptr_b+ 1*ny2_g*ni*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_y1[iptr_b+ 2*ny2_g*ni*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_y1[iptr_b+ 3*ny2_g*ni*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_y1[iptr_b+ 4*ny2_g*ni*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_y1[iptr_b+ 5*ny2_g*ni*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_y1[iptr_b+ 6*ny2_g*ni*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_y1[iptr_b+ 7*ny2_g*ni*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_y1[iptr_b+ 8*ny2_g*ni*nk];
+      for(int i=0; i<num_of_vars; i++)
+      {
+        w_cur[iptr + i*siz_volume] = rbuff_y1[iptr_b+ i*ny2_g*ni*nk];
+      }
     }
   }
   return;
@@ -725,8 +577,8 @@ blk_macdrp_unpack_mesg_y1(
 //from y1
 __global__ void
 blk_macdrp_unpack_mesg_y2(
-           float *w_cur, float *rbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid)
+           float *w_cur, float *rbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume, 
+           int num_of_vars, int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -737,15 +589,10 @@ blk_macdrp_unpack_mesg_y2(
     if(ix<ni && iy<ny1_g && iz<nk){
       iptr   = (iz+nk1) * siz_slice + (iy+nj2+1) * siz_line + (ix+ni1);
       iptr_b = iz*ni*ny1_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_y2[iptr_b+ 0*ny1_g*ni*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_y2[iptr_b+ 1*ny1_g*ni*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_y2[iptr_b+ 2*ny1_g*ni*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_y2[iptr_b+ 3*ny1_g*ni*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_y2[iptr_b+ 4*ny1_g*ni*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_y2[iptr_b+ 5*ny1_g*ni*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_y2[iptr_b+ 6*ny1_g*ni*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_y2[iptr_b+ 7*ny1_g*ni*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_y2[iptr_b+ 8*ny1_g*ni*nk];
+      for(int i=0; i<num_of_vars; i++)
+      {
+        w_cur[iptr + i*siz_volume] = rbuff_y2[iptr_b+ i*ny1_g*ni*nk];
+      }
     }
   }
   return;
@@ -754,8 +601,8 @@ blk_macdrp_unpack_mesg_y2(
 //from z2
 __global__ void
 blk_macdrp_unpack_mesg_z1(
-           float *w_cur, float *rbuff_z1, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk1, int ni, int nj, int nz2_g, int *neighid)
+           float *w_cur, float *rbuff_z1, size_t siz_line, size_t siz_slice, size_t siz_volume, 
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int nj, int nz2_g, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -768,15 +615,10 @@ blk_macdrp_unpack_mesg_z1(
     {
       iptr   = (ix+ni1) + (iy+nj1) * siz_line + (iz+nk1-nz2_g) * siz_slice;
       iptr_b = iz*ni*nj + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_z1[iptr_b + 0*nz2_g*ni*nj];
-      w_cur[iptr + 1*siz_volume] = rbuff_z1[iptr_b + 1*nz2_g*ni*nj];
-      w_cur[iptr + 2*siz_volume] = rbuff_z1[iptr_b + 2*nz2_g*ni*nj];
-      w_cur[iptr + 3*siz_volume] = rbuff_z1[iptr_b + 3*nz2_g*ni*nj];
-      w_cur[iptr + 4*siz_volume] = rbuff_z1[iptr_b + 4*nz2_g*ni*nj];
-      w_cur[iptr + 5*siz_volume] = rbuff_z1[iptr_b + 5*nz2_g*ni*nj];
-      w_cur[iptr + 6*siz_volume] = rbuff_z1[iptr_b + 6*nz2_g*ni*nj];
-      w_cur[iptr + 7*siz_volume] = rbuff_z1[iptr_b + 7*nz2_g*ni*nj];
-      w_cur[iptr + 8*siz_volume] = rbuff_z1[iptr_b + 8*nz2_g*ni*nj];
+      for(int i=0; i<num_of_vars; i++)
+      {
+        w_cur[iptr + i*siz_volume] = rbuff_z1[iptr_b + i*nz2_g*ni*nj];
+      }
     }
   }
   return;
@@ -786,7 +628,7 @@ blk_macdrp_unpack_mesg_z1(
 __global__ void
 blk_macdrp_unpack_mesg_z2(
            float *w_cur, float *rbuff_z2, size_t siz_line, size_t siz_slice, size_t siz_volume,
-           int ni1, int nj1, int nk2, int ni, int nj, int nz1_g, int *neighid)
+           int num_of_vars, int ni1, int nj1, int nk2, int ni, int nj, int nz1_g, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -799,15 +641,182 @@ blk_macdrp_unpack_mesg_z2(
     {
       iptr   = (ix+ni1) + (iy+nj1) * siz_line + (iz+nk2+1) * siz_slice;
       iptr_b = iz*ni*nj + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_z2[iptr_b+ 0*nz1_g*ni*nj];
-      w_cur[iptr + 1*siz_volume] = rbuff_z2[iptr_b+ 1*nz1_g*ni*nj];
-      w_cur[iptr + 2*siz_volume] = rbuff_z2[iptr_b+ 2*nz1_g*ni*nj];
-      w_cur[iptr + 3*siz_volume] = rbuff_z2[iptr_b+ 3*nz1_g*ni*nj];
-      w_cur[iptr + 4*siz_volume] = rbuff_z2[iptr_b+ 4*nz1_g*ni*nj];
-      w_cur[iptr + 5*siz_volume] = rbuff_z2[iptr_b+ 5*nz1_g*ni*nj];
-      w_cur[iptr + 6*siz_volume] = rbuff_z2[iptr_b+ 6*nz1_g*ni*nj];
-      w_cur[iptr + 7*siz_volume] = rbuff_z2[iptr_b+ 7*nz1_g*ni*nj];
-      w_cur[iptr + 8*siz_volume] = rbuff_z2[iptr_b+ 8*nz1_g*ni*nj];
+      for(int i=0; i<num_of_vars; i++)
+      {
+        w_cur[iptr + i*siz_volume] = rbuff_z2[iptr_b+ i*nz1_g*ni*nj];
+      }
+    }
+  }
+
+  return;
+}
+
+int 
+blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
+                               fd_t *fd,
+                               gdinfo_t *gdinfo, 
+                               mympi_t *mympi, 
+                               int ipair_mpi,
+                               int istage_mpi,
+                               int num_of_vars_fault,
+                               int myid)
+{
+  //
+  //nx1_g is fdx_op->right_len;
+  //nx2_g is fdx_op->left_len;
+  //ny1_g is fdy_op->right_len;
+  //ny2_g is fdy_op->left_len;
+  //
+  int nj1 = gdinfo->nj1;
+  int nj2 = gdinfo->nj2;
+  int nk1 = gdinfo->nk1;
+  int nk2 = gdinfo->nk2;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+  int ny = gdinfo->ny;
+  size_t siz_slice_yz = gdinfo->siz_slice_yz;
+
+  fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
+  fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
+  // ghost point
+  int ny1_g = fdy_op->right_len;
+  int ny2_g = fdy_op->left_len;
+  int nz1_g = fdz_op->right_len;
+  int nz2_g = fdz_op->left_len;
+  size_t siz_sbuff_y1_fault = mympi->pair_siz_sbuff_y1_fault[ipair_mpi][istage_mpi];
+  size_t siz_sbuff_y2_fault = mympi->pair_siz_sbuff_y2_fault[ipair_mpi][istage_mpi];
+  size_t siz_sbuff_z1_fault = mympi->pair_siz_sbuff_z1_fault[ipair_mpi][istage_mpi];
+  
+  float *sbuff_y1_fault = mympi->sbuff_fault;
+  float *sbuff_y2_fault = sbuff_y1_fault + siz_sbuff_y1_fault;
+  float *sbuff_z1_fault = sbuff_y2_fault + siz_sbuff_y2_fault;
+  float *sbuff_z2_fault = sbuff_z1_fault + siz_sbuff_z1_fault;
+  {
+    dim3 block(ny1_g,8);
+    dim3 grid;
+    grid.x = (ny1_g + block.x -1) / block.x;
+    grid.y = (nk + block.y - 1) / block.y;
+    blk_macdrp_pack_fault_mesg_y1<<<grid, block >>>(
+                                 fw_cur, sbuff_y1_fault, siz_slice_yz, 
+                                 num_of_vars_fault, ny, nj1, nk1, ny1_g, nk);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(ny2_g,8);
+    dim3 grid;
+    grid.x = (ny2_g + block.x -1) / block.x;
+    grid.y = (nk + block.y - 1) / block.y;
+    blk_macdrp_pack_fault_mesg_y2<<<grid, block >>>(
+                                 fw_cur, sbuff_y2_fault, siz_slice_yz, 
+                                 num_of_vars_fault, ny, nj2, nk1, ny2_g, nk);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(8,nz1_g);
+    dim3 grid;
+    grid.x = (nj + block.x - 1) / block.x;
+    grid.y = (nz1_g + block.y - 1) / block.y;
+    blk_macdrp_pack_fault_mesg_z1<<<grid, block >>>(
+                                 fw_cur, sbuff_z1_fault, siz_slice_yz, 
+                                 num_of_vars_fault, ny, nj1, nk1, nj, nz1_g);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(8,nz2_g);
+    dim3 grid;
+    grid.x = (nj + block.x - 1) / block.x;
+    grid.y = (nz2_g + block.y - 1) / block.y;
+    blk_macdrp_pack_fault_mesg_z2<<<grid, block >>>(
+                                 fw_cur, sbuff_z2_fault, siz_slice_yz,
+                                 num_of_vars_fault, ny, nj1, nk2, nj, nz2_g);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+
+  return 0;
+}
+
+__global__ void
+blk_macdrp_pack_fault_mesg_y1(
+             float *fw_cur, float *sbuff_y1_fault, size_t siz_slice_yz, 
+             int num_of_vars_fault, int ny, int nj1, int nk1, int ny1_g, int nk)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if(iy<ny1_g && iz<nk)
+  {
+    iptr     = (iz+nk1) * ny + (iy+nj1);
+    iptr_b   = iz*ny1_g + iy;
+    for(int i=0; i<2*num_of_vars; i++)
+    {
+      sbuff_y1_fault[iptr_b + i*ny1_g*nk] = fw_cur[iptr + i*siz_slice_yz];
+    }
+  }
+
+  return;
+}
+
+__global__ void
+blk_macdrp_pack_fault_mesg_y2(
+             float *fw_cur, float *sbuff_y2_fault, size_t siz_slice_yz, 
+             int num_of_vars_fault, int ny, int nj2, int nk1, int ny2_g, int nk)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if(iy<ny2_g && iz<nk)
+  {
+    iptr     = (iz+nk1) * ny + (iy+nj2-ny2_g+1);
+    iptr_b   = iz*ny2_g + iy;
+    for(int i=0; i<2*num_of_vars; i++)
+    {
+      sbuff_y2_fault[iptr_b + i*ny2_g*nk] = fw_cur[iptr + i*siz_slice_yz];
+    }
+  }
+
+  return;
+}
+
+__global__ void
+blk_macdrp_pack_fault_mesg_z1(
+             float *fw_cur, float *sbuff_z1_fault, size_t siz_slice_yz, 
+             int num_of_vars_fault, int ny, int nj1, int nk1, int nj, int nz1_g)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if(iy<nj && iz<nz1_g)
+  {
+    iptr     = (iz+nk1) * ny + (iy+nj1);
+    iptr_b   = iz*nj + iy;
+    for(int i=0; i<2*num_of_vars; i++)
+    {
+      sbuff_z1_fault[iptr_b + i*nz1_g*nj] = fw_cur[iptr + i*siz_slice_yz];
+    }
+  }
+
+  return;
+}
+
+__global__ void
+blk_macdrp_pack_fault_mesg_z1(
+             float *fw_cur, float *sbuff_z2_fault, size_t siz_slice_yz, 
+             int num_of_vars_fault, int ny, int nj1, int nk2, int nj, int nz2_g)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if(iy<nj && iz<nz2_g)
+  {
+    iptr     = (iz+nk2-nz2_g+1) * ny + (iy+nj1);
+    iptr_b   = iz*nj + iy;
+    for(int i=0; i<2*num_of_vars; i++)
+    {
+      sbuff_z2_fault[iptr_b + i*nz2_g*nj] = fw_cur[iptr + i*siz_slice_yz];
     }
   }
 

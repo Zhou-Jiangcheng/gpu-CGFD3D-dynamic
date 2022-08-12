@@ -73,6 +73,9 @@ typedef struct {
   size_t siz_line;
   size_t siz_slice;
   size_t siz_volume;
+  
+  size_t siz_slice_yz; 
+  size_t siz_slice_yz2; 
 
   size_t *cmp_pos;
   char  **cmp_name;

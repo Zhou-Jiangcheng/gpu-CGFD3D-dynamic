@@ -60,6 +60,17 @@ typedef struct
   char   **line_name;
 } ioline_t;
 
+// fault output
+typedef struct
+{
+  // for esti size of working space var
+  size_t siz_max_wrk;
+
+  int num_of_fault;
+  int fault_local_indx;
+  char **fault_fname;
+} iofault_t;
+
 // slice output
 typedef struct
 {
@@ -178,6 +189,13 @@ io_line_locate(gdinfo_t *gdinfo,
                char **receiver_line_name);
 
 int
+io_fault_locate(gdinfo_t *gdinfo, 
+                iofault_t *iofault,
+                int fault_global_indx,
+                char *output_fname_part,
+                char *output_dir);
+
+int
 io_slice_locate(gdinfo_t  *gdinfo,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
@@ -204,6 +222,11 @@ io_snapshot_locate(gdinfo_t *gdinfo,
                     int *snapshot_save_strain,
                     char *output_fname_part,
                     char *output_dir);
+
+int
+io_fault_nc_create(iofault_t *iofault, 
+                   int ni, int nj, int nk,
+                   int *topoid, iofault_nc_t *iofault_nc);
 
 int
 io_slice_nc_create(ioslice_t *ioslice, 

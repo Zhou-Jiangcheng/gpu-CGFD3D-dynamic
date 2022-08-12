@@ -403,6 +403,37 @@ io_line_locate(gdinfo_t *gdinfo,
 }
 
 int
+io_fault_locate(gdinfo_t *gdinfo, 
+                iofault_t *iofault,
+                int fault_global_indx,
+                char *output_fname_part,
+                char *output_dir)
+{
+  int ierr = 0;
+  iofault->siz_max_wrk = 0;
+
+  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(1,
+                                                            CONST_MAX_STRLEN,
+                                                            "fault_fname");
+  iofault->num_of_fault = 0;
+
+  if(gd_info_gindx_is_inner_i(fault_global_indx, gdinfo)==1)
+  {
+    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_global_indx, gdinfo);
+    sprintf(iofault->fault_fname,"%s/fault_i%d_%s.nc",
+              output_dir,fault_global_indx,output_fname_part);
+
+    ioslice->num_of_fault += 1;
+
+    size_t slice_siz = gdinfo->nj * gdinfo->nk;
+    iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
+                           slice_siz : iofault->siz_max_wrk;
+  }
+
+  return ierr;
+}
+
+int
 io_slice_locate(gdinfo_t  *gdinfo,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
@@ -649,6 +680,49 @@ io_snapshot_locate(gdinfo_t *gdinfo,
  */
 
 int
+io_fault_nc_create(iofault_t *iofault, 
+                   int ni, int nj, int nk,
+                   int *topoid, iofault_nc_t *iofault_nc)
+{
+  int ierr = 0;
+  int num_of_fault = iofault->num_of_fault;
+  int num_of_var = 20;
+  ioslice_nc->varid = (int *)malloc(num_of_fault * num_of_var * sizeof(int));
+  int dimid[3];
+  if(num_of_fault == 1) 
+  {
+    // fault slice
+    if (nc_create(iofault->fault_fname, NC_CLOBBER, &(iofault_nc->ncid))) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "k"   , nk          , &dimid[1])) M_NCERR;
+    if (nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2])) M_NCERR;
+
+    // define variables
+    if (nc_def_var(iofault_nc->ncid, "time",      NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "init_t0",   NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[1])))  M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "peak_rate", NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[2])))  M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Tn" ,       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[3])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Ts1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[4])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Ts2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[5])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[6])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[7])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us0",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Us1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Us2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
+
+    // attribute: index info for plot
+    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
+                   NC_INT,1,iofault->fault_local_indx);
+    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"coords_of_mpi_topo",
+                   NC_INT,3,topoid);
+
+    ierr = nc_enddef(iofault_nc->ncid); handle_nc_err(ierr);
+  }
+
+  return ierr;
+}
+
+int
 io_slice_nc_create(ioslice_t *ioslice, 
                   int num_of_vars, char **w3d_name,
                   int ni, int nj, int nk,
@@ -852,59 +926,6 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 
     if (nc_enddef(ncid[n])) M_NCERR;
   } // loop snap
-
-  return ierr;
-}
-
-int
-io_fault_nc_create(gdinfo_t *gdinfo, 
-                   iofault_nc_t *iofault_nc,
-                   int  *topoid,
-                   char *output_fname_part,
-                   char *output_dir)
-{
-  int ierr = 0;
-  int num_of_var = 20;
-  ioslice_nc->varid = (int *)malloc(num_of_var*sizeof(int));
-  int dimid[3];
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
-  int npoint_x = gdinfo->npoint_x;
-  int i0 = npoint_x/2; 
-  char fault_fname[1024];
-  if(gd_info_gindx_is_inner_i(i0, gdinfo)==1)
-  {
-    int fault_local_indx  = gd_info_ind_glphy2lcext_i(i0, gdinfo);
-    sprintf(fault_fname,"%s/fault_%d_%s.nc",output_dir,i0,output_fname_part);
-
-    // fault slice
-    if (nc_create(fault_fname, NC_CLOBBER, &(iofault_nc->ncid))) M_NCERR;
-    if (nc_def_dim(iofault_nc->ncid, "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(iofault_nc->ncid, "k"   , nk          , &dimid[1])) M_NCERR;
-    if (nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2])) M_NCERR;
-    int dimid2[2] = {dimid[1], dimid[2]};
-    // time var
-    // define variables
-    if (nc_def_var(iofault_nc->ncid, "time", NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "init_t0", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[1]))) M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "peak_rate", NC_FLOAT, 2, dimid2, &(iofault_nc->varid[2]))) M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "Tn"   , NC_FLOAT, 3, dimid, &(iofault_nc->varid[3]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Ts1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[4]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Ts2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[5]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Vs1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[6]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Vs2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[7]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us0"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[8]))) M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us1"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[9]))) M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "Us2"  , NC_FLOAT, 3, dimid, &(iofault_nc->varid[10]))) M_NCERR;   
-
-    // attribute: index info for plot
-    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
-                   NC_INT,1,fault_local_indx);
-    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,3,topoid);
-
-    ierr = nc_enddef(iofault_nc->ncid); handle_nc_err(ierr);
-  }
 
   return ierr;
 }
