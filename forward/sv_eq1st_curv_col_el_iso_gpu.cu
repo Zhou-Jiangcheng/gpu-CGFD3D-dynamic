@@ -411,11 +411,11 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
 
   // last indx, free surface force Tx/Ty/Tz to 0 in cal
-  size_t k_min = nk2 - fdz_indx[4];
+  int k_min = nk2 - fdz_indx[4];
 
 
   // point affected by timg
-  for (size_t k=k_min; k <= nk2; k++)
+  for (int k=k_min; k <= nk2; k++)
   {
     // k corresponding to current point
 
@@ -426,7 +426,7 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
 
     if(ix<ni && iy<nj)
     {
-      size_t iptr = (iy+nj1) + k * siz_line + (ix+ni1) * siz_slice;
+      size_t iptr = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
       // metric
       xix = xi_x[iptr];
       xiy = xi_y[iptr];

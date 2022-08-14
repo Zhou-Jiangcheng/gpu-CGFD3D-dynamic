@@ -285,12 +285,6 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
                          int num_of_vars,
                          int myid)
 {
-  //
-  //nx1_g is fdx_op->right_len;
-  //nx2_g is fdx_op->left_len;
-  //ny1_g is fdy_op->right_len;
-  //ny2_g is fdy_op->left_len;
-  //
   int ni1 = gdinfo->ni1;
   int ni2 = gdinfo->ni2;
   int nj1 = gdinfo->nj1;
@@ -466,12 +460,6 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
                            int num_of_vars,
                            int *neighid)
 {
-  //
-  //nx1_g is fdx_op->right_len;
-  //nx2_g is fdx_op->left_len;
-  //ny1_g is fdy_op->right_len;
-  //ny2_g is fdy_op->left_len;
-  //
   int ni1 = gdinfo->ni1;
   int ni2 = gdinfo->ni2;
   int nj1 = gdinfo->nj1;
@@ -661,12 +649,6 @@ blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
                                int num_of_vars_fault,
                                int myid)
 {
-  //
-  //nx1_g is fdx_op->right_len;
-  //nx2_g is fdx_op->left_len;
-  //ny1_g is fdy_op->right_len;
-  //ny2_g is fdy_op->left_len;
-  //
   int nj1 = gdinfo->nj1;
   int nj2 = gdinfo->nj2;
   int nk1 = gdinfo->nk1;
@@ -820,6 +802,172 @@ blk_macdrp_pack_fault_mesg_z1(
     }
   }
 
+  return;
+}
+
+int 
+blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur, 
+                                 fd_t *fd,
+                                 gdinfo_t *gdinfo,
+                                 mympi_t *mympi, 
+                                 int ipair_mpi,
+                                 int istage_mpi,
+                                 int num_of_vars_fault,
+                                 int *neighid)
+{
+  int nj1 = gdinfo->nj1;
+  int nj2 = gdinfo->nj2;
+  int nk1 = gdinfo->nk1;
+  int nk2 = gdinfo->nk2;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
+  size_t siz_slice_yz = gdinfo->siz_slice_yz;
+  
+  fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
+  fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
+  // ghost point
+  int ny1_g = fdy_op->right_len;
+  int ny2_g = fdy_op->left_len;
+  int nz1_g = fdz_op->right_len;
+  int nz2_g = fdz_op->left_len;
+
+  size_t siz_rbuff_y1_fault = mympi->pair_siz_rbuff_y_fault1[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_y2_fault = mympi->pair_siz_rbuff_y_fault2[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_z1_fault = mympi->pair_siz_rbuff_z_fault1[ipair_mpi][istage_mpi];
+
+  float *rbuff_y1_fault = mympi->rbuff_fault;
+  float *rbuff_y2_fault = rbuff_y1_fault + siz_rbuff_y1_fault;
+  float *rbuff_z1_fault = rbuff_y2_fault + siz_rbuff_y2_fault;
+  float *rbuff_z2_fault = rbuff_z1_fault + siz_rbuff_z1_fault;
+  {
+    dim3 block(ny2_g,8);
+    dim3 grid;
+    grid.x = (ny2_g + block.x -1) / block.x;
+    grid.y = (nk + block.y - 1) / block.y;
+    blk_macdrp_unpack_fault_mesg_y1<<< grid, block >>>(
+           fw_cur, rbuff_y1_fault, siz_slice_yz, 
+           num_of_vars_fault, ny, nj1, nk1, ny2_g, nk, neighid);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(ny1_g,8);
+    dim3 grid;
+    grid.x = (ny1_g + block.x -1) / block.x;
+    grid.y = (nk + block.y - 1) / block.y;
+    blk_macdrp_unpack_fault_mesg_y2<<< grid, block >>>(
+           fw_cur, rbuff_y2_fault, siz_slice_yz,
+           num_of_vars_fault, ny, nj2, nk1, ny1_g, nk, neighid);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(8,nz2_g);
+    dim3 grid;
+    grid.x = (nj + block.x -1) / block.x;
+    grid.y = (nz2_g + block.y - 1) / block.y;
+    blk_macdrp_unpack_fault_mesg_z1<<< grid, block >>>(
+           fw_cur, rbuff_z1_fault, siz_slice_yz, 
+           num_of_vars_fault, ny, nj1, nk1, nj, nz2_g, neighid);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+  {
+    dim3 block(8,nz1_g);
+    dim3 grid;
+    grid.x = (nj + block.x -1) / block.x;
+    grid.y = (nz1_g + block.y - 1) / block.y;
+    blk_macdrp_unpack_fault_mesg_z2<<< grid, block >>>(
+           fw_cur, rbuff_z2_fault, siz_slice_yz, 
+           num_of_vars_fault, ny, nj1, nk2, nj, nz1_g, neighid);
+    CUDACHECK(cudaDeviceSynchronize());
+  }
+
+  return 0;
+}
+
+__global__ void
+blk_macdrp_unpack_mesg_y1(
+           float *fw_cur, float *rbuff_y1_fault, size_t siz_slice_yz, 
+           int num_of_vars, int ny, int nj1, int nk1, int ny2_g, int nk, int *neighid)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if (neighid[2] != MPI_PROC_NULL) {
+    if(iy<ny2_g && iz<nk){
+      iptr   = (iz+nk1) * ny + (iy+nj1-ny2_g);
+      iptr_b = iz*ny2_g + iy;
+      for(int i=0; i<2*num_of_vars; i++)
+      {
+        fw_cur[iptr + i*siz_slice_yz] = rbuff_y1_fault[iptr_b+ i*ny2_g*nk];
+      }
+    }
+  }
+  return;
+}
+
+__global__ void
+blk_macdrp_unpack_mesg_y2(
+           float *fw_cur, float *rbuff_y2_fault, size_t siz_slice_yz, 
+           int num_of_vars, int ny, int nj2, int nk1, int ny1_g, int nk, int *neighid)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if (neighid[3] != MPI_PROC_NULL) {
+    if(iy<ny1_g && iz<nk){
+      iptr   = (iz+nk1) * ny + (iy+nj2+1);
+      iptr_b = iz*ny1_g + iy;
+      for(int i=0; i<2*num_of_vars; i++)
+      {
+        fw_cur[iptr + i*siz_slice_yz] = rbuff_y2_fault[iptr_b+ i*ny1_g*nk];
+      }
+    }
+  }
+  return;
+}
+
+__global__ void
+blk_macdrp_unpack_mesg_z1(
+           float *fw_cur, float *rbuff_z1_fault, size_t siz_slice_yz, 
+           int num_of_vars, int ny, int nj1, int nk1, int nj, int nz2_g, int *neighid)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if (neighid[4] != MPI_PROC_NULL) {
+    if(iy<nj && iz<nz2_g){
+      iptr   = (iz+nk1-nz2_g) * ny + (iy+nj1);
+      iptr_b = iz*nj + iy;
+      for(int i=0; i<2*num_of_vars; i++)
+      {
+        fw_cur[iptr + i*siz_slice_yz] = rbuff_z1_fault[iptr_b+ i*nz2_g*nj];
+      }
+    }
+  }
+  return;
+}
+
+__global__ void
+blk_macdrp_unpack_mesg_z2(
+           float *fw_cur, float *rbuff_z2_fault, size_t siz_slice_yz, 
+           int num_of_vars, int ny, int nj1, int nk2, int nj, int nz1_g, int *neighid)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_b;
+  size_t iptr;
+  if (neighid[5] != MPI_PROC_NULL) {
+    if(iy<nj && iz<nz1_g){
+      iptr   = (iz+nk2+1) * ny + (iy+nj1);
+      iptr_b = iz*nj + iy;
+      for(int i=0; i<2*num_of_vars; i++)
+      {
+        fw_cur[iptr + i*siz_slice_yz] = rbuff_z2_fault[iptr_b+ i*nz1_g*nj];
+      }
+    }
+  }
   return;
 }
 /*********************************************************************

@@ -5,11 +5,16 @@
 #include "macdrp.h"
 
 __global__ void 
-trial_sw_gpu(
-    )
+trial_sw_gpu(float *w_cur_d,
+             float *f_cur_d,
+             float *f_pre_d,
+             gdinfo_t gdinfo_d,
+             gdcurv_metric_t  metric_d,
+             wav_t  wav_d,
+             fault_wav_t  f_wav_d)
 {
-  int j = blockIdx.x * blockDim.x + threadIdx.x;
-  int k = blockIdx.y * blockDim.y + threadIdx.y;
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
   int ni = gdinfo_d.ni;
   int nj = gdinfo_d.nj;
@@ -18,12 +23,13 @@ trial_sw_gpu(
   int ny = gdinfo_d.ny;
   int nz = gdinfo_d.nz;
   int npoint_x = gdinfo_d.npoint_x;
-  int i0  = (npoint_x/2+3); //fault index with ghost 
+  int i0  = npoint_x/2 + 3; //fault local index with ghost
 
+  int iptr, iptr_f, iptr_t;
   size_t siz_line   = gdinfo_d.siz_line;
   size_t siz_slice  = gdinfo_d.siz_slice;
   size_t siz_volume = gdinfo_d.siz_volume;
-  size_t siz_slice_yz = ny * nz;
+  size_t siz_slice_yz = gdinfo_d.siz_slice_yz;
   float xix, xiy, xiz;
   float jac;
   float vec_n0;
@@ -31,7 +37,6 @@ trial_sw_gpu(
   float rho;
   float Mrho[2], Rx[2], Ry[2], Rz[2];
   float T11, T12, T13;
-  int iptr, iptr_f, iptr_t;
   float DyT21, DyT22, DyT23;
   float DzT31, DzT32, DzT33;
   float vecT31[7];
@@ -60,31 +65,30 @@ trial_sw_gpu(
   float *f_T32   = f_cur_d + f_wav_d.T32_pos;
   float *f_T33   = f_cur_d + f_wav_d.T33_pos;
 
-  float *f_mVx  = F_d.mW + 0 * (2*siz_slice_yz);
-  float *f_mVy  = F_d.mW + 1 * (2*siz_slice_yz);
-  float *f_mVz  = F_d.mW + 2 * (2*siz_slice_yz);
+  float *f_mVx  = f_pre_d + f_wav_d.Vx_pos;
+  float *f_mVy  = f_pre_d + f_wav_d.Vy_pos;
+  float *f_mVz  = f_pre_d + f_wav_d.Vz_pos;
 
-  float *f_tVx  = F_d.tW + 0 * (2*siz_slice_yz);
-  float *f_tVy  = F_d.tW + 1 * (2*siz_slice_yz);
-  float *f_tVz  = F_d.tW + 2 * (2*siz_slice_yz);
-
-  if ( j < nj && k < nk && fault.united[j + k * nj] == 0)
+  if ( iy < nj && iz < nk && fault.united[iy + iz * nj] == 0)
   { 
     for (int m = 0; m < 2; m++)
     {
       // m = 0 -> minus
       // m = 1 -> plus
-      iptr = i0 + (j+3) * siz_line + (k+3) * siz_slice; 
+      // T11 T12 T13
+      // 0 1 2 3 4 5 6 index 0,1,2 minus, 3 fault, 4,5,6 plus
+      iptr = i0 + (iy+3) * siz_line + (iz+3) * siz_slice;
       xix = xi_x [iptr];
       xiy = xi_y [iptr];
       xiz = xi_z [iptr];
       jac = jac3d[iptr];
-      rho = f.rho_f[(j+3) + (k+3) * ny + m * ny * nz];
+      rho = f.rho_f[(iy+3) + (iz+3) * ny + m * ny * nz];
 
-      iptr_f = (j+3) + (k+3) * ny; 
+      iptr_f = (iy+3) + (iz+3) * ny; 
+      // fault traction image method by zhang wenqiang 
       for (int l = 1; l <= 3; l++)
       {
-        iptr = (i0+(2*m-1)*l) + (j+3) * siz_line + (k+3) * siz_slice;
+        iptr = (i0+(2*m-1)*l) + (iy+3) * siz_line + (iz+3) * siz_slice;
         xix = xi_x[iptr];
         xiy = xi_y[iptr];
         xiz = xi_z[iptr];
@@ -97,122 +101,131 @@ trial_sw_gpu(
         f_wav_d.T13[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T13;
       }
 
-      float *T21 = f_T21 + m*siz_slice_yz;
-      float *T22 = f_T22 + m*siz_slice_yz;
-      float *T23 = f_T23 + m*siz_slice_yz;
+      float *T21_ptr = f_T21 + m*siz_slice_yz + iptr_f;
+      float *T22_ptr = f_T22 + m*siz_slice_yz + iptr_f;
+      float *T23_ptr = f_T23 + m*siz_slice_yz + iptr_f;
       // fault point use short stencil
       // due to slip change sharp
-      if(fault.rup_index_y[j + k * nj] == 1)
+      if(fault.rup_index_y[iy + iz * nj] == 1)
       {
-        M_FD_SHIFT(DyT21, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-        M_FD_SHIFT(DyT22, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-        M_FD_SHIFT(DyT23, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT_PTR_MAC22(DyT21, T21_ptr, 1, jdir);
+        M_FD_SHIFT_PTR_MAC22(DyT22, T22_ptr, 1, jdir);
+        M_FD_SHIFT_PTR_MAC22(DyT23, T23_ptr, 1, jdir);
       }
-      if(fault.rup_index_y[j + k * nj] == 0)
+      if(fault.rup_index_y[iy + iz * nj] == 0)
       {
-        M_FD_SHIFT(DyT21, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-        M_FD_SHIFT(DyT22, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-        M_FD_SHIFT(DyT23, T21, iptr_f, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+        M_FD_SHIFT_PTR_MACDRP(DyT21, T21_ptr, 1, jdir);
+        M_FD_SHIFT_PTR_MACDRP(DyT22, T22_ptr, 1, jdir);
+        M_FD_SHIFT_PTR_MACDRP(DyT23, T23_ptr, 1, jdir);
       }
 
-      for (int l = -3; l <=3 ; l++){
-        iptr_f = (j+3) + (k+3+l) * ny;
-        vecT31[l+3] = f_T31[iptr_f + m*nyz];
-        vecT32[l+3] = f_T32[iptr_f + m*nyz];
-        vecT33[l+3] = f_T33[iptr_f + m*nyz];
+      float *T31_ptr = f_T31 + m*siz_slice_yz + iptr_f;
+      float *T32_ptr = f_T32 + m*siz_slice_yz + iptr_f;
+      float *T33_ptr = f_T33 + m*siz_slice_yz + iptr_f;
+      if(fault.rup_index_z[iy + iz * nj] == 1)
+      {
+        M_FD_SHIFT_PTR_MAC22(DzT31, T31_ptr, ny, kdir);
+        M_FD_SHIFT_PTR_MAC22(DzT32, T32_ptr, ny, kdir);
+        M_FD_SHIFT_PTR_MAC22(DzT33, T33_ptr, ny, kdir);
       }
-
-      int km = nk - k; // nk2-3, nk2-2, nk2-1 ==> (3, 2, 1)
-      if(par.freenode && km<=3){
-        vecT31[km+2] = 0.0;
-        vecT32[km+2] = 0.0;
-        vecT33[km+2] = 0.0;
-        for (int l = km+3; l<7; l++){
-          vecT31[l] = -vecT31[2*(km+2)-l];
-          vecT32[l] = -vecT32[2*(km+2)-l];
-          vecT33[l] = -vecT33[2*(km+2)-l];
+      if(fault.rup_index_z[iy + iz * nj] == 0)
+      {
+        M_FD_SHIFT_PTR_MACDRP(DzT31, T31_ptr, ny, kdir);
+        M_FD_SHIFT_PTR_MACDRP(DzT32, T32_ptr, ny, kdir);
+        M_FD_SHIFT_PTR_MACDRP(DzT33, T33_ptr, ny, kdir);
+      }
+      int km = nk - (iz+1); //index distance between current point and surface
+      int n_free = km+3; // index of free surface in vecT[]; 
+      if(bdryfree_d.is_at_sides[2][1] == 1 && km<=3)
+      {
+        for (int l=-3; l<=3 ; l++)
+        {
+          iptr_t = (iy+3) + (iz+3+l) * ny;
+          vecT31[l+3] = f_T31[iptr_t + m*siz_slice_yz];
+          vecT32[l+3] = f_T32[iptr_t + m*siz_slice_yz];
+          vecT33[l+3] = f_T33[iptr_t + m*siz_slice_yz];
         }
-      } // end par.freenode
-      if(f.rup_index_z[j + k * nj] % 7){
-        DzT31 = vec_L22(vecT31, 3, FlagZ) * rDH;
-        DzT32 = vec_L22(vecT32, 3, FlagZ) * rDH;
-        DzT33 = vec_L22(vecT33, 3, FlagZ) * rDH;
-      }else{
-        DzT31 = vec_L(vecT31, 3, FlagZ) * rDH;
-        DzT32 = vec_L(vecT32, 3, FlagZ) * rDH;
-        DzT33 = vec_L(vecT33, 3, FlagZ) * rDH;
-      }
 
+        vecT31[n_free] = 0.0;
+        vecT32[n_free] = 0.0;
+        vecT33[n_free] = 0.0;
+        for (int l = n_free+1; l<7; l++)
+        {
+          vecT31[l] = -vecT31[2*n_free-l];
+          vecT32[l] = -vecT32[2*n_free-l];
+          vecT33[l] = -vecT33[2*n_free-l];
+        }
+      } 
+      if(kdir == 1)
+      {
+        // -1 ~ 3, vecT pointer is +2
+        M_FD_NOINDEX(DzT31, vecT31+2, kdir);
+        M_FD_NOINDEX(DzT32, vecT32+2, kdir);
+        M_FD_NOINDEX(DzT33, vecT33+2, kdir);
+      }
+      if(kdir == 0)
+      {
+        M_FD_NOINDEX(DzT31, vecT31, kdir);
+        M_FD_NOINDEX(DzT32, vecT32, kdir);
+        M_FD_NOINDEX(DzT33, vecT33, kdir);
+      }
+      
+      float a_1 = 1.541764761036000;
+      float a_2 = -0.333411808829999;
+      float a_3 = 0.0416862855405999;
       if (m == 0){ // "-" side
         Rx[m] =
-          a_1 * f.T11[2*nyz+pos_f] +
-          a_2 * f.T11[1*nyz+pos_f] +
-          a_3 * f.T11[0*nyz+pos_f] ;
+          a_1 * f.T11[2*siz_slice_yz+iptr_f] +
+          a_2 * f.T11[1*siz_slice_yz+iptr_f] +
+          a_3 * f.T11[0*siz_slice_yz+iptr_f] ;
         Ry[m] =
-          a_1 * f.T12[2*nyz+pos_f] +
-          a_2 * f.T12[1*nyz+pos_f] +
-          a_3 * f.T12[0*nyz+pos_f] ;
+          a_1 * f.T12[2*siz_slice_yz+iptr_f] +
+          a_2 * f.T12[1*siz_slice_yz+iptr_f] +
+          a_3 * f.T12[0*siz_slice_yz+iptr_f] ;
         Rz[m] =
-          a_1 * f.T13[2*nyz+pos_f] +
-          a_2 * f.T13[1*nyz+pos_f] +
-          a_3 * f.T13[0*nyz+pos_f] ;
+          a_1 * f_wav_d.T13[2*siz_slice_yz+iptr_f] +
+          a_2 * f_wav_d.T13[1*siz_slice_yz+iptr_f] +
+          a_3 * f_wav_d.T13[0*siz_slice_yz+iptr_f] ;
       }else{ // "+" side
         Rx[m] =
-          a_1 * f.T11[4*nyz+pos_f] +
-          a_2 * f.T11[5*nyz+pos_f] +
-          a_3 * f.T11[6*nyz+pos_f] ;
+          a_1 * f_wav_d.T11[4*siz_slice_yz+iptr_f] +
+          a_2 * f_wav_d.T11[5*siz_slice_yz+iptr_f] +
+          a_3 * f_wav_d.T11[6*siz_slice_yz+iptr_f] ;
         Ry[m] =
-          a_1 * f.T12[4*nyz+pos_f] +
-          a_2 * f.T12[5*nyz+pos_f] +
-          a_3 * f.T12[6*nyz+pos_f] ;
+          a_1 * f_wav_d.T12[4*siz_slice_yz+iptr_f] +
+          a_2 * f_wav_d.T12[5*siz_slice_yz+iptr_f] +
+          a_3 * f_wav_d.T12[6*siz_slice_yz+iptr_f] ;
         Rz[m] =
-          a_1 * f.T13[4*nyz+pos_f] +
-          a_2 * f.T13[5*nyz+pos_f] +
-          a_3 * f.T13[6*nyz+pos_f] ;
+          a_1 * f_wav_d.T13[4*siz_slice_yz+iptr_f] +
+          a_2 * f_wav_d.T13[5*siz_slice_yz+iptr_f] +
+          a_3 * f_wav_d.T13[6*siz_slice_yz+iptr_f] ;
       }
+      // dh = 1, so omit dh in formula
+      Rx[m] = 0.5*( (2*m-1)*Rx[m] + (DyT21 + DzT31));
+      Ry[m] = 0.5*( (2*m-1)*Ry[m] + (DyT22 + DzT32));
+      Rz[m] = 0.5*( (2*m-1)*Rz[m] + (DyT23 + DzT33));
 
-      Rx[m] = 0.5f*( (2*m-1)*Rx[m] + (DyT21 + DzT31)*DH )*DH2;
-      Ry[m] = 0.5f*( (2*m-1)*Ry[m] + (DyT22 + DzT32)*DH )*DH2;
-      Rz[m] = 0.5f*( (2*m-1)*Rz[m] + (DyT23 + DzT33)*DH )*DH2;
-
-      Mrho[m] = 0.5f*jac*rho*DH*DH2;
+      Mrho[m] = 0.5*jac*rho;
 
     } // end m
 
-    real_t t;
-    if(irk == 0){
-      t = it*DT;
-    }else if (irk == 1 || irk == 2){
-      t = (it+0.5)*DT;
-    }else{
-      t = (it+1)*DT;
-    }
-    pos = j1 + k1 * ny;
-    real_t dVx = f_mVx[pos + nyz] - f_mVx[pos];
-    real_t dVy = f_mVy[pos + nyz] - f_mVy[pos];
-    real_t dVz = f_mVz[pos + nyz] - f_mVz[pos];
+    // dv = (V+) - (V-)
+    float dVx = f_mVx[iptr_f + siz_slice_yz] - f_mVx[iptr_f];
+    float dVy = f_mVy[iptr_f + siz_slice_yz] - f_mVy[iptr_f];
+    float dVz = f_mVz[iptr_f + siz_slice_yz] - f_mVz[iptr_f];
 
-    real_t Trial[3]; // stress variation
-    real_t Trial_local[3]; // + init background stress
-    real_t Trial_s[3]; // shear stress
+    float Trial[3];       // stress variation
+    float Trial_local[3]; // + init background stress
+    float Trial_s[3];     // shear stress
 
-    real_t dt1 = DT;
+    float  a_0 = 1.250039237746600;
+    Trial[0] = (Mrho[0]*Mrho[1]*dVx/dt + Mrho[0]*Rx[1] - Mrho[1]*Rx[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;
+    Trial[1] = (Mrho[0]*Mrho[1]*dVy/dt + Mrho[0]*Ry[1] - Mrho[1]*Ry[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;
+    Trial[2] = (Mrho[0]*Mrho[1]*dVz/dt + Mrho[0]*Rz[1] - Mrho[1]*Rz[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;
 
-    real_t a0p,a0m;
-    if(FlagX==FWD){
-      a0p = a_0pF;
-      a0m = a_0mF;
-    }else{
-      a0p = a_0pB;
-      a0m = a_0mB;
-    }
-    Trial[0] = -(Mrho[0]*Mrho[1]*dVx/dt1 + Mrho[0]*Rx[1] - Mrho[1]*Rx[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
-    Trial[1] = -(Mrho[0]*Mrho[1]*dVy/dt1 + Mrho[0]*Ry[1] - Mrho[1]*Ry[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
-    Trial[2] = -(Mrho[0]*Mrho[1]*dVz/dt1 + Mrho[0]*Rz[1] - Mrho[1]*Rz[0])/(DH2*(Mrho[0]*a0p-a0m*Mrho[1]))*2.0f;
-
-    real_t vec_n [3];
-    real_t vec_s1[3];
-    real_t vec_s2[3];
+    float vec_n [3];
+    float vec_s1[3];
+    float vec_s2[3];
 
 
     pos = (j1 + k1 * ny) * 3;

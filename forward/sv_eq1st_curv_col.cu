@@ -294,7 +294,8 @@ sv_eq1st_curv_col_allstep(
         //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
         //}
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
 
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
@@ -349,7 +350,8 @@ sv_eq1st_curv_col_allstep(
         //}
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -404,7 +406,8 @@ sv_eq1st_curv_col_allstep(
         //}
         
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(fw_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -426,10 +429,12 @@ sv_eq1st_curv_col_allstep(
  
       if (istage != num_rk_stages-1) 
       {
-        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       } else 
       {
         blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(fw_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       }
     } // RK stages
 
