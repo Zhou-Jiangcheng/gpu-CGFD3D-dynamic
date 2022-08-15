@@ -104,12 +104,15 @@ typedef struct
   float *Vs2;
   float *init_t0;
 
+  float *hslip;
+  float *tTn;
+  float *tTs1;
+  float *tTs2;
   int *united;
   int *faultgrid;
   int *rup_index_y;
   int *rup_index_z;
   int *flag_rup;
-  int *first_rup;
   int *init_t0_flag;
 } fault_t;
 
