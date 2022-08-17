@@ -159,24 +159,12 @@ trial_sw_gpu(float *w_cur_d,
           vecT32[l] = -vecT32[2*n_free-l];
           vecT33[l] = -vecT33[2*n_free-l];
         }
+
+        M_FD_VEC(DzT31, vecT31+3, kdir);
+        M_FD_VEC(DzT32, vecT32+3, kdir);
+        M_FD_VEC(DzT33, vecT33+3, kdir);
       } 
-      if(kdir == 1)
-      {
-        // -1 ~ 3, vecT pointer is +2
-        M_FD_NOINDEX(DzT31, vecT31+2, kdir);
-        M_FD_NOINDEX(DzT32, vecT32+2, kdir);
-        M_FD_NOINDEX(DzT33, vecT33+2, kdir);
-      }
-      if(kdir == 0)
-      {
-        M_FD_NOINDEX(DzT31, vecT31, kdir);
-        M_FD_NOINDEX(DzT32, vecT32, kdir);
-        M_FD_NOINDEX(DzT33, vecT33, kdir);
-      }
       
-      float a_1 = 1.541764761036000;
-      float a_2 = -0.333411808829999;
-      float a_3 = 0.0416862855405999;
       if (m == 0){ // "-" side
         Rx[m] =
           a_1 * f_wav_d.T11[2*siz_slice_yz+iptr_f] +
@@ -219,7 +207,6 @@ trial_sw_gpu(float *w_cur_d,
     float Trial_local[3]; // + init background stress
     float Trial_s[3];     // shear stress
 
-    float  a_0 = 1.250039;
     Trial[0] = (Mrho[0]*Mrho[1]*dVx/dt + Mrho[0]*Rx[1] - Mrho[1]*Rx[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;
     Trial[1] = (Mrho[0]*Mrho[1]*dVy/dt + Mrho[0]*Ry[1] - Mrho[1]*Ry[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;
     Trial[2] = (Mrho[0]*Mrho[1]*dVz/dt + Mrho[0]*Rz[1] - Mrho[1]*Rz[0])/(a_0*(Mrho[0]+Mrho[1]))*2.0;

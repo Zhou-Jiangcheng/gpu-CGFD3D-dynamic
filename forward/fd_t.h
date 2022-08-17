@@ -5,20 +5,22 @@
  *macro for fd opterators
  *******************************************************************************/
 
+// fault traction image coef
+#define a_0  -1.2500392
+#define a_1   1.5417647
+#define a_2  -0.3334118
+#define a_3   0.0416862
+
 //macdrp 2nd op
-#define a_1  -1.0
-#define a_2  1.0
 
 #define M_FD_SHIFT_PTR_MAC22(deriv, var_ptr, stride, FLAG) \
   ((FLAG==1) ? MAC22_F(deriv, var_ptr, stride) : MAC22_B(deriv, var_ptr, stride))
 
 #define MAC22_F(deriv, var_ptr, stride)  \
-  (deriv =  (a_1 * *(var_ptr))           \
-           +(a_2 * *(var_ptr + stride)) )
+  (deriv =  *(var_ptr + stride) - *(var_ptr) )
 
 #define MAC22_B(deriv, var_ptr, stride)  \
-  (deriv = -(a_1 * *(var_ptr))            \
-           -(a_2 * *(var_ptr - stride)) )
+  (deriv =  *(var_ptr) - *(var_ptr - stride) )
 
 //macdrp 4th op
 #define b_1  -7.0/6.0
@@ -37,6 +39,19 @@
   (deriv = -(b_1 * *(var_ptr))            \
            -(b_2 * *(var_ptr - stride))    \
            -(b_3 * *(var_ptr - 2*stride)))
+
+#define M_FD_VEC_24(deriv, var_ptr, FLAG) \
+  ((FLAG==1) ? VEC_24_F(deriv, var_ptr) : VEC_24_B(deriv, var_ptr))
+
+#define VEC_24_F(deriv, var_ptr)  \
+  (deriv =  (b_1 * *(var_ptr))            \
+           +(b_2 * *(var_ptr + 1))    \
+           +(b_3 * *(var_ptr + 2)))
+
+#define VEC_24_B(deriv, var_ptr)  \
+  (deriv = -(b_3 * *(var_ptr))            \
+           -(b_2 * *(var_ptr + 1))    \
+           -(b_1 * *(var_ptr + 2)))
 
 //macdrp normal op
 #define c_1  -0.30874
@@ -63,22 +78,39 @@
            -(c_5 * *(var_ptr - 3*stride)))
 
 
-#define M_FD_NOINDEX(deriv, var_ptr, FLAG) \
-  ((FLAG==1) ? NOINDEX_F(deriv, var_ptr) : NOINDEX_B(deriv, var_ptr))
+#define M_FD_VEC_DRP(deriv, var_ptr, FLAG) \
+  ((FLAG==1) ? VEC_DRP_F(deriv, var_ptr) : VEC_DRP_B(deriv, var_ptr))
 
-#define NOINDEX_F(deriv, var_ptr)   \
-  (deriv =  (c_1 * *(var_ptr))       \
+#define VEC_DRP_F(deriv, var_ptr)   \
+  (deriv =  (c_1 * *(var_ptr))        \
            +(c_2 * *(var_ptr + 1))    \
            +(c_3 * *(var_ptr + 2))    \
            +(c_4 * *(var_ptr + 3))    \
            +(c_5 * *(var_ptr + 4)))
 
-#define NOINDEX_B(deriv, var_ptr)    \
-  (deriv = -(c_5 * *(var_ptr))        \
+#define VEC_DRP_B(deriv, var_ptr)    \
+  (deriv = -(c_5 * *(var_ptr))         \
            -(c_4 * *(var_ptr + 1))     \
            -(c_3 * *(var_ptr + 2))     \
            -(c_2 * *(var_ptr + 3))     \
            -(c_1 * *(var_ptr + 4)))
+
+#define M_FD_VEC(deriv, var_ptr, FLAG) \
+  ((FLAG==1) ? VEC_F(deriv, var_ptr) : VEC_B(deriv, var_ptr))
+
+#define VEC_F(deriv, var_ptr)   \
+  (deriv =  (c_1 * *(var_ptr - 1))    \
+           +(c_2 * *(var_ptr    ))    \
+           +(c_3 * *(var_ptr + 1))    \
+           +(c_4 * *(var_ptr + 2))    \
+           +(c_5 * *(var_ptr + 3)))
+
+#define VEC_B(deriv, var_ptr)    \
+  (deriv = -(c_1 * *(var_ptr + 1))     \
+           -(c_2 * *(var_ptr    ))     \
+           -(c_3 * *(var_ptr - 1))     \
+           -(c_4 * *(var_ptr - 2))     \
+           -(c_5 * *(var_ptr - 3)))
 
 //certer 7th op
 #define d_1  -0.02084
