@@ -405,7 +405,7 @@ io_line_locate(gdinfo_t *gdinfo,
 int
 io_fault_locate(gdinfo_t *gdinfo, 
                 iofault_t *iofault,
-                int fault_global_indx,
+                int fault_i_global_indx,
                 char *output_fname_part,
                 char *output_dir)
 {
@@ -417,9 +417,9 @@ io_fault_locate(gdinfo_t *gdinfo,
                                                             "fault_fname");
   iofault->num_of_fault = 0;
 
-  if(gd_info_gindx_is_inner_i(fault_global_indx, gdinfo)==1)
+  if(gd_info_gindx_is_inner_i(fault_i_global_indx, gdinfo)==1)
   {
-    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_global_indx, gdinfo);
+    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_i_global_indx, gdinfo);
     sprintf(iofault->fault_fname,"%s/fault_i%d_%s.nc",
               output_dir,fault_global_indx,output_fname_part);
 
@@ -700,15 +700,15 @@ io_fault_nc_create(iofault_t *iofault,
     // define variables
     if (nc_def_var(iofault_nc->ncid, "time",      NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "init_t0",   NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[1])))  M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "peak_rate", NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[2])))  M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "peak_Vs",   NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[2])))  M_NCERR;   
     if (nc_def_var(iofault_nc->ncid, "Tn" ,       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[3])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[4])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[5])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Vs1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[6])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Vs2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[7])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us0",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Us1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "Us2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "slip",      NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "slip1",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "slip2",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",

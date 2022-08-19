@@ -224,7 +224,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
       float *sbuff_z1_fault = sbuff_y2_fault + siz_s_y2_fault;
       float *sbuff_z2_fault = sbuff_z1_fault + siz_s_z1_fault;
       
-      float mympi->sbuff_fault = sbuff_y1_fault;
+      mympi->sbuff_fault = sbuff_y1_fault;
       // npair: xx, nstage: x, 
       int tag_pair_stage = ipair * 1000 + istage * 100;
       int tag[8] = { tag_pair_stage+21, tag_pair_stage+22, tag_pair_stage+31, tag_pair_stage+32, 
@@ -259,7 +259,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
       float *rbuff_z1_fault = rbuff_y2_fault + siz_r_y2_fault;
       float *rbuff_z2_fault = rbuff_z1_fault + siz_r_z1_fault;
 
-      float mympi->rbuff_fault = rbuff_y1_fault;
+      mympi->rbuff_fault = rbuff_y1_fault;
       // recv
       MPI_Recv_init(rbuff_y1, siz_r_y1, MPI_FLOAT, mympi->neighid[2], tag[1], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][0]));
       MPI_Recv_init(rbuff_y2, siz_r_y2, MPI_FLOAT, mympi->neighid[3], tag[0], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][1]));

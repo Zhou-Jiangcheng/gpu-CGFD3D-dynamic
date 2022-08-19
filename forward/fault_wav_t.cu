@@ -18,13 +18,13 @@ fault_wav_init(gdinfo_t *gdinfo,
 {
   int ierr = 0;
 
-  FW->nx   = gdinfo->nx;
   FW->ny   = gdinfo->ny;
   FW->nz   = gdinfo->nz;
   FW->ncmp = 9;
   FW->nlevel = number_of_levels;
   FW->siz_slice_yz = ny * nz;
   FW->siz_slice_yz_2 = 2 * ny * nz;
+  FW->siz_ilevel = 2 * ny * nz * FW->ncmp;
   
   // i0-3 i0-2 i0-1 i0 i0+1 i0+2 i0+3
   // i0 is fault plane x index
@@ -36,11 +36,18 @@ fault_wav_init(gdinfo_t *gdinfo,
                         0.0, "T12, ft_wav_el3d_1st");
   FW->T13 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
                         0.0, "T13, ft_wav_el3d_1st");
+  // dT/dt 1st order
+  FW->hT11 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT11, ft_wav_el3d_1st");
+  FW->hT12 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT12, ft_wav_el3d_1st");
+  FW->hT13 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT13, ft_wav_el3d_1st");
   // vars
   // split "-" minus "+" plus 
   // Vx, Vy, Vz, T21, T22, T23, T31, T32, T33
   // 4 rk stages
-  FW->v5d = (float *) fdlib_mem_calloc_1d_float(2 * ny * nz * FW->ncmp * FW->nlevel,
+  FW->v5d = (float *) fdlib_mem_calloc_1d_float(FW->siz_ilevel * FW->nlevel,
                         0.0, "v5d, ft_wav_el3d_1st");
   // position of each var
   size_t *cmp_pos = (size_t *) fdlib_mem_calloc_1d_sizet(

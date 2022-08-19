@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Curvilinear Grid Finite Difference Fault Dynamic Simulation 
+ * Curvilinear Grid Finite Difference For Fault Dynamic Simulation 
  ******************************************************************************/
 
 #include <stdio.h>
@@ -51,7 +51,6 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-    //strncpy(par_fname, argv[1], sizeof(argv[1]));
     par_fname = argv[1];
 
     if (argc >= 3) {
@@ -106,8 +105,8 @@ int main(int argc, char** argv)
   ioslice_t       *ioslice       = blk->ioslice;
   iosnap_t        *iosnap        = blk->iosnap;
   fault_t         *fault         = blk->fault;
-  fault_coef_t    *f_coef        = blk->fault_coef;
-  fault_wav_t     *f_wav         = blk->fault_wav;
+  fault_coef_t    *fault_coef    = blk->fault_coef;
+  fault_wav_t     *fault_wav     = blk->fault_wav;
 
   // set up fd_t
   //    not support selection scheme by par file yet
@@ -586,7 +585,7 @@ int main(int argc, char** argv)
   
   // fault slice
   io_fault_locate(gdinfo,iofault,
-                  par->fault_global_indx, 
+                  par->fault_i_global_indx, 
                   blk->output_fname_part,
                   blk->output_dir);
                   
@@ -679,12 +678,13 @@ int main(int argc, char** argv)
   time_t t_start = time(NULL);
   
   sv_eq1st_curv_col_allstep(fd,gdinfo,gdcurv_metric,md,
-                            src,bdryfree,bdrypml,
-                            wav, mympi,
+                            bdryfree,bdrypml, wav, mympi,
+                            fault_coef,fault,fault_wav,
                             iorecv,ioline,iofault,ioslice,iosnap,
                             dt,nt_total,t0,
                             blk->output_fname_part,
                             blk->output_dir,
+                            par->fault_i_global_indx,
                             par->check_nan_every_nummber_of_steps,
                             par->output_all,
                             verbose);
@@ -704,21 +704,6 @@ int main(int argc, char** argv)
   if(md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
     io_recv_output_sac_el_iso_strain(iorecv,md->lambda,md->mu,dt,
                       src->evtnm,blk->output_dir,err_message);
-  }
-  if(md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
-    io_recv_output_sac_el_vti_strain(iorecv,md->c11,md->c13,
-                      md->c33,md->c55,md->c66,dt,
-                      src->evtnm,blk->output_dir,err_message);
-  }
-  if(md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
-    io_recv_output_sac_el_aniso_strain(iorecv,
-                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                             md->c33,md->c34,md->c35,md->c36,
-                                     md->c44,md->c45,md->c46,
-                                     md->c55,md->c56,
-                                             md->c66,
-                     dt,src->evtnm,blk->output_dir,err_message);
   }
 
   io_line_output_sac(ioline,dt,wav->cmp_name,src->evtnm,blk->output_dir);

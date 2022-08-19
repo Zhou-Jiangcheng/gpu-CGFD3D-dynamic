@@ -38,14 +38,14 @@ gd_info_set(gdinfo_t *const gdinfo,
   int nx_avg  = nx_et / mympi->nprocx;
   int nx_left = nx_et % mympi->nprocx;
 
-  // should not be less than 2 * fdx_nghosts
   if (nx_avg < 2 * fdx_nghosts) {
-    // error
+    fprintf(stdout,"should not be less than 2 * fdx_nghosts");
+    exit(1);
   }
 
-  // should not be less than abs_num_of_layers
   if (nx_avg<abs_num_of_layers[0][0] || nx_avg<abs_num_of_layers[0][1]) {
-    // error
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
   }
 
   // default set to average value
@@ -77,11 +77,14 @@ gd_info_set(gdinfo_t *const gdinfo,
   ny_et += abs_num_of_layers[1][0] + abs_num_of_layers[1][1];
   int ny_avg  = ny_et / mympi->nprocy;
   int ny_left = ny_et % mympi->nprocy;
+
   if (ny_avg < 2 * fdy_nghosts) {
-    // error
+    fprintf(stdout,"should not be less than 2 * fdy_nghosts");
+    exit(1);
   }
   if (ny_avg<abs_num_of_layers[1][0] || ny_avg<abs_num_of_layers[1][1]) {
-    // error
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
   }
   int nj = ny_avg;
   if (mympi->neighid[2] == MPI_PROC_NULL) {
@@ -112,10 +115,12 @@ gd_info_set(gdinfo_t *const gdinfo,
   int nz_avg  = nz_et / mympi->nprocz;
   int nz_left = ny_et % mympi->nprocz;
   if (nz_avg < 2 * fdz_nghosts) {
-    // error
+    fprintf(stdout,"should not be less than 2 * fdz_nghosts");
+    exit(1);
   }
   if (nz_avg<abs_num_of_layers[2][0] || nz_avg<abs_num_of_layers[2][1]) {
-    // error
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
   }
   int nk = nz_avg;
   if (mympi->neighid[4] == MPI_PROC_NULL) {

@@ -312,19 +312,32 @@ par_read_from_str(const char *str, par_t *par)
 
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
-    par->fault_i0_indx = par->number_of_total_grid_points_x/2 + 3;
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
-       par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
-       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry")) {
-          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress")) {
-          sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
-         par->dh = thirditem->valueint;
-       }
-     }
+      par->fault_i_global_indx = par->number_of_total_grid_points_x/2;
+      par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
+         sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
+      }
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
+         sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
+      }
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
+        par->dh = thirditem->valueint;
+      }
+    }
+    // 3D grid import
+    //if (subitem = cJSON_GetObjectItem(item, "3D_grid_with_fault")) {
+    //  par->grid_generation_itype = PAR_GRID_3D_GRID;
+    //  if (thirditem = cJSON_GetObjectItem(subitem, "3D_grid_file")) {
+    //     sprintf(par->3D_grid_coord_nc, "%s", thirditem->valuestring);
+    //  }
+    //  if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
+    //     sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
+    //  }
+    //  if (thirditem = cJSON_GetObjectItem(subitem, "fault_i_global_index")) {
+    //    par->fault_i_global_indx = thirditem->valueint;
+    //  }
+    //}
   }
 
   par->is_export_grid = 1;

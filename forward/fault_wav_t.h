@@ -17,10 +17,14 @@ typedef struct {
   float *T11;
   float *T12;
   float *T13;
+  float *hT11;
+  float *hT12;
+  float *hT13;
   int nx, ny, nz, ncmp, nlevel;
 
   size_t siz_slice_yz;
   size_t siz_slice_yz_2;
+  size_t siz_ilevel;
 
   size_t *cmp_pos;
   char  **cmp_name;

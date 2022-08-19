@@ -18,8 +18,6 @@
 #include "alloc.h"
 #include "cuda_common.h"
 
-//#define SV_ELISO1ST_CURV_MACDRP_DEBUG
-
 /*******************************************************************************
  * one simulation over all time steps, could be used in imaging or inversion
  *  simple MPI exchange without computing-communication overlapping
@@ -47,6 +45,7 @@ sv_eq1st_curv_col_allstep(
   float dt, int nt_total, float t0,
   char *output_fname_part,
   char *output_dir,
+  int fault_i_global_indx,
   int qc_check_nan_num_of_step,
   const int output_all, // qc all var
   const int verbose)
@@ -55,13 +54,13 @@ sv_eq1st_curv_col_allstep(
   int num_rk_stages = fd->num_rk_stages;
   float *rk_a = fd->rk_a;
   float *rk_b = fd->rk_b;
-  int num_of_pairs     = fd->num_of_pairs;
   
   //gdinfo
   int ni = gdinfo->ni;
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;
-
+  // fault x index with ghost
+  int i0 = fault_i_global_indx + gdinfo->fdx_nghosts;
   // mpi
   int myid = mympi->myid;
   int *topoid = mympi->topoid;
@@ -98,11 +97,11 @@ sv_eq1st_curv_col_allstep(
   float * w_end_d;
   float * w_tmp_d;
 
-  float * fw_cur_d;
-  float * fw_pre_d;
-  float * fw_rhs_d;
-  float * fw_end_d;
-  float * fw_tmp_d;
+  float * f_cur_d;
+  float * f_pre_d;
+  float * f_rhs_d;
+  float * f_end_d;
+  float * f_tmp_d;
 
   // get wavefield
   w_pre_d = wav_d.v5d + wav_d.siz_ilevel * 0; // previous level at n
@@ -110,10 +109,11 @@ sv_eq1st_curv_col_allstep(
   w_rhs_d = wav_d.v5d + wav_d.siz_ilevel * 2; // for rhs
   w_end_d = wav_d.v5d + wav_d.siz_ilevel * 3; // end level at n+1
 
-  fw_pre_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 0; // previous level at n
-  fw_tmp_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 1; // intermidate value
-  fw_rhs_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 2; // for rhs
-  fw_end_d = fault_wav_d.v5d + wav_d.siz_slice_yz_2 * 3; // end level at n+1
+  // get fault wavefield
+  f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
+  f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
+  f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
+  f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
 
   int   ipair, istage;
   float t_cur;
@@ -155,19 +155,20 @@ sv_eq1st_curv_col_allstep(
     }
   }
 
+  int isfree = bdryfree_d.is_at_sides[CONST_NDIM-1][1];
   // alloc free surface PGV, PGA and PGD
   float *PG_d = NULL;
   float *PG   = NULL;
   // Dis_accu is Displacemen accumulation, be uesd for PGD calculaton.
   float *Dis_accu_d   = NULL;
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (isfree == 1)
   {
     PG_d = init_PGVAD_device(gdinfo);
     Dis_accu_d = init_Dis_accu_device(gdinfo);
     PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gdinfo->ny*gdinfo->nx,0.0,"PGV,A,D malloc");
   }
   // calculate conversion matrix for free surface
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (isfree == 1)
   {
     if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ISO)
     {
@@ -176,24 +177,6 @@ sv_eq1st_curv_col_allstep(
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
       sv_eq1st_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
-      CUDACHECK(cudaDeviceSynchronize());
-    }
-    else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
-    {
-      dim3 block(16,16);
-      dim3 grid;
-      grid.x = (ni+block.x-1)/block.x;
-      grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
-      CUDACHECK(cudaDeviceSynchronize());
-    }
-    else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-    {
-      dim3 block(16,16);
-      dim3 grid;
-      grid.x = (ni+block.x-1)/block.x;
-      grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else
@@ -237,6 +220,7 @@ sv_eq1st_curv_col_allstep(
       // use pointer to avoid 1 copy for previous level value
       if (istage==0) {
         w_cur_d = w_pre_d;
+        f_cur_d = f_pre_d;
         for (int idim=0; idim<CONST_NDIM; idim++) {
           for (int iside=0; iside<2; iside++) {
             bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].pre;
@@ -246,6 +230,7 @@ sv_eq1st_curv_col_allstep(
       else
       {
         w_cur_d = w_tmp_d;
+        f_cur_d = f_tmp_d;
         for (int idim=0; idim<CONST_NDIM; idim++) {
           for (int iside=0; iside<2; iside++) {
             bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].tmp;
@@ -257,7 +242,18 @@ sv_eq1st_curv_col_allstep(
       switch (md_d.medium_type)
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
-          //trial_cal();
+          trial_slipweaking_onestage(
+              w_cur_d, f_cur_d, f_pre_d, 
+              i0, isfree, dt,
+              gdinfo_d, metric_d, wav_d, 
+              fault_wav_d, fault_d, fault_coef_d,
+              fd->pair_fdy_op[ipair][istage],
+              fd->pair_fdz_op[ipair][istage],
+              myid, verbose);
+          fault2wave_onestage(
+              w_cur_d, wav_d, 
+              f_cur_d, fault_wav_d,
+              fault_d, metric_d, gdinfo_d);
           sv_eq1st_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,
               gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
@@ -265,8 +261,18 @@ sv_eq1st_curv_col_allstep(
               fd->pair_fdy_op[ipair][istage],
               fd->pair_fdz_op[ipair][istage],
               myid, verbose);
-          //fault_wav_iso_onestage();
-          //fault2wave();
+          sv_eq1st_curv_col_el_iso_fault_onestage(
+              w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
+              i0, isfree, wav_d, f_wav_d,
+              gdinfo_d, metric_d, md_d, bdryfree_d,  
+              fd->pair_fdx_op[ipair][istage],
+              fd->pair_fdy_op[ipair][istage],
+              fd->pair_fdz_op[ipair][istage],
+              myid, verbose);
+          fault2wave_onestage(
+              w_cur_d, wav_d, 
+              f_cur_d, fault_wav_d,
+              fault_d, metric_d, gdinfo_d);
           break;
         }
       //  synchronize onestage device func.
@@ -288,6 +294,7 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
+          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_a, f_tmp_d, f_pre_d, f_rhs_d);
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
@@ -295,7 +302,7 @@ sv_eq1st_curv_col_allstep(
         //}
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
 
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
@@ -318,6 +325,7 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_pre_d, w_rhs_d);
+          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_pre_d, f_rhs_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -342,6 +350,7 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
+          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_a, f_tmp_d, f_pre_d, f_rhs_d);
           //CUDACHECK(cudaDeviceSynchronize());
         }
         // apply Qs
@@ -351,7 +360,7 @@ sv_eq1st_curv_col_allstep(
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -366,13 +375,13 @@ sv_eq1st_curv_col_allstep(
             }
           }
         }
-
         // w_end
         {
           dim3 block(256);
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update_end <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
+          wav_update_end <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -398,6 +407,7 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update_end <<<grid, block>>>(wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
+          wav_update_end <<<grid, block>>>(fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
         }
 
         // apply Qs
@@ -407,7 +417,7 @@ sv_eq1st_curv_col_allstep(
         
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(fw_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(f_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -430,11 +440,11 @@ sv_eq1st_curv_col_allstep(
       if (istage != num_rk_stages-1) 
       {
         blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(fw_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       } else 
       {
         blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(fw_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       }
     } // RK stages
 
@@ -450,7 +460,7 @@ sv_eq1st_curv_col_allstep(
     // save results
     //--------------------------------------------
     // calculate PGV, PGA and PGD for each surface at each stage
-    if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+    if (isfree == 1)
     {
         dim3 block(8,8);
         dim3 grid;
@@ -465,15 +475,19 @@ sv_eq1st_curv_col_allstep(
     //-- line values
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
 
-    // write slice, use w_rhs as buff
+    // write slice, use w_buff as buff
+    io_fault_nc_put(iofault,&iofault_nc,gdinfo,f_end_d,w_buff,it,t_end,0,wav->ncmp-1);
+
+    // write slice, use w_buff as buff
     io_slice_nc_put(ioslice,&ioslice_nc,gdinfo,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
 
     // snapshot
     io_snap_nc_put(iosnap, &iosnap_nc, gdinfo, md, wav, 
                    w_end_d, w_buff, nt_total, it, t_end, 1,1,1);
 
-    // swap w_pre and w_end, avoid copying
+    // swap w_pre and w_end pointer, avoid copying
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;
+    f_cur_d = f_pre_d; f_pre_d = f_end_d; f_end_d = f_cur_d;
 
     for (int idim=0; idim<CONST_NDIM; idim++) {
       for (int iside=0; iside<2; iside++) {
@@ -497,7 +511,7 @@ sv_eq1st_curv_col_allstep(
   dealloc_bdrypml_device(bdrypml_d);
   dealloc_wave_device(wav_d);
   // postproc
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (isfree == 1)
   {
     PG_slice_output(PG,gdinfo,output_dir,output_fname_part,topoid);
   }

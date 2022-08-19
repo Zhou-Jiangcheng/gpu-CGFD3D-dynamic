@@ -62,9 +62,4 @@ mympi_print(mympi_t *mympi)
   fprintf(stdout, " neighid_z[%d,%d]\n", mympi->neighid[4], mympi->neighid[5]);
   
   return;
-  fprintf(stdout, "\n-------------------------------------------------------\n");
-  fprintf(stdout, "print mympi info:\n");
-  fprintf(stdout, "-------------------------------------------------------\n\n");
-  
-  return;
 }

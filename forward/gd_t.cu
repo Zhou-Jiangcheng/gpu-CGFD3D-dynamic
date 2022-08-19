@@ -485,12 +485,11 @@ gd_curv_exchange(gdinfo_t *gdinfo,
 }
 
 void
-gd_curv_gen_fault(
-  gd_t *gdcurv,
-  gdinfo_t *gdinfo,
-  int  num_of_x_points,
-  float dh,
-  char *in_grid_fault_nc)
+gd_curv_gen_fault(gd_t *gdcurv,
+                  gdinfo_t *gdinfo,
+                  int  num_of_x_points,
+                  float dh,
+                  char *in_grid_fault_nc)
 {
   int nx = gdinfo->nx;
   int ny = gdinfo->ny;
@@ -527,8 +526,8 @@ gd_curv_gen_fault(
       for (int i = ni1; i <= ni2; i++){
 
         int gi = gni1 + i - 3; 
-        //float x0 = -num_of_x_points/2*dh;
-        float x0 = 0;
+        float x0 = -num_of_x_points/2*dh;
+        //float x0 = 0;
 
         float x = fault_x[j-3 + (k-3) * nj] + gi * dh + x0;
         float y = fault_y[j-3 + (k-3) * nj];

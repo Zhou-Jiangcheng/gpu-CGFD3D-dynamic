@@ -11,18 +11,13 @@
 typedef struct
 {
   //Fault coefs
-  float *D11_1;
-  float *D12_1;
-  float *D13_1;
   float *D21_1;
   float *D22_1;
   float *D23_1;
   float *D31_1;
   float *D32_1;
   float *D33_1;
-  float *D11_2;
-  float *D12_2;
-  float *D13_2;
+
   float *D21_2;
   float *D22_2;
   float *D23_2;
@@ -53,10 +48,6 @@ typedef struct
   float *matVy2Vz1;
   float *matVx2Vz2;
   float *matVy2Vz2;
-  float *matVx1_free;
-  float *matVy1_free;
-  float *matVx2_free;
-  float *matVy2_free;
 
   float *matPlus2Min1f; //zhangzhengguo
   float *matPlus2Min2f;
@@ -102,6 +93,7 @@ typedef struct
   float *slip2;
   float *Vs1;
   float *Vs2;
+  float *peak_Vs;
   float *init_t0;
 
   float *hslip;

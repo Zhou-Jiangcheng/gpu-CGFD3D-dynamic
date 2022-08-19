@@ -12,10 +12,8 @@
 #define PAR_MAX_STRLEN 1000
 #define PAR_TYPE_STRLEN 50
 
-#define PAR_GRID_IMPORT       1
-#define PAR_GRID_CARTESIAN    2
-#define PAR_GRID_LAYER_INTERP 3
-#define PAR_GRID_FAULT_PLANE  4
+#define PAR_GRID_FAULT_PLANE  1
+#define PAR_GRID_3D_GRID  2
 
 #define PAR_METRIC_CALCULATE 1
 #define PAR_METRIC_IMPORT    2
@@ -91,13 +89,14 @@ typedef struct{
 
   int imethod;
   // grid
-  int fault_i0_indx;
+  int fault_i_global_indx;
   int fault_grid[4];
   int grid_generation_itype;
   int is_export_grid;
   char grid_export_dir[PAR_MAX_STRLEN];
 
   char fault_coord_nc[PAR_MAX_STRLEN];
+  char 3D_grid_coord_nc[PAR_MAX_STRLEN];
   char init_stress_nc[PAR_MAX_STRLEN];
   float dh;
 

@@ -203,10 +203,6 @@ int init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_
   FC_d->matVy2Vz1     = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matVx2Vz2     = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matVy2Vz2     = (float *) cuda_malloc(sizeof(float)*ny*3*3);
-  FC_d->matVx1_free   = (float *) cuda_malloc(sizeof(float)*ny*3*3);
-  FC_d->matVy1_free   = (float *) cuda_malloc(sizeof(float)*ny*3*3);
-  FC_d->matVx2_free   = (float *) cuda_malloc(sizeof(float)*ny*3*3);
-  FC_d->matVy2_free   = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matPlus2Min1f = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matPlus2Min2f = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matPlus2Min3f = (float *) cuda_malloc(sizeof(float)*ny*3*3);
@@ -270,11 +266,6 @@ int init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_
   CUDACHECK( cudaMemcpy(FC_d->matVx2Vz2, FC->matVx2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(FC_d->matVy2Vz2, FC->matVy2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
 
-  CUDACHECK( cudaMemcpy(FC_d->matVx1_free, FC->matVx1_free, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVy1_free, FC->matVy1_free, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVx2_free, FC->matVx2_free, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVy2_free, FC->matVy2_free, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-
   CUDACHECK( cudaMemcpy(FC_d->matPlus2Min1f, FC->matPlus2Min1f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(FC_d->matPlus2Min2f, FC->matPlus2Min2f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(FC_d->matPlus2Min3f, FC->matPlus2Min3f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
@@ -312,12 +303,13 @@ int init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d)
   F_d->slip2      = (float *) cuda_malloc(sizeof(float)*nj*nk);  
   F_d->Vs1        = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->Vs2        = (float *) cuda_malloc(sizeof(float)*nj*nk);
+  F_d->peak_Vs    = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->init_t0    = (float *) cuda_malloc(sizeof(float)*nj*nk);
   // for inner
   F_d->hslip        = (float *) cuda_malloc(sizeof(float)*nj*nk);
-  F_d->Tn           = (float *) cuda_malloc(sizeof(float)*nj*nk);
-  F_d->Ts1          = (float *) cuda_malloc(sizeof(float)*nj*nk);
-  F_d->Ts2          = (float *) cuda_malloc(sizeof(float)*nj*nk);
+  F_d->tTn          = (float *) cuda_malloc(sizeof(float)*nj*nk);
+  F_d->tTs1         = (float *) cuda_malloc(sizeof(float)*nj*nk);
+  F_d->tTs2         = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->united       = (int *) cuda_malloc(sizeof(int)*nj*nk);
   F_d->faultgrid    = (int *) cuda_malloc(sizeof(int)*nj*nk);
   F_d->rup_index_y  = (int *) cuda_malloc(sizeof(int)*nj*nk);
@@ -341,6 +333,7 @@ int init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d)
   CUDACHECK( cudaMemcpy(F_d->slip2, F->slip2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(F_d->Vs1, F->Vs1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(F_d->Vs2, F->Vs2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
+  CUDACHECK( cudaMemcpy(F_d->peak_Vs, F->peak_Vs, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
   CUDACHECK( cudaMemcpy(F_d->init_t0, F->init_t0, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
 
   CUDACHECK( cudaMemcpy(F_d->hslip, F->hslip, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
@@ -363,15 +356,22 @@ int init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d)
   int nz = FW->nz;
   int nlevel = FW->nlevel;
   int ncmp = FW->ncmp;
+  size_t siz_ilevel = FW->siz_ilevel;
   memcpy(FW_d,FW,sizeof(fault_wav_t));
-  FW_d->v5d   = (float *) cuda_malloc(sizeof(float)*2*ny*nz*ncmp*nlevel);
+  FW_d->v5d   = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
   FW_d->T11   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
   FW_d->T12   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
   FW_d->T13   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  CUDACHECK(cudaMemset(FW_d->v5d,0,sizeof(float)*2*ny*nz*ncmp*nlevel);
+  FW_d->hT11  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT12  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT13  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  CUDACHECK(cudaMemset(FW_d->v5d,0,sizeof(float)*siz_ilevel*nlevel);
   CUDACHECK(cudaMemset(FW_d->T11,0,sizeof(float)*7*ny*nz);
   CUDACHECK(cudaMemset(FW_d->T12,0,sizeof(float)*7*ny*nz);
   CUDACHECK(cudaMemset(FW_d->T13,0,sizeof(float)*7*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT11,0,sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT12,0,sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT13,0,sizeof(float)*ny*nz);
 
   return 0;
 }
