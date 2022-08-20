@@ -14,12 +14,12 @@
 // fault wavefield variables elastic 1st eqn: vel + stress
 typedef struct {
   float *v5d; // allocated var
-  float *T11;
-  float *T12;
-  float *T13;
-  float *hT11;
-  float *hT12;
-  float *hT13;
+  float *T1x;
+  float *T1y;
+  float *T1z;
+  float *hT1x;
+  float *hT1y;
+  float *hT1z;
   int nx, ny, nz, ncmp, nlevel;
 
   size_t siz_slice_yz;
@@ -32,23 +32,23 @@ typedef struct {
   size_t Vx_pos;
   size_t Vy_pos;
   size_t Vz_pos;
-  size_t T21_pos;
-  size_t T22_pos;
-  size_t T23_pos;
-  size_t T31_pos;
-  size_t T32_pos;
-  size_t T33_pos;
+  size_t T2x_pos;
+  size_t T2y_pos;
+  size_t T2z_pos;
+  size_t T3x_pos;
+  size_t T3y_pos;
+  size_t T3z_pos;
 
   // sequential index 0-based
   size_t Vx_seq;
   size_t Vy_seq;
   size_t Vz_seq;
-  size_t T21_seq;
-  size_t T22_seq;
-  size_t T23_seq;
-  size_t T31_seq;
-  size_t T32_seq;
-  size_t T33_seq;
+  size_t T2x_seq;
+  size_t T2y_seq;
+  size_t T2z_seq;
+  size_t T3x_seq;
+  size_t T3y_seq;
+  size_t T3z_seq;
 
 } fault_wav_t;
 

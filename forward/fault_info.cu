@@ -350,23 +350,23 @@ fault_coef_cal(gdinfo_t *gdinfo,
       FC->D33_2[iptr_f*9+8] = lam2mu*e33*e33+mu*(e31*e31+e32*e32);
 
 
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          D11_1[ii][jj] *= jac;
-          D12_1[ii][jj] *= jac;
-          D13_1[ii][jj] *= jac;
+          int ij = 3*i+j;
+          D11_1[i][j] *= jac;
+          D12_1[i][j] *= jac;
+          D13_1[i][j] *= jac;
           FC->D21_1[iptr_f*9+ij] *= jac;
           FC->D22_1[iptr_f*9+ij] *= jac;
           FC->D23_1[iptr_f*9+ij] *= jac;
           FC->D31_1[iptr_f*9+ij] *= jac;
           FC->D32_1[iptr_f*9+ij] *= jac;
           FC->D33_1[iptr_f*9+ij] *= jac;
-          D11_2[ii][jj] *= jac;
-          D12_2[ii][jj] *= jac;
-          D13_2[ii][jj] *= jac;
+          D11_2[i][j] *= jac;
+          D12_2[i][j] *= jac;
+          D13_2[i][j] *= jac;
           FC->D21_2[iptr_f*9+ij] *= jac;
           FC->D22_2[iptr_f*9+ij] *= jac;
           FC->D23_2[iptr_f*9+ij] *= jac;
@@ -374,19 +374,19 @@ fault_coef_cal(gdinfo_t *gdinfo,
           FC->D32_2[iptr_f*9+ij] *= jac;
           FC->D33_2[iptr_f*9+ij] *= jac;
 
-          D21_1[ii][jj] = FC->D21_1[iptr_f*9+ij];
-          D22_1[ii][jj] = FC->D22_1[iptr_f*9+ij];
-          D23_1[ii][jj] = FC->D23_1[iptr_f*9+ij];
-          D31_1[ii][jj] = FC->D31_1[iptr_f*9+ij];
-          D32_1[ii][jj] = FC->D32_1[iptr_f*9+ij];
-          D33_1[ii][jj] = FC->D33_1[iptr_f*9+ij];
+          D21_1[i][j] = FC->D21_1[iptr_f*9+ij];
+          D22_1[i][j] = FC->D22_1[iptr_f*9+ij];
+          D23_1[i][j] = FC->D23_1[iptr_f*9+ij];
+          D31_1[i][j] = FC->D31_1[iptr_f*9+ij];
+          D32_1[i][j] = FC->D32_1[iptr_f*9+ij];
+          D33_1[i][j] = FC->D33_1[iptr_f*9+ij];
 
-          D21_2[ii][jj] = FC->D21_2[iptr_f*9+ij];
-          D22_2[ii][jj] = FC->D22_2[iptr_f*9+ij];
-          D23_2[ii][jj] = FC->D23_2[iptr_f*9+ij];
-          D31_2[ii][jj] = FC->D31_2[iptr_f*9+ij];
-          D32_2[ii][jj] = FC->D32_2[iptr_f*9+ij];
-          D33_2[ii][jj] = FC->D33_2[iptr_f*9+ij];
+          D21_2[i][j] = FC->D21_2[iptr_f*9+ij];
+          D22_2[i][j] = FC->D22_2[iptr_f*9+ij];
+          D23_2[i][j] = FC->D23_2[iptr_f*9+ij];
+          D31_2[i][j] = FC->D31_2[iptr_f*9+ij];
+          D32_2[i][j] = FC->D32_2[iptr_f*9+ij];
+          D33_2[i][j] = FC->D33_2[iptr_f*9+ij];
         }                           
       }                             
     
@@ -399,205 +399,205 @@ fault_coef_cal(gdinfo_t *gdinfo,
       // minus to plus
       // invert(D11_2) * D 
       // D = D11_1, D12_1, D13_1, D12_2, D13_2
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          mat1[ii][jj] = D11_2[ii][jj];
+          mat1[i][j] = D11_2[i][j];
         }
       }
       fdlib_math_invert3x3(mat1);
 
       // invert(D11_2) * D11_1 
       fdlib_math_matmul3x3(mat1,D11_1,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matMin2Plus1[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matMin2Plus1[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_2) * D12_1 
       fdlib_math_matmul3x3(mat1,D12_1,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matMin2Plus2[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matMin2Plus2[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_2) * D13_1 
       fdlib_math_matmul3x3(mat1,D13_1,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matMin2Plus3[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matMin2Plus3[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_2) * D12_2
       fdlib_math_matmul3x3(mat1,D12_2,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matMin2Plus4[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matMin2Plus4[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_2) * D13_2
       fdlib_math_matmul3x3(mat1,D13_2,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matMin2Plus5[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matMin2Plus5[iptr_f*9+ij] = mat2[i][j];
         }
       }
 
       // plus -> min
       // invert(D11_1) * D
       // D = D11_2, D12_2, D13_2, D12_1, D13_1
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          mat1[ii][jj] = D11_1[ii][jj];
+          mat1[i][j] = D11_1[i][j];
         }
       }
       fdlib_math_invert3x3(mat1);
       // invert(D11_1) * D11_2 
       fdlib_math_matmul3x3(mat1,D11_2,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matPlus2Min1[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matPlus2Min1[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_1) * D12_2
       fdlib_math_matmul3x3(mat1,D12_2,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matPlus2Min2[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matPlus2Min2[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_1) * D13_2 
       fdlib_math_matmul3x3(mat1,D13_2,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matPlus2Min3[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matPlus2Min3[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_1) * D12_1 
       fdlib_math_matmul3x3(mat1,D12_1,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matPlus2Min4[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matPlus2Min4[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_1) * D13_1
       fdlib_math_matmul3x3(mat1,D13_1,mat2);
-      for (int ii = 0; ii < 3; ii++)
+      for (int i = 0; i < 3; i++)
       {
-        for (int jj = 0; jj < 3; jj++)
+        for (int j = 0; j < 3; j++)
         {
-          int ij = 3*ii+jj;
-          FC->matPlus2Min5[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matPlus2Min5[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // method 2 coef 
       // minus
       // T1 Vy Vz -> Vx
       // inversion D11_1 
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          mat1[ii][jj] = D11_1[ii][jj];
+          mat1[i][j] = D11_1[i][j];
         }
       }
       // invert(D11_1) 
       fdlib_math_invert3x3(mat1);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matT1toVx_Min[iptr_f*9+ij] = mat1[ii][jj];
+          int ij = 3*i+j;
+          FC->matT1toVx_Min[iptr_f*9+ij] = mat1[i][j];
         }
       }
       // invert(D11_1) * D12_1 
       fdlib_math_matmul3x3(mat1,D12_1,mat2);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matVytoVx_Min[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matVytoVx_Min[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_1) * D13_1 
       fdlib_math_matmul3x3(mat1,D13_1,mat2);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matVztoVx_Min[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matVztoVx_Min[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // Plus side
       // T1 Vy Vz -> Vx
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          mat1[ii][jj] = D11_2[ii][jj];
+          mat1[i][j] = D11_2[i][j];
         }
       }
       // invert(D11_2) 
       fdlib_math_invert3x3(mat1);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matT1toVx_Plus[iptr_f*9+ij] = mat1[ii][jj];
+          int ij = 3*i+j;
+          FC->matT1toVx_Plus[iptr_f*9+ij] = mat1[i][j];
         }
       }
       // invert(D11_2) * D12_2 
       fdlib_math_matmul3x3(mat1,D12_2,mat2);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matVytoVx_Plus[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matVytoVx_Plus[iptr_f*9+ij] = mat2[i][j];
         }
       }
       // invert(D11_2) * D13_2 
       fdlib_math_matmul3x3(mat1,D13_2,mat2);
-      for (int ii = 0; ii < 3; ii++) 
+      for (int i = 0; i < 3; i++) 
       {
-        for (int jj = 0; jj < 3; jj++) 
+        for (int j = 0; j < 3; j++) 
         {
-          int ij = 3*ii+jj;
-          FC->matVztoVx_Plus[iptr_f*9+ij] = mat2[ii][jj];
+          int ij = 3*i+j;
+          FC->matVztoVx_Plus[iptr_f*9+ij] = mat2[i][j];
         }
       }
 
@@ -649,24 +649,24 @@ fault_coef_cal(gdinfo_t *gdinfo,
 
       if ((k-3+gnk1) == npoint_z-1) // free surface global index, index start 0
       {
-        for (int ii = 0; ii < 3; ii++) {
-          for (int jj = 0; jj < 3; jj++) {
-            int ij = 3*ii+jj; 
-            A[ii][jj] =  FC->D33_1[iptr_f*9+ij];
-            B[ii][jj] = -FC->D31_1[iptr_f*9+ij];
-            C[ii][jj] = -FC->D32_1[iptr_f*9+ij];
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            int ij = 3*i+j; 
+            A[i][j] =  FC->D33_1[iptr_f*9+ij];
+            B[i][j] = -FC->D31_1[iptr_f*9+ij];
+            C[i][j] = -FC->D32_1[iptr_f*9+ij];
           }
         }
         fdlib_math_invert3x3(A);
         fdlib_math_matmul3x3(A, B, matVx2Vz1);
         fdlib_math_matmul3x3(A, C, matVy2Vz1);
 
-        for (int ii = 0; ii < 3; ii++){
-          for (int jj = 0; jj < 3; jj++){
-            int ij = 3*ii+jj; 
-            A[ii][jj] =  FC->D33_2[iptr_f*9+ij];
-            B[ii][jj] = -FC->D31_2[iptr_f*9+ij];
-            C[ii][jj] = -FC->D32_2[iptr_f*9+ij];
+        for (int i = 0; i < 3; i++){
+          for (int j = 0; j < 3; j++){
+            int ij = 3*i+j; 
+            A[i][j] =  FC->D33_2[iptr_f*9+ij];
+            B[i][j] = -FC->D31_2[iptr_f*9+ij];
+            C[i][j] = -FC->D32_2[iptr_f*9+ij];
           }
         }
         fdlib_math_invert3x3(A);
@@ -708,53 +708,53 @@ fault_coef_cal(gdinfo_t *gdinfo,
         h2_3 = h2_3/norm;
         h3_3 = h3_3/norm;
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = vec_s1[ii] * vec_n[jj];
-            D11_12[ii][jj] = mu * g1_2 * Tovert[ii][jj];
-            D12_12[ii][jj] = mu * g2_2 * Tovert[ii][jj];
-            D13_12[ii][jj] = mu * g3_2 * Tovert[ii][jj];
+            Tovert[i][j] = vec_s1[i] * vec_n[j];
+            D11_12[i][j] = mu * g1_2 * Tovert[i][j];
+            D12_12[i][j] = mu * g2_2 * Tovert[i][j];
+            D13_12[i][j] = mu * g3_2 * Tovert[i][j];
           }
         }
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = vec_s2[ii] * vec_n[jj];
-            D11_13[ii][jj] = mu * h1_3 * Tovert[ii][jj];
-            D12_13[ii][jj] = mu * h2_3 * Tovert[ii][jj];
-            D13_13[ii][jj] = mu * h3_3 * Tovert[ii][jj];
-            D11_1f[ii][jj] = D11_1[ii][jj] + D11_12[ii][jj] + D11_13[ii][jj];
-            D12_1f[ii][jj] = D12_1[ii][jj] + D12_12[ii][jj] + D12_13[ii][jj];
-            D13_1f[ii][jj] = D13_1[ii][jj] + D13_12[ii][jj] + D13_13[ii][jj];
+            Tovert[i][j] = vec_s2[i] * vec_n [j];
+            D11_13[i][j] = mu * h1_3 * Tovert[i][j];
+            D12_13[i][j] = mu * h2_3 * Tovert[i][j];
+            D13_13[i][j] = mu * h3_3 * Tovert[i][j];
+            D11_1f[i][j] = D11_1[i][j] + D11_12[i][j] + D11_13[i][j];
+            D12_1f[i][j] = D12_1[i][j] + D12_12[i][j] + D12_13[i][j];
+            D13_1f[i][j] = D13_1[i][j] + D13_12[i][j] + D13_13[i][j];
           }
         }
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = vec_s1[ii] * vec_n[jj];
-            D11_12[ii][jj] = mu * g1_2 * Tovert[ii][jj];
-            D12_12[ii][jj] = mu * g2_2 * Tovert[ii][jj];
-            D13_12[ii][jj] = mu * g3_2 * Tovert[ii][jj];
+            Tovert[i][j] = vec_s1[i] * vec_n[j];
+            D11_12[i][j] = mu * g1_2 * Tovert[i][j];
+            D12_12[i][j] = mu * g2_2 * Tovert[i][j];
+            D13_12[i][j] = mu * g3_2 * Tovert[i][j];
           }
         }
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = vec_s2[ii] * vec_n[jj];
-            D11_13[ii][jj] = mu * h1_3 * Tovert[ii][jj];
-            D12_13[ii][jj] = mu * h2_3 * Tovert[ii][jj];
-            D13_13[ii][jj] = mu * h3_3 * Tovert[ii][jj];
-            D11_2f[ii][jj] = D11_2[ii][jj] + D11_12[ii][jj] + D11_13[ii][jj];
-            D12_2f[ii][jj] = D12_2[ii][jj] + D12_12[ii][jj] + D12_13[ii][jj];
-            D13_2f[ii][jj] = D13_2[ii][jj] + D13_12[ii][jj] + D13_13[ii][jj];
+            Tovert[i][j] = vec_s2[i] * vec_n [j];
+            D11_13[i][j] = mu * h1_3 * Tovert[i][j];
+            D12_13[i][j] = mu * h2_3 * Tovert[i][j];
+            D13_13[i][j] = mu * h3_3 * Tovert[i][j];
+            D11_2f[i][j] = D11_2[i][j] + D11_12[i][j] + D11_13[i][j];
+            D12_2f[i][j] = D12_2[i][j] + D12_12[i][j] + D12_13[i][j];
+            D13_2f[i][j] = D13_2[i][j] + D13_12[i][j] + D13_13[i][j];
           }
         }
 
@@ -763,22 +763,22 @@ fault_coef_cal(gdinfo_t *gdinfo,
         fdlib_math_matmul3x3(D13_2f, matVx2Vz2, mat3);
         fdlib_math_matmul3x3(D13_2f, matVy2Vz2, mat4);
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            matVx1_free[ii][jj] = D11_1f[ii][jj] + mat1[ii][jj];
-            matVy1_free[ii][jj] = D12_1f[ii][jj] + mat2[ii][jj];
-            matVx2_free[ii][jj] = D11_2f[ii][jj] + mat3[ii][jj];
-            matVy2_free[ii][jj] = D12_2f[ii][jj] + mat4[ii][jj];
+            matVx1_free[i][j] = D11_1f[i][j] + mat1[i][j];
+            matVy1_free[i][j] = D12_1f[i][j] + mat2[i][j];
+            matVx2_free[i][j] = D11_2f[i][j] + mat3[i][j];
+            matVy2_free[i][j] = D12_2f[i][j] + mat4[i][j];
           }
         }
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = matVx1_free[ii][jj];
+            Tovert[i][j] = matVx1_free[i][j];
           }
         }
         fdlib_math_invert3x3(Tovert);
@@ -786,21 +786,21 @@ fault_coef_cal(gdinfo_t *gdinfo,
         fdlib_math_matmul3x3(Tovert, matVy2_free, matPlus2Min2f);
         fdlib_math_matmul3x3(Tovert, matVy1_free, matPlus2Min3f);
         // method 2 coef
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            int ij = 3*ii+jj;
-            FC->matT1toVxf_Min[j*9+ij] = Tovert[ii][jj];
-            FC->matVytoVxf_Min[j*9+ij] = matPlus2Min3f[ii][jj];
+            int ij = 3*i+j;
+            FC->matT1toVxf_Min[j*9+ij] = Tovert[i][j];
+            FC->matVytoVxf_Min[j*9+ij] = matPlus2Min3f[i][j];
           }
         }
 
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            Tovert[ii][jj] = matVx2_free[ii][jj];
+            Tovert[i][j] = matVx2_free[i][j];
           }
         }
         fdlib_math_invert3x3(Tovert);
@@ -809,32 +809,32 @@ fault_coef_cal(gdinfo_t *gdinfo,
         fdlib_math_matmul3x3(Tovert, matVy2_free, matMin2Plus3f);
 
         // method 2 coef
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            int ij = 3*ii+jj;
-            FC->matT1toVxf_Plus[j*9+ij] = Tovert[ii][jj];
-            FC->matVytoVxf_Plus[j*9+ij] = matMin2Plus3f[ii][jj];
+            int ij = 3*i+j;
+            FC->matT1toVxf_Plus[j*9+ij] = Tovert[i][j];
+            FC->matVytoVxf_Plus[j*9+ij] = matMin2Plus3f[i][j];
           }
         }
 
         // save
-        for (int ii = 0; ii < 3; ii++)
+        for (int i = 0; i < 3; i++)
         {
-          for (int jj = 0; jj < 3; jj++)
+          for (int j = 0; j < 3; j++)
           {
-            int ij = 3*ii+jj;
-            FC->matVx2Vz1    [j*9+ij] = matVx2Vz1    [ii][jj];
-            FC->matVy2Vz1    [j*9+ij] = matVy2Vz1    [ii][jj];
-            FC->matVx2Vz2    [j*9+ij] = matVx2Vz2    [ii][jj];
-            FC->matVy2Vz2    [j*9+ij] = matVy2Vz2    [ii][jj];
-            FC->matPlus2Min1f[j*9+ij] = matPlus2Min1f[ii][jj];
-            FC->matPlus2Min2f[j*9+ij] = matPlus2Min2f[ii][jj];
-            FC->matPlus2Min3f[j*9+ij] = matPlus2Min3f[ii][jj];
-            FC->matMin2Plus1f[j*9+ij] = matMin2Plus1f[ii][jj];
-            FC->matMin2Plus2f[j*9+ij] = matMin2Plus2f[ii][jj];
-            FC->matMin2Plus3f[j*9+ij] = matMin2Plus3f[ii][jj];
+            int ij = 3*i+j;
+            FC->matVx2Vz1    [j*9+ij] = matVx2Vz1    [i][j];
+            FC->matVy2Vz1    [j*9+ij] = matVy2Vz1    [i][j];
+            FC->matVx2Vz2    [j*9+ij] = matVx2Vz2    [i][j];
+            FC->matVy2Vz2    [j*9+ij] = matVy2Vz2    [i][j];
+            FC->matPlus2Min1f[j*9+ij] = matPlus2Min1f[i][j];
+            FC->matPlus2Min2f[j*9+ij] = matPlus2Min2f[i][j];
+            FC->matPlus2Min3f[j*9+ij] = matPlus2Min3f[i][j];
+            FC->matMin2Plus1f[j*9+ij] = matMin2Plus1f[i][j];
+            FC->matMin2Plus2f[j*9+ij] = matMin2Plus2f[i][j];
+            FC->matMin2Plus3f[j*9+ij] = matMin2Plus3f[i][j];
           }
         }
       }
@@ -922,30 +922,30 @@ fault_set(fault_t *F
   {
     for (int j=0; j<nj; j++)
     {
-      iptr   = j + k * nj;
-      iptr_g = (j+3) + (k+3) * ny; //with ghost
+      iptr_t = j + k * nj;
+      iptr_f = (j+3) + (k+3) * ny; //with ghost
 
-      vec_n [0] = FC->vec_n [iptr_g*3 + 0];
-      vec_n [1] = FC->vec_n [iptr_g*3 + 1];
-      vec_n [2] = FC->vec_n [iptr_g*3 + 2];
-      vec_s1[0] = FC->vec_s1[iptr_g*3 + 0];
-      vec_s1[1] = FC->vec_s1[iptr_g*3 + 1];
-      vec_s1[2] = FC->vec_s1[iptr_g*3 + 2];
-      vec_s2[0] = FC->vec_s2[iptr_g*3 + 0];
-      vec_s2[1] = FC->vec_s2[iptr_g*3 + 1];
-      vec_s2[2] = FC->vec_s2[iptr_g*3 + 2];
+      vec_n [0] = FC->vec_n [iptr_f*3 + 0];
+      vec_n [1] = FC->vec_n [iptr_f*3 + 1];
+      vec_n [2] = FC->vec_n [iptr_f*3 + 2];
+      vec_s1[0] = FC->vec_s1[iptr_f*3 + 0];
+      vec_s1[1] = FC->vec_s1[iptr_f*3 + 1];
+      vec_s1[2] = FC->vec_s1[iptr_f*3 + 2];
+      vec_s2[0] = FC->vec_s2[iptr_f*3 + 0];
+      vec_s2[1] = FC->vec_s2[iptr_f*3 + 1];
+      vec_s2[2] = FC->vec_s2[iptr_f*3 + 2];
 
       // transform init stress to local coordinate, not nessessary,
       // only for output 
-      F->Tn [iptr] = F->T0x[iptr] * vec_n[0]
-                   + F->T0y[iptr] * vec_n[1]
-                   + F->T0z[iptr] * vec_n[2];
-      F->Ts1[iptr] = F->T0x[iptr] * vec_s1[0]
-                   + F->T0y[iptr] * vec_s1[1]
-                   + F->T0z[iptr] * vec_s1[2];
-      F->Ts2[iptr] = F->T0x[iptr] * vec_s2[0]
-                   + F->T0y[iptr] * vec_s2[1]
-                   + F->T0z[iptr] * vec_s2[2];
+      F->Tn [iptr] = F->T0x[iptr_t] * vec_n[0]
+                   + F->T0y[iptr_t] * vec_n[1]
+                   + F->T0z[iptr_t] * vec_n[2];
+      F->Ts1[iptr] = F->T0x[iptr_t] * vec_s1[0]
+                   + F->T0y[iptr_t] * vec_s1[1]
+                   + F->T0z[iptr_t] * vec_s1[2];
+      F->Ts2[iptr] = F->T0x[iptr_t] * vec_s2[0]
+                   + F->T0y[iptr_t] * vec_s2[1]
+                   + F->T0z[iptr_t] * vec_s2[2];
 
       gj = gnj1 + j;
       gk = gnk1 + k;
@@ -954,15 +954,15 @@ fault_set(fault_t *F
       // rup_index = 0 means points out of fault.
       // NOTE: boundry 3 points out of fault, due to use different fd stencil
       if( gj+1 <= fault_grid[0]+3 || gj+1 >= fault_grid[1]-3 ){
-        F->rup_index_y[iptr] = 0;
+        F->rup_index_y[iptr_t] = 0;
       }else{
-        F->rup_index_y[iptr] = 1;
+        F->rup_index_y[iptr_t] = 1;
       }
 
       if( gk+1 <= fault_grid[2]+3 || gk+1 >= fault_grid[3]-3 ){
-        F->rup_index_z[iptr] = 0;
+        F->rup_index_z[iptr_t] = 0;
       }else{
-        F->rup_index_z[iptr] = 1;
+        F->rup_index_z[iptr_t] = 1;
       }
       
       // united is used for pml, pml with fault easy write code
@@ -971,30 +971,30 @@ fault_set(fault_t *F
       if(bdry_has_free == 1) 
       {
         if( gj+1 > 30 && gj+1 <= npoint_y - 30 && gk+1 > 30) {
-          F.united[iptr] = 0;
+          F.united[iptr_t] = 0;
         }else{
-          F.united[iptr] = 1;
+          F.united[iptr_t] = 1;
         }
       } 
       else if(bdry_has_free == 0)
       {
         if( gj+1 > 30 && gj+1 <= npoint_y - 30 && gk+1 > 30 
             && gk+1 <= npoint_z - 30) {
-          F->united[iptr] = 0;
+          F->united[iptr_t] = 0;
         }else{
-          F->united[iptr] = 1;
+          F->united[iptr_t] = 1;
         }
       }
       if( gj+1 >= fault_grid[0]+3 && gj+1 <= fault_grid[1]-3 &&
           gk+1 >= fault_grid[2]+3 && gk+1 <= fault_grid[3]-3 ) {
-        F->faultgrid[iptr] = 1;
+        F->faultgrid[iptr_t] = 1;
       }else{
-        F->faultgrid[iptr] = 0;
+        F->faultgrid[iptr_t] = 0;
       }
 
-      F->init_t0[iptr] = -9999.9;
-      F->flag_rup   [iptr] = 0;
-      F->first_rup  [iptr] = 1;
+      F->init_t0[iptr_t] = -9999.9;
+      F->flag_rup   [iptr_t] = 0;
+      F->first_rup  [iptr_t] = 1;
     }
   }
   return 0;
@@ -1039,6 +1039,42 @@ nc_read_init_stress(fault_t *F, gdinfo_t *gdinfo, char *init_stress_nc)
   err = nc_close(ncid);handle_nc_err(ierr);
 
   return 0;
+}
+
+int 
+fault_var_update(gdinfo_t *gdinfo, fault_wav_t FW, fault_t F, int it, int dt)
+{
+  {
+    dim3 block(8,8);
+    dim3 grid;
+    grid.x = (nj + block.x - 1) / block.x;
+    grid.y = (nk + block.y - 1) / block.y;
+    fault_var_update<<<gird, block >>> (
+                      );
+  }
+  return 0;
+}
+
+__global__ void
+fault_stress_update_first(size_t size, float coef, fault_t F)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  if(ix<size){
+    F.Tn [ix] = coef * F.tTn[ix];
+    F.Ts1[ix] = coef * F.tTs1[ix];
+    F.Ts2[ix] = coef * F.tTs2[ix];
+  }
+}
+
+__global__ void
+fault_stress_update(size_t size, float coef, fault_t F)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  if(ix<size){
+    F.Tn [ix] += coef * F.tTn [ix];
+    F.Ts1[ix] += coef * F.tTs1[ix];
+    F.Ts2[ix] += coef * F.tTs2[ix];
+  }
 }
 
 

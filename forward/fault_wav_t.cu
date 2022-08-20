@@ -30,22 +30,22 @@ fault_wav_init(gdinfo_t *gdinfo,
   // i0 is fault plane x index
   // this is for zhang wenqiang method
   // zhang zhenguo method only need i0-1 i0 i0+1
-  FW->T11 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
-                        0.0, "T11, ft_wav_el3d_1st");
-  FW->T12 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
-                        0.0, "T12, ft_wav_el3d_1st");
-  FW->T13 = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
-                        0.0, "T13, ft_wav_el3d_1st");
+  FW->T1x = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+                        0.0, "T1x, ft_wav_el3d_1st");
+  FW->T1y = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+                        0.0, "T1y, ft_wav_el3d_1st");
+  FW->T1z = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+                        0.0, "T1z, ft_wav_el3d_1st");
   // dT/dt 1st order
-  FW->hT11 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
-                        0.0, "hT11, ft_wav_el3d_1st");
-  FW->hT12 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
-                        0.0, "hT12, ft_wav_el3d_1st");
-  FW->hT13 = (float *) fdlib_mem_calloc_1d_float(ny * nz,
-                        0.0, "hT13, ft_wav_el3d_1st");
+  FW->hT1x = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT1x, ft_wav_el3d_1st");
+  FW->hT1y = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT1y, ft_wav_el3d_1st");
+  FW->hT1z = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "hT1z, ft_wav_el3d_1st");
   // vars
   // split "-" minus "+" plus 
-  // Vx, Vy, Vz, T21, T22, T23, T31, T32, T33
+  // Vx, Vy, Vz, T2x, T2y, T2z, T3x, T3y, T3z
   // 4 rk stages
   FW->v5d = (float *) fdlib_mem_calloc_1d_float(FW->siz_ilevel * FW->nlevel,
                         0.0, "v5d, ft_wav_el3d_1st");
@@ -67,7 +67,7 @@ fault_wav_init(gdinfo_t *gdinfo,
 
   /*
    * 0-3: Vx,Vy,Vz
-   * 4-9: T21, T22, T23, T31, T32, T33
+   * 4-9: T2x, T2y, T2z, T3x, T3y, T3z
    */
 
   sprintf(cmp_name[icmp],"%s","Vx");
@@ -85,34 +85,34 @@ fault_wav_init(gdinfo_t *gdinfo,
   FW->Vz_seq = 2;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T21");
-  FW->T21_pos = cmp_pos[icmp];
-  FW->T21_seq = 3;
+  sprintf(cmp_name[icmp],"%s","T2x");
+  FW->T2x_pos = cmp_pos[icmp];
+  FW->T2x_seq = 3;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T22");
-  FW->T22_pos = cmp_pos[icmp];
-  FW->T22_seq = 4;
+  sprintf(cmp_name[icmp],"%s","T2y");
+  FW->T2y_pos = cmp_pos[icmp];
+  FW->T2y_seq = 4;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T23");
-  FW->T23_pos = cmp_pos[icmp];
-  FW->T23_seq = 5;
+  sprintf(cmp_name[icmp],"%s","T2z");
+  FW->T2z_pos = cmp_pos[icmp];
+  FW->T2z_seq = 5;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T31");
-  FW->T31_pos = cmp_pos[icmp];
-  FW->T31_seq = 6;
+  sprintf(cmp_name[icmp],"%s","T3x");
+  FW->T3x_pos = cmp_pos[icmp];
+  FW->T3x_seq = 6;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T32");
-  FW->T32_pos = cmp_pos[icmp];
-  FW->T32_seq = 7;
+  sprintf(cmp_name[icmp],"%s","T3y");
+  FW->T3y_pos = cmp_pos[icmp];
+  FW->T3y_seq = 7;
   icmp += 1;
 
-  sprintf(cmp_name[icmp],"%s","T33");
-  FW->T33_pos = cmp_pos[icmp];
-  FW->T33_seq = 8;
+  sprintf(cmp_name[icmp],"%s","T3z");
+  FW->T3z_pos = cmp_pos[icmp];
+  FW->T3z_seq = 8;
   icmp += 1;
 
   // set pointer
@@ -120,24 +120,5 @@ fault_wav_init(gdinfo_t *gdinfo,
   FW->cmp_name = cmp_name;
 
   return ierr;
-}
-
-
-__global__ void
-failt_wav_update(size_t size, float coef, float *w_update, float *w_input1, float *w_input2)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    w_update[ix] = w_input1[ix] + coef * w_input2[ix];
-  }
-}
-
-__global__ void
-fault_wav_update_end(size_t size, float coef, float *w_update, float *w_input2)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    w_update[ix] = w_update[ix] + coef * w_input2[ix];
-  }
 }
 

@@ -59,6 +59,7 @@ sv_eq1st_curv_col_allstep(
   int ni = gdinfo->ni;
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;
+  size_t fault_size = nj * nk;
   // fault x index with ghost
   int i0 = fault_i_global_indx + gdinfo->fdx_nghosts;
   // mpi
@@ -242,6 +243,7 @@ sv_eq1st_curv_col_allstep(
       switch (md_d.medium_type)
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
+
           trial_slipweaking_onestage(
               w_cur_d, f_cur_d, f_pre_d, 
               i0, isfree, dt,
@@ -250,10 +252,12 @@ sv_eq1st_curv_col_allstep(
               fd->pair_fdy_op[ipair][istage],
               fd->pair_fdz_op[ipair][istage],
               myid, verbose);
+
           fault2wave_onestage(
               w_cur_d, wav_d, 
               f_cur_d, fault_wav_d,
               fault_d, metric_d, gdinfo_d);
+
           sv_eq1st_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,
               gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
@@ -261,6 +265,7 @@ sv_eq1st_curv_col_allstep(
               fd->pair_fdy_op[ipair][istage],
               fd->pair_fdz_op[ipair][istage],
               myid, verbose);
+
           sv_eq1st_curv_col_el_iso_fault_onestage(
               w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
               i0, isfree, wav_d, f_wav_d,
@@ -269,10 +274,12 @@ sv_eq1st_curv_col_allstep(
               fd->pair_fdy_op[ipair][istage],
               fd->pair_fdz_op[ipair][istage],
               myid, verbose);
+
           fault2wave_onestage(
               w_cur_d, wav_d, 
               f_cur_d, fault_wav_d,
               fault_d, metric_d, gdinfo_d);
+
           break;
         }
       //  synchronize onestage device func.
@@ -288,7 +295,7 @@ sv_eq1st_curv_col_allstep(
         float coef_a = rk_a[istage] * dt;
         float coef_b = rk_b[istage] * dt;
 
-        // wavefield
+        // temp wavefield
         {
           dim3 block(256);
           dim3 grid;
@@ -327,6 +334,12 @@ sv_eq1st_curv_col_allstep(
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_pre_d, w_rhs_d);
           wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_pre_d, f_rhs_d);
         }
+        {
+          dim3 block(256);
+          dim3 grid;
+          grid.x = (fault_size + block.x - 1) / block.x;
+          fault_stress_update_first <<<grid, block>>> (fault_size, coef_b, fault_d);
+        }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
           for (int iside=0; iside<2; iside++) {
@@ -345,6 +358,7 @@ sv_eq1st_curv_col_allstep(
       {
         float coef_a = rk_a[istage] * dt;
         float coef_b = rk_b[istage] * dt;
+        //temp wavefield
         {
           dim3 block(256);
           dim3 grid;
@@ -383,6 +397,12 @@ sv_eq1st_curv_col_allstep(
           wav_update_end <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
           wav_update_end <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
         }
+        {
+          dim3 block(256);
+          dim3 grid;
+          grid.x = (fault_size + block.x - 1) / block.x;
+          fault_stress_update <<<grid, block>>> (fault_size, coef_b, fault_d);
+        }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
           for (int iside=0; iside<2; iside++) {
@@ -401,13 +421,19 @@ sv_eq1st_curv_col_allstep(
       {
         float coef_b = rk_b[istage] * dt;
 
-        // wavefield
+        // w_end
         {
           dim3 block(256);
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update_end <<<grid, block>>>(wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
           wav_update_end <<<grid, block>>>(fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
+        }
+        {
+          dim3 block(256);
+          dim3 grid;
+          grid.x = (fault_size + block.x - 1) / block.x;
+          fault_stress_update <<<grid, block>>> (fault_size, coef_b, fault_d);
         }
 
         // apply Qs
@@ -459,7 +485,7 @@ sv_eq1st_curv_col_allstep(
     //--------------------------------------------
     // save results
     //--------------------------------------------
-    // calculate PGV, PGA and PGD for each surface at each stage
+    // calculate PGV, PGA and PGD for surface 
     if (isfree == 1)
     {
         dim3 block(8,8);
@@ -468,6 +494,8 @@ sv_eq1st_curv_col_allstep(
         grid.y = (nj + block.y - 1) / block.y;
         PG_calcu_gpu<<<grid, block>>> (w_end_d, w_pre_d, gdinfo_d, PG_d, Dis_accu_d, dt);
     }
+    // calculate fault slip, Vs, ... at each dt  
+    fault_var_update(fault_wav_d,fault_d,it,dt);
 
     //-- recv by interp
     io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);

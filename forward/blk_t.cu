@@ -224,7 +224,6 @@ blk_macdrp_mesg_init(mympi_t *mympi,
       float *sbuff_z1_fault = sbuff_y2_fault + siz_s_y2_fault;
       float *sbuff_z2_fault = sbuff_z1_fault + siz_s_z1_fault;
       
-      mympi->sbuff_fault = sbuff_y1_fault;
       // npair: xx, nstage: x, 
       int tag_pair_stage = ipair * 1000 + istage * 100;
       int tag[8] = { tag_pair_stage+21, tag_pair_stage+22, tag_pair_stage+31, tag_pair_stage+32, 
@@ -259,7 +258,6 @@ blk_macdrp_mesg_init(mympi_t *mympi,
       float *rbuff_z1_fault = rbuff_y2_fault + siz_r_y2_fault;
       float *rbuff_z2_fault = rbuff_z1_fault + siz_r_z1_fault;
 
-      mympi->rbuff_fault = rbuff_y1_fault;
       // recv
       MPI_Recv_init(rbuff_y1, siz_r_y1, MPI_FLOAT, mympi->neighid[2], tag[1], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][0]));
       MPI_Recv_init(rbuff_y2, siz_r_y2, MPI_FLOAT, mympi->neighid[3], tag[0], mympi->topocomm, &(mympi->pair_r_reqs[ipair][istage][1]));
@@ -665,10 +663,15 @@ blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
   int ny2_g = fdy_op->left_len;
   int nz1_g = fdz_op->right_len;
   int nz2_g = fdz_op->left_len;
+  size_t siz_sbuff_y1 = mympi->pair_siz_sbuff_y1[ipair_mpi][istage_mpi];
+  size_t siz_sbuff_y2 = mympi->pair_siz_sbuff_y2[ipair_mpi][istage_mpi];
+  size_t siz_sbuff_z1 = mympi->pair_siz_sbuff_z1[ipair_mpi][istage_mpi];
+  size_t siz_sbuff_z2 = mympi->pair_siz_sbuff_z2[ipair_mpi][istage_mpi];
   size_t siz_sbuff_y1_fault = mympi->pair_siz_sbuff_y1_fault[ipair_mpi][istage_mpi];
   size_t siz_sbuff_y2_fault = mympi->pair_siz_sbuff_y2_fault[ipair_mpi][istage_mpi];
   size_t siz_sbuff_z1_fault = mympi->pair_siz_sbuff_z1_fault[ipair_mpi][istage_mpi];
-  
+
+  mympi->sbuff_fault = mympi->sbuff + siz_sbuff_y1 + siz_sbuff_y2 + siz_sbuff_z1 + siz_sbuff_z2;
   float *sbuff_y1_fault = mympi->sbuff_fault;
   float *sbuff_y2_fault = sbuff_y1_fault + siz_sbuff_y1_fault;
   float *sbuff_z1_fault = sbuff_y2_fault + siz_sbuff_y2_fault;
@@ -831,10 +834,15 @@ blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur,
   int nz1_g = fdz_op->right_len;
   int nz2_g = fdz_op->left_len;
 
+  size_t siz_rbuff_y1 = mympi->pair_siz_rbuff_y1[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_y2 = mympi->pair_siz_rbuff_y2[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_z1 = mympi->pair_siz_rbuff_z1[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_z2 = mympi->pair_siz_rbuff_z2[ipair_mpi][istage_mpi];
   size_t siz_rbuff_y1_fault = mympi->pair_siz_rbuff_y_fault1[ipair_mpi][istage_mpi];
   size_t siz_rbuff_y2_fault = mympi->pair_siz_rbuff_y_fault2[ipair_mpi][istage_mpi];
   size_t siz_rbuff_z1_fault = mympi->pair_siz_rbuff_z_fault1[ipair_mpi][istage_mpi];
 
+  mympi->rbuff_fault = mympi->rbuff + siz_rbuff_y1 + siz_rbuff_y2 + siz_rbuff_z1 + siz_rbuff_z2;
   float *rbuff_y1_fault = mympi->rbuff_fault;
   float *rbuff_y2_fault = rbuff_y1_fault + siz_rbuff_y1_fault;
   float *rbuff_z1_fault = rbuff_y2_fault + siz_rbuff_y2_fault;
@@ -884,7 +892,7 @@ blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur,
 }
 
 __global__ void
-blk_macdrp_unpack_mesg_y1(
+blk_macdrp_unpack_fault_mesg_y1(
            float *fw_cur, float *rbuff_y1_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk1, int ny2_g, int nk, int *neighid)
 {
@@ -906,7 +914,7 @@ blk_macdrp_unpack_mesg_y1(
 }
 
 __global__ void
-blk_macdrp_unpack_mesg_y2(
+blk_macdrp_unpack_fault_mesg_y2(
            float *fw_cur, float *rbuff_y2_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj2, int nk1, int ny1_g, int nk, int *neighid)
 {
@@ -928,7 +936,7 @@ blk_macdrp_unpack_mesg_y2(
 }
 
 __global__ void
-blk_macdrp_unpack_mesg_z1(
+blk_macdrp_unpack_fault_mesg_z1(
            float *fw_cur, float *rbuff_z1_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk1, int nj, int nz2_g, int *neighid)
 {
@@ -950,7 +958,7 @@ blk_macdrp_unpack_mesg_z1(
 }
 
 __global__ void
-blk_macdrp_unpack_mesg_z2(
+blk_macdrp_unpack_fault_mesg_z2(
            float *fw_cur, float *rbuff_z2_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk2, int nj, int nz1_g, int *neighid)
 {

@@ -359,19 +359,19 @@ int init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d)
   size_t siz_ilevel = FW->siz_ilevel;
   memcpy(FW_d,FW,sizeof(fault_wav_t));
   FW_d->v5d   = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
-  FW_d->T11   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->T12   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->T13   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->hT11  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->hT12  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->hT13  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->T1x   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->T1y   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->T1z   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->hT1x  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT1y  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT1z  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
   CUDACHECK(cudaMemset(FW_d->v5d,0,sizeof(float)*siz_ilevel*nlevel);
-  CUDACHECK(cudaMemset(FW_d->T11,0,sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->T12,0,sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->T13,0,sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT11,0,sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT12,0,sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT13,0,sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->T1x,0,sizeof(float)*7*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->T1y,0,sizeof(float)*7*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->T1z,0,sizeof(float)*7*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT1x,0,sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT1y,0,sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->hT1z,0,sizeof(float)*ny*nz);
 
   return 0;
 }
@@ -656,9 +656,9 @@ int dealloc_fault_wav_device(fault_wav_t FW)
 {
 
   CUDACHECK(cudaFree(FW_d.v5d);
-  CUDACHECK(cudaFree(FW_d.T11);
-  CUDACHECK(cudaFree(FW_d.T12);
-  CUDACHECK(cudaFree(FW_d.T13);
+  CUDACHECK(cudaFree(FW_d.T1x);
+  CUDACHECK(cudaFree(FW_d.T2y);
+  CUDACHECK(cudaFree(FW_d.T3z);
 
   return 0;
 }

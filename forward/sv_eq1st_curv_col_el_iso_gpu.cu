@@ -482,9 +482,9 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
       }
 
       // deri
-      M_FD_NOINDEX(DxTx, vecxi, idir);
-      M_FD_NOINDEX(DyTy, vecet, jdir);
-      M_FD_NOINDEX(DzTz, veczt, kdir);
+      M_FD_VEC_DRP(DxTx, vecxi, idir);
+      M_FD_VEC_DRP(DyTy, vecet, jdir);
+      M_FD_VEC_DRP(DzTz, veczt, kdir);
 
       hVx[iptr] = ( DxTx+DyTy+DzTz ) * slwjac;
 
@@ -528,9 +528,9 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
       }
 
       // deri
-      M_FD_NOINDEX(DxTx, vecxi, idir);
-      M_FD_NOINDEX(DyTy, vecet, jdir);
-      M_FD_NOINDEX(DzTz, veczt, kdir);
+      M_FD_VEC_DRP(DxTx, vecxi, idir);
+      M_FD_VEC_DRP(DyTy, vecet, jdir);
+      M_FD_VEC_DRP(DzTz, veczt, kdir);
 
       hVy[iptr] = ( DxTx+DyTy+DzTz ) * slwjac;
 
@@ -575,9 +575,9 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
 
       // for hVx 
       // deri
-      M_FD_NOINDEX(DxTx, vecxi, idir);
-      M_FD_NOINDEX(DyTy, vecet, jdir);
-      M_FD_NOINDEX(DzTz, veczt, kdir);
+      M_FD_VEC_DRP(DxTx, vecxi, idir);
+      M_FD_VEC_DRP(DyTy, vecet, jdir);
+      M_FD_VEC_DRP(DzTz, veczt, kdir);
 
       hVz[iptr] = ( DxTx+DyTy+DzTz ) * slwjac;
     }

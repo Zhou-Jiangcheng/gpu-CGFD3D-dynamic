@@ -52,23 +52,23 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
   float *f_Vx    = f_cur_d + FW.Vx_pos ;
   float *f_Vy    = f_cur_d + FW.Vy_pos ;
   float *f_Vz    = f_cur_d + FW.Vz_pos ;
-  float *f_T21   = f_cur_d + FW.T21_pos;
-  float *f_T22   = f_cur_d + FW.T22_pos;
-  float *f_T23   = f_cur_d + FW.T23_pos;
-  float *f_T31   = f_cur_d + FW.T31_pos;
-  float *f_T32   = f_cur_d + FW.T32_pos;
-  float *f_T33   = f_cur_d + FW.T33_pos;
+  float *f_T2x   = f_cur_d + FW.T2x_pos;
+  float *f_T2y   = f_cur_d + FW.T2y_pos;
+  float *f_T2z   = f_cur_d + FW.T2z_pos;
+  float *f_T3x   = f_cur_d + FW.T3x_pos;
+  float *f_T3y   = f_cur_d + FW.T3y_pos;
+  float *f_T3z   = f_cur_d + FW.T3z_pos;
 
-  float *f_T11   = FW.T11;
-  float *f_T12   = FW.T12;
-  float *f_T13   = FW.T13;
+  float *f_T1x   = FW.T1x;
+  float *f_T1y   = FW.T1y;
+  float *f_T1z   = FW.T1z;
 
-  float *f_hT21  = f_rhs_d + FW.T21_pos; 
-  float *f_hT22  = f_rhs_d + FW.T22_pos; 
-  float *f_hT23  = f_rhs_d + FW.T23_pos; 
-  float *f_hT31  = f_rhs_d + FW.T31_pos; 
-  float *f_hT32  = f_rhs_d + FW.T32_pos; 
-  float *f_hT33  = f_rhs_d + FW.T33_pos; 
+  float *f_hT2x  = f_rhs_d + FW.T2x_pos; 
+  float *f_hT2y  = f_rhs_d + FW.T2y_pos; 
+  float *f_hT2z  = f_rhs_d + FW.T2z_pos; 
+  float *f_hT3x  = f_rhs_d + FW.T3x_pos; 
+  float *f_hT3y  = f_rhs_d + FW.T3y_pos; 
+  float *f_hT3z  = f_rhs_d + FW.T3z_pos; 
   {
     dim3 block(8,8);
     dim3 grid;
@@ -77,11 +77,11 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
     wave2fault_gpu(Vx, Vy, Vy, Txx, Tyy, Tzz,
                    Txz, Tyz, Txy, hTxx, hTyy, hTzz,
                    hTxz,hTyz,hTxy,f_Vx, f_Vy, f_Vz,
-                   f_T21, f_T22, f_T23,
-                   f_T31, f_T32, f_T33,
-                   f_T11, f_T12, f_T13,
-                   f_hT21,f_hT22,f_hT23,
-                   f_hT31,f_hT32,f_hT33,
+                   f_T2x, f_T2y, f_T2z,
+                   f_T3x, f_T3y, f_T3z,
+                   f_T1x, f_T1y, f_T1z,
+                   f_hT2x,f_hT2y,f_hT2z,
+                   f_hT3x,f_hT3y,f_hT3z,
                    xi_x, xi_y, xi_z,
                    et_x, et_y, et_z,
                    zt_x, zt_y, zt_z,
@@ -99,11 +99,11 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
                float * hTxx,float * hTyy,float * hTzz,
                float * hTxz,float * hTyz,float * hTxy,
                float * f_Vx,  float * f_Vy,  float * f_Vz,
-               float * f_T21, float * f_T22, float * f_T23,
-               float * f_T31, float * f_T32, float * f_T33,
-               float * f_T11, float * f_T12, float * f_T13,
-               float * f_hT21,float * f_hT22,float * f_hT23,
-               float * f_hT31,float * f_hT32,float * f_hT33,
+               float * f_T2x, float * f_T2y, float * f_T2z,
+               float * f_T3x, float * f_T3y, float * f_T3z,
+               float * f_T1x, float * f_T1y, float * f_T1z,
+               float * f_hT2x,float * f_hT2y,float * f_hT2z,
+               float * f_hT3x,float * f_hT3y,float * f_hT3z,
                float * xi_x,  float * xi_y, float * xi_z,
                float * et_x,  float * et_y, float * et_z,
                float * zt_x,  float * zt_y, float * zt_z,
@@ -115,12 +115,12 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
   // transform
   //          wave (Txx, Tyy, ..., Tyz, Vx, ... (at i0))
   // to
-  //          fault (T11, T12, T13 (at i0), T21, ..., T31, ..., Vx, ...)
+  //          fault (T1x, T1y, T1z (at i0), T2x, ..., T3x, ..., Vx, ...)
   // and
   // transform
   //          wave (hTxx, hTyy, ..., hTyz)
   // to
-  //          fault (hT21, ..., hT31, ...)
+  //          fault (hT2x, ..., hT3x, ...)
  
   int j = blockIdx.x * blockDim.x + threadIdx.x;
   int k = blockIdx.y * blockDim.y + threadIdx.y;
@@ -153,11 +153,11 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
           traction[i][j] *= jac;
         }
       }
-      //NOTE  T11 -3 : 3. fault T11 is medium, = 0. so 3 * siz_slice_yz   
+      //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_slice_yz   
       iptr_f = (iy+3) + (iz+3) * ny + 3 * siz_slice_yz;  
-      f_T11[iptr_f] = traction[0][0];
-      f_T12[iptr_f] = traction[1][0];
-      f_T13[iptr_f] = traction[2][0];
+      f_T1x[iptr_f] = traction[0][0];
+      f_T1y[iptr_f] = traction[1][0];
+      f_T1z[iptr_f] = traction[2][0];
 
       for (int m = 0; m < 2; m++)
       {
@@ -166,12 +166,12 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
         f_Vx [iptr_f] = Vx[iptr];
         f_Vy [iptr_f] = Vy[iptr];
         f_Vz [iptr_f] = Vz[iptr];
-        f_T21[iptr_f] = traction[0][1];
-        f_T22[iptr_f] = traction[1][1];
-        f_T23[iptr_f] = traction[2][1];
-        f_T31[iptr_f] = traction[0][2];
-        f_T32[iptr_f] = traction[1][2];
-        f_T33[iptr_f] = traction[2][2];
+        f_T2x[iptr_f] = traction[0][1];
+        f_T2y[iptr_f] = traction[1][1];
+        f_T2z[iptr_f] = traction[2][1];
+        f_T3x[iptr_f] = traction[0][2];
+        f_T3y[iptr_f] = traction[1][2];
+        f_T3z[iptr_f] = traction[2][2];
       }
 
       stress[0][0]=hTxx[iptr];stress[0][1]=hTxy[iptr];stress[0][2]=hTxz[iptr];
@@ -191,12 +191,12 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
       for (int m = 0; m < 2; m++) 
       {
         iptr_f = (iy+3) + (iz+3) * ny + m * siz_slice_yz;
-        f_hT21[iptr_f] = traction[0][1];
-        f_hT22[iptr_f] = traction[1][1];
-        f_hT23[iptr_f] = traction[2][1];
-        f_hT31[iptr_f] = traction[0][2];
-        f_hT32[iptr_f] = traction[1][2];
-        f_hT33[iptr_f] = traction[2][2];
+        f_hT2x[iptr_f] = traction[0][1];
+        f_hT2y[iptr_f] = traction[1][1];
+        f_hT2z[iptr_f] = traction[2][1];
+        f_hT3x[iptr_f] = traction[0][2];
+        f_hT3y[iptr_f] = traction[1][2];
+        f_hT3z[iptr_f] = traction[2][2];
       }
 
     } // end if of united
@@ -243,16 +243,16 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
   float *f_Vx    = f_cur_d + FW.Vx_pos ;
   float *f_Vy    = f_cur_d + FW.Vy_pos ;
   float *f_Vz    = f_cur_d + FW.Vz_pos ;
-  float *f_T21   = f_cur_d + FW.T21_pos;
-  float *f_T22   = f_cur_d + FW.T22_pos;
-  float *f_T23   = f_cur_d + FW.T23_pos;
-  float *f_T31   = f_cur_d + FW.T31_pos;
-  float *f_T32   = f_cur_d + FW.T32_pos;
-  float *f_T33   = f_cur_d + FW.T33_pos;
+  float *f_T2x   = f_cur_d + FW.T2x_pos;
+  float *f_T2y   = f_cur_d + FW.T2y_pos;
+  float *f_T2z   = f_cur_d + FW.T2z_pos;
+  float *f_T3x   = f_cur_d + FW.T3x_pos;
+  float *f_T3y   = f_cur_d + FW.T3y_pos;
+  float *f_T3z   = f_cur_d + FW.T3z_pos;
 
-  float *f_T11   = FW.T11;
-  float *f_T12   = FW.T12;
-  float *f_T13   = FW.T13;
+  float *f_T1x   = FW.T1x;
+  float *f_T1y   = FW.T1y;
+  float *f_T1z   = FW.T1z;
   {
     dim3 block(8,8);
     dim3 grid;
@@ -260,9 +260,9 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
     grid.y = (nk+block.y-1)/block.y;
     fault2wave_gpu(Vx, Vy, Vy, Txx, Tyy, Tzz,
                    Txz, Tyz, Txy, f_Vx, f_Vy, f_Vz,
-                   f_T21, f_T22, f_T23, 
-                   f_T31, f_T32, f_T33,
-                   f_T11, f_T12, f_T13,
+                   f_T2x, f_T2y, f_T2z, 
+                   f_T3x, f_T3y, f_T3z,
+                   f_T1x, f_T1y, f_T1z,
                    xi_x, xi_y, xi_z,
                    et_x, et_y, et_z,
                    zt_x, zt_y, zt_z,
@@ -278,9 +278,9 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
                float * Txx, float * Tyy, float * Tzz,
                float * Txz, float * Tyz, float * Txy,
                float * f_Vx,  float * f_Vy,  float * f_Vz,
-               float * f_T21, float * f_T22, float * f_T23,
-               float * f_T31, float * f_T32, float * f_T33,
-               float * f_T11, float * f_T12, float * f_T13,
+               float * f_T2x, float * f_T2y, float * f_T2z,
+               float * f_T3x, float * f_T3y, float * f_T3z,
+               float * f_T1x, float * f_T1y, float * f_T1z,
                float * xi_x,  float * xi_y, float * xi_z,
                float * et_x,  float * et_y, float * et_z,
                float * zt_x,  float * zt_y, float * zt_z,
@@ -290,8 +290,8 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
 {
   // it's necessary for wave output
   // transform
-  //          fault (T11 (at i0), ...
-  //                 T21, ..., F->T31, ...)
+  //          fault (T1x (at i0), ...
+  //                 T2x, ..., F->T3x, ...)
   // to
   //          wave (Txx, Tyy, ..., Tyz (at i0)
   // and
@@ -317,18 +317,18 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
     metric[2][0]=xi_z[iptr];metric[2][1]=et_z[iptr];metric[2][2]=zt_z[iptr];
     jac = 1.0/jac3d[iptr];
 
-    //NOTE  T11 -3 : 3. fault T11 is medium, = 0. so 3 * siz_slice_yz
+    //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_slice_yz
     iptr_f = (iy+3) + (iz+3) * ny + 3 * siz_slice_yz;  
-    traction[0][0] = f_T11[iptr_f];
-    traction[1][0] = f_T12[iptr_f];
-    traction[2][0] = f_T13[iptr_f];
+    traction[0][0] = f_T1x[iptr_f];
+    traction[1][0] = f_T1y[iptr_f];
+    traction[2][0] = f_T1z[iptr_f];
     iptr_f = (iy+3) + (iz+3) * ny;
-    traction[0][1] = (f_T21[iptr_f] + f_T21[iptr_f + siz_slice_yz]) * 0.5; // T21
-    traction[1][1] = (f_T22[iptr_f] + f_T22[iptr_f + siz_slice_yz]) * 0.5; // T22
-    traction[2][1] = (f_T23[iptr_f] + f_T23[iptr_f + siz_slice_yz]) * 0.5; // T23
-    traction[0][2] = (f_T31[iptr_f] + f_T31[iptr_f + siz_slice_yz]) * 0.5; // T31
-    traction[1][2] = (f_T32[iptr_f] + f_T32[iptr_f + siz_slice_yz]) * 0.5; // T32
-    traction[2][2] = (f_T33[iptr_f] + f_T33[iptr_f + siz_slice_yz]) * 0.5; // T33
+    traction[0][1] = (f_T2x[iptr_f] + f_T2x[iptr_f + siz_slice_yz]) * 0.5; // T2x
+    traction[1][1] = (f_T2y[iptr_f] + f_T2y[iptr_f + siz_slice_yz]) * 0.5; // T2y
+    traction[2][1] = (f_T2z[iptr_f] + f_T2z[iptr_f + siz_slice_yz]) * 0.5; // T2z
+    traction[0][2] = (f_T3x[iptr_f] + f_T3x[iptr_f + siz_slice_yz]) * 0.5; // T3x
+    traction[1][2] = (f_T3y[iptr_f] + f_T3y[iptr_f + siz_slice_yz]) * 0.5; // T3y
+    traction[2][2] = (f_T3z[iptr_f] + f_T3z[iptr_f + siz_slice_yz]) * 0.5; // T3z
 
     fdlib_math_invert3x3(metric);
     fdlib_math_matmul3x3(traction, metric, stress);
