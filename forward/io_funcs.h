@@ -191,7 +191,7 @@ io_line_locate(gdinfo_t *gdinfo,
 int
 io_fault_locate(gdinfo_t *gdinfo, 
                 iofault_t *iofault,
-                int fault_global_indx,
+                int fault_i_global_indx,
                 char *output_fname_part,
                 char *output_dir);
 
@@ -236,6 +236,20 @@ io_slice_nc_create(ioslice_t *ioslice,
 
 int
 io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
+
+int
+io_fault_nc_put(iofault_nc_t *iofault_nc,
+                gdinfo_t     *gdinfo,
+                fault_t  F,
+                float *buff,
+                int   it,
+                float time);
+
+int
+io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
+                      gdinfo_t     *gdinfo,
+                      fault_t  F,
+                      float *buff);
 
 int
 io_slice_nc_put(ioslice_t    *ioslice,

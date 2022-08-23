@@ -20,6 +20,9 @@ typedef struct {
   float *hT1x;
   float *hT1y;
   float *hT1z;
+  float *mT1x;
+  float *mT1y;
+  float *mT1z;
   int nx, ny, nz, ncmp, nlevel;
 
   size_t siz_slice_yz;
@@ -58,14 +61,26 @@ typedef struct {
 
 int 
 fault_wav_init(gdinfo_t *gdinfo,
-               wav_t *V,
+               fault_wav_t *FW,
                int number_of_levels);
 
-__global__ void
-fault_wav_update(size_t size, float coef, float *w_update, float *w_input1, float *w_input2);
+int 
+fault_var_update(float *f_end_d, int dt, float t_end, 
+                 gdinfo_t gdinfo_d, fault_t F, 
+                 fault_coef_t FC, fault_wav_t FW);
 
 __global__ void
-fault_wav_update_end(size_t size, float coef, float *w_update, float *w_input2);
+fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
+                     int nj, int nj1, int nk, int nk1, 
+                     int ny, size_t siz_slice_yz,
+                     int it, int dt, int t_end, 
+                     fault_coef_t FC, fault_t F);
+
+__global__ void
+fault_stress_update_first(size_t size, float coef, fault_t F);
+
+__global__ void
+fault_stress_update(size_t size, float coef, fault_t F);
 
 #endif
 

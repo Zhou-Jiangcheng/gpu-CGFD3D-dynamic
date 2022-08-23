@@ -13,8 +13,6 @@
 #include "blk_t.h"
 #include "sv_eq1st_curv_col.h"
 #include "sv_eq1st_curv_col_el_iso_gpu.h"
-#include "sv_eq1st_curv_col_el_vti_gpu.h"
-#include "sv_eq1st_curv_col_el_aniso_gpu.h"
 #include "alloc.h"
 #include "cuda_common.h"
 

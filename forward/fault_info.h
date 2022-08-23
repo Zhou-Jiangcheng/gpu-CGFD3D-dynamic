@@ -62,7 +62,7 @@ typedef struct
   float *matVytoVxf_Plus;
   
   // fault split node, + - media 
-  float *lambda_f;
+  float *lam_f;
   float *mu_f;
   float *rho_f;
 
@@ -91,12 +91,12 @@ typedef struct
   float *slip;
   float *slip1;
   float *slip2;
+  float *Vs;
   float *Vs1;
   float *Vs2;
   float *peak_Vs;
   float *init_t0;
 
-  float *hslip;
   float *tTn;
   float *tTs1;
   float *tTs2;
@@ -120,12 +120,24 @@ int
 fault_coef_cal(gdinfo_t *gdinfo, 
                gdcurv_metric_t *metric, 
                md_t *md, 
+               int fault_i_global_index,
                fault_coef_t *FC);
 
 int
 fault_init(fault_t *F
-           gdinfo_t *gdinfo)
+           gdinfo_t *gdinfo);
 
+int
+fault_set(fault_t *F
+          fault_coef_t *FC,
+          gdinfo_t *gdinfo,
+          int bdry_has_free,
+          float *fault_grid,
+          char *init_stress_nc);
 
+int 
+nc_read_init_stress(fault_t *F, 
+                    gdinfo_t *gdinfo, 
+                    char *init_stress_nc);
 
 #endif

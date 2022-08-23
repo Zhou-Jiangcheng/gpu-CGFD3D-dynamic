@@ -655,7 +655,6 @@ int dealloc_fault_device(fault_t F_d)
   CUDACHECK( cudaFree(F_d.rup_index_y);
   CUDACHECK( cudaFree(F_d.rup_index_z);
   CUDACHECK( cudaFree(F_d.flag_rup);
-  CUDACHECK( cudaFree(F_d.first_rup);
   CUDACHECK( cudaFree(F_d.init_t0_flag);
 
   return 0;

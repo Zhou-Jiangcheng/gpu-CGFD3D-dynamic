@@ -5,7 +5,7 @@
 #include "macdrp.h"
 
 
-__global__ void 
+int 
 wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d, 
                     float *f_cur_d, float *f_rhs_d, fault_wav_t FW, 
                     int i0, fault_t F, gdcurv_metric_t metric_d, gdinfo_t gdinfo_d)

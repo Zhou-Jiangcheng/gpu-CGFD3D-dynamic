@@ -43,6 +43,13 @@ fault_wav_init(gdinfo_t *gdinfo,
                         0.0, "hT1y, ft_wav_el3d_1st");
   FW->hT1z = (float *) fdlib_mem_calloc_1d_float(ny * nz,
                         0.0, "hT1z, ft_wav_el3d_1st");
+
+  FW->mT1x = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "mT1x, ft_wav_el3d_1st");
+  FW->mT1y = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "mT1y, ft_wav_el3d_1st");
+  FW->mT1z = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+                        0.0, "mT1z, ft_wav_el3d_1st");
   // vars
   // split "-" minus "+" plus 
   // Vx, Vy, Vz, T2x, T2y, T2z, T3x, T3y, T3z
@@ -123,8 +130,9 @@ fault_wav_init(gdinfo_t *gdinfo,
 }
 
 int 
-fault_var_update(float *f_end_d, int dt, float t_end, gdinfo_t gdinfo_d, 
-                 fault_t F, fault_coef_t FC, fault_wav_t FW)
+fault_var_update(float *f_end_d, int dt, float t_end, 
+                 gdinfo_t gdinfo_d, fault_t F, 
+                 fault_coef_t FC, fault_wav_t FW)
 {
   int nj  = gdinfo_d.nj;
   int nj1 = gdinfo_d.nj1;
@@ -148,9 +156,11 @@ fault_var_update(float *f_end_d, int dt, float t_end, gdinfo_t gdinfo_d,
 }
 
 __global__ void
-fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, int nj, 
-                     int nj1, int nk, int nk1, int ny, size_t siz_slice_yz,
-                     int it, int dt, int t_end, fault_coef_t FC, fault_t F)
+fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
+                     int nj, int nj1, int nk, int nk1, 
+                     int ny, size_t siz_slice_yz,
+                     int it, int dt, int t_end, 
+                     fault_coef_t FC, fault_t F)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;

@@ -292,9 +292,9 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
   size_t siz_line   = gdinfo->siz_line;
   size_t siz_slice  = gdinfo->siz_slice;
   size_t siz_volume = gdinfo->siz_volume;
-  int ni = ni2-ni1+1;
-  int nj = nj2-nj1+1;
-  int nk = nk2-nk1+1;
+  int ni = gdinfo->ni;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
 
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -468,9 +468,9 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
   size_t siz_slice  = gdinfo->siz_slice;
   size_t siz_volume = gdinfo->siz_volume;
 
-  int ni = ni2-ni1+1;
-  int nj = nj2-nj1+1;
-  int nk = nk2-nk1+1;
+  int ni = gdinfo->ni;
+  int nj = gdinfo->nj;
+  int nk = gdinfo->nk;
   
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -787,7 +787,7 @@ blk_macdrp_pack_fault_mesg_z1(
 }
 
 __global__ void
-blk_macdrp_pack_fault_mesg_z1(
+blk_macdrp_pack_fault_mesg_z2(
              float *fw_cur, float *sbuff_z2_fault, size_t siz_slice_yz, 
              int num_of_vars_fault, int ny, int nj1, int nk2, int nj, int nz2_g)
 {

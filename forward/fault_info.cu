@@ -81,7 +81,7 @@ int
 fault_coef_cal(gdinfo_t *gdinfo, 
                gdcurv_metric_t *metric, 
                md_t *md,
-               int fault_global_index,
+               int fault_i_global_index,
                fault_coef_t *FC)
 {
   int ny = gdinfo->ny;
@@ -91,7 +91,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
   // x direction only has 1 mpi. 
   int npoint_z = gdinfo->npoint_z;
   int gnk1 = gdinfo->gnk1;
-  int i0 = fault_global_index + 3; //fault plane x index with ghost
+  int i0 = fault_i_global_index + 3; //fault plane x index with ghost
   size_t iptr, iptr_f;
   float rho, mu, lam, lam2mu, jac;
   // point to each var
@@ -994,14 +994,15 @@ fault_set(fault_t *F
 
       F->init_t0[iptr_t] = -9999.9;
       F->flag_rup   [iptr_t] = 0;
-      F->first_rup  [iptr_t] = 1;
     }
   }
   return 0;
 }
 
 int 
-nc_read_init_stress(fault_t *F, gdinfo_t *gdinfo, char *init_stress_nc)
+nc_read_init_stress(fault_t *F, 
+                    gdinfo_t *gdinfo,
+                    char *init_stress_nc)
 {
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;

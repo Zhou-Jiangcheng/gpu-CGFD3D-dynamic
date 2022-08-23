@@ -10,7 +10,7 @@ void setDeviceBeforeInit()
   }
   CUDACHECK(cudaGetDeviceCount(&devCount));
   CUDACHECK(cudaSetDevice((rank%devCount)));
-  //debuge
+  //debug
   fprintf(stdout,"rank is %d\n",rank);
   fprintf(stdout,"device count is %d\n",devCount);
   fflush(stdout);

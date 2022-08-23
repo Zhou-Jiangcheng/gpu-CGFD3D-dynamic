@@ -548,7 +548,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   fault_coef_init(f_coef, gdinfo); 
-  fault_coef_cal(gdinfo, gdcurv_metric, md, f_coef);
+  fault_coef_cal(gdinfo, gdcurv_metric, md, par->fault_i_global_index, f_coef);
   fault_init(fault, gdinfo);
   fault_set(fault, f_coef, gdinfo, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
   fault_wav_init(gdinfo, f_wav, fd->num_rk_stages);
