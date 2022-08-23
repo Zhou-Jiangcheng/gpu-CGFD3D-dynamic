@@ -1,3 +1,16 @@
+#ifndef SV_EQ1ST_CURV_COL_EL_ISO_FAULT_H
+#define SV_EQ1ST_CURV_COL_EL_ISO_FAULT_H
+
+#include "fd_t.h"
+#include "gd_info.h"
+#include "fault_info.h"
+#include "mympi_t.h"
+#include "gd_t.h"
+#include "md_t.h"
+#include "wav_t.h"
+#include "fault_wav_t.h"
+#include "bdry_free.h"
+#include <cuda_runtime.h>
 
 int 
 sv_eq1st_curv_col_el_iso_fault_onestage(
@@ -76,3 +89,5 @@ sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
                        int idir, int jdir, int kdir);
+
+#endif

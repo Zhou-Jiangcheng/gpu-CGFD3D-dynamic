@@ -1,4 +1,3 @@
-#include <math.h>
 
 #include "fdlib_math.h"
 
@@ -57,7 +56,7 @@ void fdlib_math_matmul3x3(float A[][3], float B[][3], float C[][3])
 }
 
 __host__ __device__
-void fdlib_math_matmul3x1(float A[][3], float *B, float *C);
+void fdlib_math_matmul3x1(float A[][3], float *B, float *C)
 {
   C[0] = A[0][0]*B[0] + A[0][1]*B[1] + A[0][2]*B[2];
   C[1] = A[1][0]*B[0] + A[1][1]*B[1] + A[1][2]*B[2];

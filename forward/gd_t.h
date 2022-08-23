@@ -120,7 +120,7 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
 void
 gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
-                   gdcurv_metric_t *metric)
+                   gdcurv_metric_t *metric);
 
 void
 gd_curv_exchange(gdinfo_t *gdinfo,

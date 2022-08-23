@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "common.h"
-#include "params.h"
-#include "macdrp.h"
+#include "transform.h"
+#include "fdlib_math.h"
 
 
 int 

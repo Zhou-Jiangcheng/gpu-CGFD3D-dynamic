@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "trial_slipweakening.h"
+#include "fdlib_math.h"
 
 int 
 trial_slipweaking_onestage(

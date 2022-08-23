@@ -48,6 +48,8 @@ typedef struct {
   size_t siz_slice;
   size_t siz_volume; // number of points per var
 
+  size_t siz_slice_yz;
+  size_t siz_slice_yz2;
   // curvilinear coord name,
   char **index_name;
   

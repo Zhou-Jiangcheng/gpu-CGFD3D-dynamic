@@ -13,6 +13,9 @@
 #include "blk_t.h"
 #include "sv_eq1st_curv_col.h"
 #include "sv_eq1st_curv_col_el_iso_gpu.h"
+#include "sv_eq1st_curv_col_el_iso_fault_gpu.h"
+#include "trial_slipweakening.h"
+#include "transform.h"
 #include "alloc.h"
 #include "cuda_common.h"
 
@@ -109,10 +112,10 @@ sv_eq1st_curv_col_allstep(
   w_end_d = wav_d.v5d + wav_d.siz_ilevel * 3; // end level at n+1
 
   // get fault wavefield
-  f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
-  f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
-  f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
-  f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
+  //f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
+  //f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
+  //f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
+  //f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
 
   int   ipair, istage;
   float t_cur;

@@ -1,6 +1,9 @@
 #ifndef FDLIB_MEM_H
 #define FDLIB_MEM_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
 void *
 fdlib_mem_malloc_1d(size_t siz_byte, char *msg);
 

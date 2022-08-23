@@ -9,7 +9,6 @@
 #include "wav_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
-#include "io_funcs.h"
 #include <cuda_runtime.h>
 
 /*************************************************

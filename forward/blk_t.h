@@ -4,14 +4,15 @@
 #include "constants.h"
 #include "fd_t.h"
 #include "gd_info.h"
+#include "fault_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
+#include "fault_wav_t.h"
 #include "bdry_free.h"
 #include "bdry_pml.h"
 #include "io_funcs.h"
-#include "fault_info.h"
 
 /*******************************************************************************
  * structure

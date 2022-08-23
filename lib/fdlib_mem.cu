@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "fdlib_mem.h"
 
 /*

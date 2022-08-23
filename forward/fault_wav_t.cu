@@ -9,7 +9,7 @@
 
 #include "constants.h"
 #include "fdlib_mem.h"
-#include "wav_t.h"
+#include "fault_wav_t.h"
 
 int 
 fault_wav_init(gdinfo_t *gdinfo,
@@ -17,38 +17,37 @@ fault_wav_init(gdinfo_t *gdinfo,
                int number_of_levels)
 {
   int ierr = 0;
-
   FW->ny   = gdinfo->ny;
   FW->nz   = gdinfo->nz;
   FW->ncmp = 9;
   FW->nlevel = number_of_levels;
-  FW->siz_slice_yz = ny * nz;
-  FW->siz_slice_yz_2 = 2 * ny * nz;
-  FW->siz_ilevel = 2 * ny * nz * FW->ncmp;
+  FW->siz_slice_yz = gdinfo->ny * gdinfo->nz;
+  FW->siz_slice_yz_2 = 2 * gdinfo->ny * gdinfo->nz;
+  FW->siz_ilevel = 2 * gdinfo->ny * gdinfo->nz * FW->ncmp;
   
   // i0-3 i0-2 i0-1 i0 i0+1 i0+2 i0+3
   // i0 is fault plane x index
   // this is for zhang wenqiang method
   // zhang zhenguo method only need i0-1 i0 i0+1
-  FW->T1x = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+  FW->T1x = (float *) fdlib_mem_calloc_1d_float(7 * gdinfo->ny * gdinfo->nz,
                         0.0, "T1x, ft_wav_el3d_1st");
-  FW->T1y = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+  FW->T1y = (float *) fdlib_mem_calloc_1d_float(7 * gdinfo->ny * gdinfo->nz,
                         0.0, "T1y, ft_wav_el3d_1st");
-  FW->T1z = (float *) fdlib_mem_calloc_1d_float(7 * ny * nz,
+  FW->T1z = (float *) fdlib_mem_calloc_1d_float(7 * gdinfo->ny * gdinfo->nz,
                         0.0, "T1z, ft_wav_el3d_1st");
   // dT/dt 1st order
-  FW->hT1x = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->hT1x = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "hT1x, ft_wav_el3d_1st");
-  FW->hT1y = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->hT1y = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "hT1y, ft_wav_el3d_1st");
-  FW->hT1z = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->hT1z = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "hT1z, ft_wav_el3d_1st");
 
-  FW->mT1x = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->mT1x = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "mT1x, ft_wav_el3d_1st");
-  FW->mT1y = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->mT1y = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "mT1y, ft_wav_el3d_1st");
-  FW->mT1z = (float *) fdlib_mem_calloc_1d_float(ny * nz,
+  FW->mT1z = (float *) fdlib_mem_calloc_1d_float(gdinfo->ny * gdinfo->nz,
                         0.0, "mT1z, ft_wav_el3d_1st");
   // vars
   // split "-" minus "+" plus 
@@ -66,7 +65,7 @@ fault_wav_init(gdinfo_t *gdinfo,
   // set value
   for (int icmp=0; icmp < FW->ncmp; icmp++)
   {
-    cmp_pos[icmp] = icmp * 2 * ny * nz;
+    cmp_pos[icmp] = icmp * 2 * gdinfo->ny * gdinfo->nz;
   }
 
   // set values
@@ -130,7 +129,7 @@ fault_wav_init(gdinfo_t *gdinfo,
 }
 
 int 
-fault_var_update(float *f_end_d, int dt, float t_end, 
+fault_var_update(float *f_end_d, int it, float dt, float t_end, 
                  gdinfo_t gdinfo_d, fault_t F, 
                  fault_coef_t FC, fault_wav_t FW)
 {
@@ -148,9 +147,9 @@ fault_var_update(float *f_end_d, int dt, float t_end,
     dim3 grid;
     grid.x = (nj + block.x - 1) / block.x;
     grid.y = (nk + block.y - 1) / block.y;
-    fault_var_update_gpu<<<gird, block >>> ( f_Vx, f_Vy, f_Vz, 
+    fault_var_update_gpu<<<grid, block >>> ( f_Vx, f_Vy, f_Vz, 
                                              nj, nj1, nk, nk1, ny, 
-                                             siz_slice_yz, dt, t_end, FC, f);
+                                             siz_slice_yz, it, dt, t_end, FC, F, FW);
   }
   return 0;
 }
@@ -160,7 +159,7 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
                      int nj, int nj1, int nk, int nk1, 
                      int ny, size_t siz_slice_yz,
                      int it, int dt, int t_end, 
-                     fault_coef_t FC, fault_t F)
+                     fault_coef_t FC, fault_t F, fault_wav_t FW)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -194,13 +193,13 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     // mT1x used for storage last dt T1x
     if(it >= 1) 
     {
-      F.hT1x[iptr_t] = (F.T1x[iptr_t+3*siz_slice_yz] - F.mT1x[iptr_t])/dt;
-      F.hT1y[iptr_t] = (F.T1y[iptr_t+3*siz_slice_yz] - F.mT1y[iptr_t])/dt;
-      F.hT1z[iptr_t] = (F.T1z[iptr_t+3*siz_slice_yz] - F.mT1z[iptr_t])/dt;
+      FW.hT1x[iptr_t] = (FW.T1x[iptr_t+3*siz_slice_yz] - FW.mT1x[iptr_t])/dt;
+      FW.hT1y[iptr_t] = (FW.T1y[iptr_t+3*siz_slice_yz] - FW.mT1y[iptr_t])/dt;
+      FW.hT1z[iptr_t] = (FW.T1z[iptr_t+3*siz_slice_yz] - FW.mT1z[iptr_t])/dt;
     }
-    F.mT1x[iptr_t] = F.T1x[iptr_t+3*siz_slice_yz];
-    F.mT1y[iptr_t] = F.T1y[iptr_t+3*siz_slice_yz];
-    F.mT1z[iptr_t] = F.T1z[iptr_t+3*siz_slice_yz];
+    FW.mT1x[iptr_t] = FW.T1x[iptr_t+3*siz_slice_yz];
+    FW.mT1y[iptr_t] = FW.T1y[iptr_t+3*siz_slice_yz];
+    FW.mT1z[iptr_t] = FW.T1z[iptr_t+3*siz_slice_yz];
 
     if(Vs > F.peak_Vs[iptr_t]) F.peak_Vs[iptr_t] = Vs;
 

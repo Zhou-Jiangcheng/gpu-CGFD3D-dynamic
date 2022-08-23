@@ -1,6 +1,8 @@
 #ifndef FDLIB_MATH_H
 #define FDLIB_MATH_H
 
+#include <math.h>
+
 __host__ __device__
 float fdlib_math_norm3(float *A);
 

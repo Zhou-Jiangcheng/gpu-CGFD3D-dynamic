@@ -1,3 +1,10 @@
+#ifndef TRANSFORM_H
+#define TRANSFORM_H
+
+#include "gd_info.h"
+#include "gd_t.h"
+#include "fault_info.h"
+#include "fault_wav_t.h"
 
 int 
 wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d, 
@@ -39,6 +46,8 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
                float * xi_x,  float * xi_y, float * xi_z,
                float * et_x,  float * et_y, float * et_z,
                float * zt_x,  float * zt_y, float * zt_z,
-               float *jac3d, int i0, int nj, int nk, int ny, 
+               float * jac3d, int i0, int nj, int nk, int ny, 
                size_t siz_line, size_t siz_slice, 
                size_t siz_slice_yz, fault_t F);
+
+#endif

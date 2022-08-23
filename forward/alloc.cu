@@ -40,6 +40,7 @@ int init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d)
 
   return 0;
 }
+
 int init_md_device(md_t *md, md_t *md_d)
 {
   size_t siz_volume = md->siz_volume;
@@ -356,7 +357,6 @@ int init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d)
   int ny = FW->ny;
   int nz = FW->nz;
   int nlevel = FW->nlevel;
-  int ncmp = FW->ncmp;
   size_t siz_ilevel = FW->siz_ilevel;
   memcpy(FW_d,FW,sizeof(fault_wav_t));
   FW_d->v5d   = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
@@ -369,16 +369,16 @@ int init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d)
   FW_d->mT1x  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
   FW_d->mT1y  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
   FW_d->mT1z  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  CUDACHECK(cudaMemset(FW_d->v5d,  0, sizeof(float)*siz_ilevel*nlevel);
-  CUDACHECK(cudaMemset(FW_d->T1x,  0, sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->T1y,  0, sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->T1z,  0, sizeof(float)*7*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT1x, 0, sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT1y, 0, sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->hT1z, 0, sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->mT1x, 0, sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->mT1y, 0, sizeof(float)*ny*nz);
-  CUDACHECK(cudaMemset(FW_d->mT1z, 0, sizeof(float)*ny*nz);
+  CUDACHECK(cudaMemset(FW_d->v5d,  0, sizeof(float)*siz_ilevel*nlevel));
+  CUDACHECK(cudaMemset(FW_d->T1x,  0, sizeof(float)*7*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->T1y,  0, sizeof(float)*7*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->T1z,  0, sizeof(float)*7*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->hT1x, 0, sizeof(float)*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->hT1y, 0, sizeof(float)*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->hT1z, 0, sizeof(float)*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->mT1x, 0, sizeof(float)*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->mT1y, 0, sizeof(float)*ny*nz));
+  CUDACHECK(cudaMemset(FW_d->mT1z, 0, sizeof(float)*ny*nz));
 
   return 0;
 }
@@ -555,124 +555,120 @@ int dealloc_metric_device(gdcurv_metric_t metric_d)
   CUDACHECK(cudaFree(metric_d.zeta_z)); 
   return 0;
 }
+
 int dealloc_fault_coef_device(fault_coef_t FC_d)
 {
-  CUDACHECK( cudaFree(FC_d.rho_f);
-  CUDACHECK( cudaFree(FC_d.mu_f );
-  CUDACHECK( cudaFree(FC_d.lam_f);
+  CUDACHECK( cudaFree(FC_d.rho_f));
+  CUDACHECK( cudaFree(FC_d.mu_f ));
+  CUDACHECK( cudaFree(FC_d.lam_f));
 
-  CUDACHECK( cudaFree(FC_d.D21_1);
-  CUDACHECK( cudaFree(FC_d.D22_1);
-  CUDACHECK( cudaFree(FC_d.D23_1);
-  CUDACHECK( cudaFree(FC_d.D31_1);
-  CUDACHECK( cudaFree(FC_d.D32_1);
-  CUDACHECK( cudaFree(FC_d.D33_1);
+  CUDACHECK( cudaFree(FC_d.D21_1));
+  CUDACHECK( cudaFree(FC_d.D22_1));
+  CUDACHECK( cudaFree(FC_d.D23_1));
+  CUDACHECK( cudaFree(FC_d.D31_1));
+  CUDACHECK( cudaFree(FC_d.D32_1));
+  CUDACHECK( cudaFree(FC_d.D33_1));
 
-  CUDACHECK( cudaFree(FC_d.D21_2);
-  CUDACHECK( cudaFree(FC_d.D22_2);
-  CUDACHECK( cudaFree(FC_d.D23_2);
-  CUDACHECK( cudaFree(FC_d.D31_2);
-  CUDACHECK( cudaFree(FC_d.D32_2);
-  CUDACHECK( cudaFree(FC_d.D33_2);
+  CUDACHECK( cudaFree(FC_d.D21_2));
+  CUDACHECK( cudaFree(FC_d.D22_2));
+  CUDACHECK( cudaFree(FC_d.D23_2));
+  CUDACHECK( cudaFree(FC_d.D31_2));
+  CUDACHECK( cudaFree(FC_d.D32_2));
+  CUDACHECK( cudaFree(FC_d.D33_2));
 
-  CUDACHECK( cudaFree(FC_d.vec_n );
-  CUDACHECK( cudaFree(FC_d.vec_s1);
-  CUDACHECK( cudaFree(FC_d.vec_s2);
+  CUDACHECK( cudaFree(FC_d.vec_n ));
+  CUDACHECK( cudaFree(FC_d.vec_s1));
+  CUDACHECK( cudaFree(FC_d.vec_s2));
 
-  CUDACHECK( cudaFree(FC_d.x_et);
-  CUDACHECK( cudaFree(FC_d.y_et);
-  CUDACHECK( cudaFree(FC_d.z_et);
+  CUDACHECK( cudaFree(FC_d.x_et));
+  CUDACHECK( cudaFree(FC_d.y_et));
+  CUDACHECK( cudaFree(FC_d.z_et));
 
-  CUDACHECK( cudaFree(FC_d.matMin2Plus1);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus2);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus3);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus4);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus5);
+  CUDACHECK( cudaFree(FC_d.matMin2Plus1));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus2));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus3));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus4));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus5));
 
-  CUDACHECK( cudaFree(FC_d.matPlus2Min1);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min2);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min3);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min4);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min5);
+  CUDACHECK( cudaFree(FC_d.matPlus2Min1));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min2));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min3));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min4));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min5));
 
-  CUDACHECK( cudaFree(FC_d.matT1toVx_Min);
-  CUDACHECK( cudaFree(FC_d.matVytoVx_Min);
-  CUDACHECK( cudaFree(FC_d.matVztoVx_Min);
+  CUDACHECK( cudaFree(FC_d.matT1toVx_Min));
+  CUDACHECK( cudaFree(FC_d.matVytoVx_Min));
+  CUDACHECK( cudaFree(FC_d.matVztoVx_Min));
 
-  CUDACHECK( cudaFree(FC_d.matT1toVx_Plus);
-  CUDACHECK( cudaFree(FC_d.matVytoVx_Plus);
-  CUDACHECK( cudaFree(FC_d.matVztoVx_Plus);
+  CUDACHECK( cudaFree(FC_d.matT1toVx_Plus));
+  CUDACHECK( cudaFree(FC_d.matVytoVx_Plus));
+  CUDACHECK( cudaFree(FC_d.matVztoVx_Plus));
 
-  CUDACHECK( cudaFree(FC_d.matVx2Vz1);
-  CUDACHECK( cudaFree(FC_d.matVy2Vz1);
-  CUDACHECK( cudaFree(FC_d.matVx2Vz2);
-  CUDACHECK( cudaFree(FC_d.matVy2Vz2);
+  CUDACHECK( cudaFree(FC_d.matVx2Vz1));
+  CUDACHECK( cudaFree(FC_d.matVy2Vz1));
+  CUDACHECK( cudaFree(FC_d.matVx2Vz2));
+  CUDACHECK( cudaFree(FC_d.matVy2Vz2));
 
-  CUDACHECK( cudaFree(FC_d.matVx1_free);
-  CUDACHECK( cudaFree(FC_d.matVy1_free);
-  CUDACHECK( cudaFree(FC_d.matVx2_free);
-  CUDACHECK( cudaFree(FC_d.matVy2_free);
+  CUDACHECK( cudaFree(FC_d.matPlus2Min1f));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min2f));
+  CUDACHECK( cudaFree(FC_d.matPlus2Min3f));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus1f));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus2f));
+  CUDACHECK( cudaFree(FC_d.matMin2Plus3f));
 
-  CUDACHECK( cudaFree(FC_d.matPlus2Min1f);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min2f);
-  CUDACHECK( cudaFree(FC_d.matPlus2Min3f);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus1f);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus2f);
-  CUDACHECK( cudaFree(FC_d.matMin2Plus3f);
-
-  CUDACHECK( cudaFree(FC_d.matT1toVxf_Min);
-  CUDACHECK( cudaFree(FC_d.matVytoVxf_Min);
-  CUDACHECK( cudaFree(FC_d.matT1toVxf_Plus);
-  CUDACHECK( cudaFree(FC_d.matVytoVxf_Plus);
+  CUDACHECK( cudaFree(FC_d.matT1toVxf_Min));
+  CUDACHECK( cudaFree(FC_d.matVytoVxf_Min));
+  CUDACHECK( cudaFree(FC_d.matT1toVxf_Plus));
+  CUDACHECK( cudaFree(FC_d.matVytoVxf_Plus));
 
   return 0;
 }
 
 int dealloc_fault_device(fault_t F_d)
 {
-  CUDACHECK( cudaFree(F_d.T0x);
-  CUDACHECK( cudaFree(F_d.T0y);
-  CUDACHECK( cudaFree(F_d.T0z);
-  CUDACHECK( cudaFree(F_d.mu_s);
-  CUDACHECK( cudaFree(F_d.mu_d);
-  CUDACHECK( cudaFree(F_d.Dc);
-  CUDACHECK( cudaFree(F_d.C0);
+  CUDACHECK( cudaFree(F_d.T0x));
+  CUDACHECK( cudaFree(F_d.T0y));
+  CUDACHECK( cudaFree(F_d.T0z));
+  CUDACHECK( cudaFree(F_d.mu_s));
+  CUDACHECK( cudaFree(F_d.mu_d));
+  CUDACHECK( cudaFree(F_d.Dc));
+  CUDACHECK( cudaFree(F_d.C0));
 
-  CUDACHECK( cudaFree(F_d.Tn);
-  CUDACHECK( cudaFree(F_d.Ts1);
-  CUDACHECK( cudaFree(F_d.Ts2);
-  CUDACHECK( cudaFree(F_d.slip);
-  CUDACHECK( cudaFree(F_d.slip1);
-  CUDACHECK( cudaFree(F_d.slip2);
-  CUDACHECK( cudaFree(F_d.Vs);
-  CUDACHECK( cudaFree(F_d.Vs1);
-  CUDACHECK( cudaFree(F_d.Vs2);
-  CUDACHECK( cudaFree(F_d.peak_Vs);
-  CUDACHECK( cudaFree(F_d.init_t0);
+  CUDACHECK( cudaFree(F_d.Tn));
+  CUDACHECK( cudaFree(F_d.Ts1));
+  CUDACHECK( cudaFree(F_d.Ts2));
+  CUDACHECK( cudaFree(F_d.slip));
+  CUDACHECK( cudaFree(F_d.slip1));
+  CUDACHECK( cudaFree(F_d.slip2));
+  CUDACHECK( cudaFree(F_d.Vs));
+  CUDACHECK( cudaFree(F_d.Vs1));
+  CUDACHECK( cudaFree(F_d.Vs2));
+  CUDACHECK( cudaFree(F_d.peak_Vs));
+  CUDACHECK( cudaFree(F_d.init_t0));
 
-  CUDACHECK( cudaFree(F_d.united);
-  CUDACHECK( cudaFree(F_d.faultgrid);
-  CUDACHECK( cudaFree(F_d.rup_index_y);
-  CUDACHECK( cudaFree(F_d.rup_index_z);
-  CUDACHECK( cudaFree(F_d.flag_rup);
-  CUDACHECK( cudaFree(F_d.init_t0_flag);
+  CUDACHECK( cudaFree(F_d.united));
+  CUDACHECK( cudaFree(F_d.faultgrid));
+  CUDACHECK( cudaFree(F_d.rup_index_y));
+  CUDACHECK( cudaFree(F_d.rup_index_z));
+  CUDACHECK( cudaFree(F_d.flag_rup));
+  CUDACHECK( cudaFree(F_d.init_t0_flag));
 
   return 0;
 }
 
-int dealloc_fault_wav_device(fault_wav_t FW)
+int dealloc_fault_wav_device(fault_wav_t FW_d)
 {
 
-  CUDACHECK(cudaFree(FW_d.v5d);
-  CUDACHECK(cudaFree(FW_d.T1x);
-  CUDACHECK(cudaFree(FW_d.T2y);
-  CUDACHECK(cudaFree(FW_d.T3z);
-  CUDACHECK(cudaFree(FW_d.hT1x);
-  CUDACHECK(cudaFree(FW_d.hT2y);
-  CUDACHECK(cudaFree(FW_d.hT3z);
-  CUDACHECK(cudaFree(FW_d.mT1x);
-  CUDACHECK(cudaFree(FW_d.mT2y);
-  CUDACHECK(cudaFree(FW_d.mT3z);
+  CUDACHECK(cudaFree(FW_d.v5d));
+  CUDACHECK(cudaFree(FW_d.T1x));
+  CUDACHECK(cudaFree(FW_d.T1y));
+  CUDACHECK(cudaFree(FW_d.T1z));
+  CUDACHECK(cudaFree(FW_d.hT1x));
+  CUDACHECK(cudaFree(FW_d.hT1y));
+  CUDACHECK(cudaFree(FW_d.hT1z));
+  CUDACHECK(cudaFree(FW_d.mT1x));
+  CUDACHECK(cudaFree(FW_d.mT1y));
+  CUDACHECK(cudaFree(FW_d.mT1z));
 
   return 0;
 }
@@ -714,4 +710,3 @@ int dealloc_wave_device(wav_t wav_d)
   CUDACHECK(cudaFree(wav_d.v5d)); 
   return 0;
 }
-

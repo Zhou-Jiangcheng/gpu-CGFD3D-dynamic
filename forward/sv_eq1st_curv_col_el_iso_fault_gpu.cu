@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <mpi.h>
+
+#include "fdlib_math.h"
+#include "sv_eq1st_curv_col_el_iso_fault_gpu.h"
+#include "cuda_common.h"
 
 int 
 sv_eq1st_curv_col_el_iso_fault_onestage(

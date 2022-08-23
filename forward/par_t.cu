@@ -326,18 +326,18 @@ par_read_from_str(const char *str, par_t *par)
       }
     }
     // 3D grid import
-    //if (subitem = cJSON_GetObjectItem(item, "3D_grid_with_fault")) {
-    //  par->grid_generation_itype = PAR_GRID_3D_GRID;
-    //  if (thirditem = cJSON_GetObjectItem(subitem, "3D_grid_file")) {
-    //     sprintf(par->3D_grid_coord_nc, "%s", thirditem->valuestring);
-    //  }
-    //  if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
-    //     sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
-    //  }
-    //  if (thirditem = cJSON_GetObjectItem(subitem, "fault_i_global_index")) {
-    //    par->fault_i_global_indx = thirditem->valueint;
-    //  }
-    //}
+    if (subitem = cJSON_GetObjectItem(item, "3D_grid_with_fault")) {
+      par->grid_generation_itype = PAR_GRID_3D_GRID;
+      if (thirditem = cJSON_GetObjectItem(subitem, "3D_grid_file")) {
+         sprintf(par->grid_coord_nc, "%s", thirditem->valuestring);
+      }
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
+         sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
+      }
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_i_global_index")) {
+        par->fault_i_global_indx = thirditem->valueint;
+      }
+    }
   }
 
   par->is_export_grid = 1;
@@ -1001,7 +1001,6 @@ par_print(par_t *par)
     fprintf(stdout, "--> no visco\n");
   }
 
-  fprintf(stdout, " in_source_file = %s\n", par->source_input_file);
 
   fprintf(stdout, "\n");
   fprintf(stdout, "-------------------------------------------------------\n");

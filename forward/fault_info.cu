@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "gd_info.h"
+#include "fault_info.h"
+#include "fdlib_math.h"
+
 int
-fault_coef_init(fault_coef_t *FC
+fault_coef_init(fault_coef_t *FC,
                 gdinfo_t *gdinfo)
 {
   int ny = gdinfo->ny;
@@ -120,6 +124,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
   float D31_2[3][3], D32_2[3][3], D33_2[3][3];
   // temp  matrix
   float mat1[3][3], mat2[3][3], mat3[3][3], mat4[3][3];
+  float vec_n[3], vec_s1[3], vec_s2[3];
 
   // for free surface
   float A[3][3], B[3][3], C[3][3];
@@ -695,7 +700,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
 
         h1_3 = vec_s2[0]*e11
              + vec_s2[1]*e12
-             + vec_s2[2]*e13
+             + vec_s2[2]*e13;
         h2_3 = vec_s2[0]*e21
              + vec_s2[1]*e22
              + vec_s2[2]*e23;
@@ -844,7 +849,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
 }  
 
 int
-fault_init(fault_t *F
+fault_init(fault_t *F,
            gdinfo_t *gdinfo)
 {
   int nj = gdinfo->nj;
@@ -894,7 +899,7 @@ fault_init(fault_t *F
 }
 
 int
-fault_set(fault_t *F
+fault_set(fault_t *F,
           fault_coef_t *FC,
           gdinfo_t *gdinfo,
           int bdry_has_free,
@@ -913,7 +918,7 @@ fault_set(fault_t *F
   int npoint_y = gdinfo->npoint_y;
   int npoint_z = gdinfo->npoint_z;
   int gj, gk;
-  size_t iptr, iptr_g; 
+  size_t iptr_t, iptr_f; 
   float vec_n[3], vec_s1[3], vec_s2[3];
 
   nc_read_init_stress(F, gdinfo,init_stress_nc);
@@ -937,15 +942,15 @@ fault_set(fault_t *F
 
       // transform init stress to local coordinate, not nessessary,
       // only for output 
-      F->Tn [iptr] = F->T0x[iptr_t] * vec_n[0]
-                   + F->T0y[iptr_t] * vec_n[1]
-                   + F->T0z[iptr_t] * vec_n[2];
-      F->Ts1[iptr] = F->T0x[iptr_t] * vec_s1[0]
-                   + F->T0y[iptr_t] * vec_s1[1]
-                   + F->T0z[iptr_t] * vec_s1[2];
-      F->Ts2[iptr] = F->T0x[iptr_t] * vec_s2[0]
-                   + F->T0y[iptr_t] * vec_s2[1]
-                   + F->T0z[iptr_t] * vec_s2[2];
+      F->Tn [iptr_t] = F->T0x[iptr_t] * vec_n[0]
+                     + F->T0y[iptr_t] * vec_n[1]
+                     + F->T0z[iptr_t] * vec_n[2];
+      F->Ts1[iptr_t] = F->T0x[iptr_t] * vec_s1[0]
+                     + F->T0y[iptr_t] * vec_s1[1]
+                     + F->T0z[iptr_t] * vec_s1[2];
+      F->Ts2[iptr_t] = F->T0x[iptr_t] * vec_s2[0]
+                     + F->T0y[iptr_t] * vec_s2[1]
+                     + F->T0z[iptr_t] * vec_s2[2];
 
       gj = gnj1 + j;
       gk = gnk1 + k;
@@ -971,9 +976,9 @@ fault_set(fault_t *F
       if(bdry_has_free == 1) 
       {
         if( gj+1 > 30 && gj+1 <= npoint_y - 30 && gk+1 > 30) {
-          F.united[iptr_t] = 0;
+          F->united[iptr_t] = 0;
         }else{
-          F.united[iptr_t] = 1;
+          F->united[iptr_t] = 1;
         }
       } 
       else if(bdry_has_free == 0)
@@ -1011,33 +1016,33 @@ nc_read_init_stress(fault_t *F,
   int ierr;
   int ncid;
   int varid;
-  int start[] = {gnk1, gnj1};
-  int count[] = {nk, nj}; // y vary first
+  size_t start[] = {gnk1, gnj1};
+  size_t count[] = {nk, nj}; // y vary first
 
   ierr = nc_open(init_stress_nc, NC_NOWRITE, &ncid); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "Tx", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->T0x); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "Tx", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->T0x); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "Ty", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count,F->T0y); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "Ty", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->T0y); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "Tz", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->T0z); handle_nc_err(ierr); 
+  ierr = nc_inq_varid(ncid, "Tz", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->T0z); handle_nc_err(ierr); 
 
-  err = nc_inq_varid(ncid, "mu_s", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->mu_s); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "mu_s", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->mu_s); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "mu_d", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->mu_d); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "mu_d", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->mu_d); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "Dc", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->Dc); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "Dc", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->Dc); handle_nc_err(ierr);
 
-  err = nc_inq_varid(ncid, "C0", &varid); handle_nc_err(ierr);
-  err = nc_get_vara_real_t(ncid, varid, start, count, F->C0); handle_nc_err(ierr);
+  ierr = nc_inq_varid(ncid, "C0", &varid); handle_nc_err(ierr);
+  ierr = nc_get_vara_float(ncid, varid, start, count, F->C0); handle_nc_err(ierr);
 
-  err = nc_close(ncid);handle_nc_err(ierr);
-
+  ierr = nc_close(ncid);handle_nc_err(ierr);
+  
   return 0;
 }

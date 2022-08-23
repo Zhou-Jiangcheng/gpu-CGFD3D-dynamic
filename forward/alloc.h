@@ -3,6 +3,8 @@
 
 #include "constants.h"
 #include "gd_info.h"
+#include "fault_info.h"
+#include "fault_wav_t.h"
 #include "gd_t.h"
 #include "fd_t.h"
 #include "md_t.h"

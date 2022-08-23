@@ -96,7 +96,7 @@ typedef struct{
   char grid_export_dir[PAR_MAX_STRLEN];
 
   char fault_coord_nc[PAR_MAX_STRLEN];
-  char 3D_grid_coord_nc[PAR_MAX_STRLEN];
+  char grid_coord_nc[PAR_MAX_STRLEN];
   char init_stress_nc[PAR_MAX_STRLEN];
   float dh;
 

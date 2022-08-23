@@ -2,7 +2,8 @@
 #define FT_INFO_H
 
 #include "gd_info.h"
-#include "constants.h"
+#include "gd_t.h"
+#include "md_t.h"
 
 /*************************************************
  * structure
@@ -113,7 +114,7 @@ typedef struct
  *************************************************/
 
 int
-fault_coef_init(fault_coef_t *FC
+fault_coef_init(fault_coef_t *FC,
                 gdinfo_t *gdinfo);
 
 int 
@@ -124,11 +125,11 @@ fault_coef_cal(gdinfo_t *gdinfo,
                fault_coef_t *FC);
 
 int
-fault_init(fault_t *F
+fault_init(fault_t *F,
            gdinfo_t *gdinfo);
 
 int
-fault_set(fault_t *F
+fault_set(fault_t *F,
           fault_coef_t *FC,
           gdinfo_t *gdinfo,
           int bdry_has_free,
