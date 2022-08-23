@@ -37,7 +37,6 @@ cat << ieof > $PAR_FILE
   "number_of_total_grid_points_y" : 200,
   "number_of_total_grid_points_z" : 60,
 
-  "number_of_mpiprocs_x" : 1,
   "number_of_mpiprocs_y" : 1,
   "number_of_mpiprocs_z" : 1,
 
@@ -96,9 +95,14 @@ cat << ieof > $PAR_FILE
 
   "grid_generation_method" : {
       "fault_plane" : {
-        "fault_geometry" : "${INPUTDIR}/fault_coord.nc",
-        "fault_init_stress" : "${INPUTDIR}/init_stress.nc",
+        "fault_geometry_file" : "${INPUTDIR}/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
         "fault_inteval" : 100.0
+      },
+      "#3D_grid_with_fault" : {
+        "3D_grid_file" : "${INPUTDIR}/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
+        "fault_i_gobal_index" : 100.0
       }
   },
   "is_export_grid" : 1,

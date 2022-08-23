@@ -11,6 +11,9 @@ __host__ __device__
 void fdlib_math_matmul3x3(float A[][3], float B[][3], float C[][3]);
 
 __host__ __device__
+void fdlib_math_matmul3x1(float A[][3], float *B, float *C);
+
+__host__ __device__
 void fdlib_math_cross_product(float *A, float *B, float *C);
 
 __host__ __device__
