@@ -378,10 +378,3 @@ trial_slipweaking_gpu(
   } 
   return;
 }
-    if(F.init_t0_flag[iptr_t] == 0) {
-      if (F.hslip[iptr_t] > 1e-3) {
-        F.init_t0[iptr_t] = it * dt;
-        F.init_t0_flag[iptr_t] = 1;
-        F.flag_rup[iptr_t] = 1;
-      }
-    }

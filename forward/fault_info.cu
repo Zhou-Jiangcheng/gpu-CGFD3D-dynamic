@@ -865,12 +865,12 @@ fault_init(fault_t *F
   F->slip    = (float *) malloc(sizeof(float)*nj*nk);
   F->slip1   = (float *) malloc(sizeof(float)*nj*nk); 
   F->slip2   = (float *) malloc(sizeof(float)*nj*nk);  
+  F->Vs      = (float *) malloc(sizeof(float)*nj*nk);
   F->Vs1     = (float *) malloc(sizeof(float)*nj*nk);
   F->Vs2     = (float *) malloc(sizeof(float)*nj*nk);
   F->peak_Vs = (float *) malloc(sizeof(float)*nj*nk);
   F->init_t0 = (float *) malloc(sizeof(float)*nj*nk);
   // for inner
-  F->hslip        = (float *) malloc(sizeof(float)*nj*nk);
   F->tTn          = (float *) malloc(sizeof(float)*nj*nk);
   F->tTs1         = (float *) malloc(sizeof(float)*nj*nk);
   F->tTs2         = (float *) malloc(sizeof(float)*nj*nk);
@@ -1040,41 +1040,3 @@ nc_read_init_stress(fault_t *F, gdinfo_t *gdinfo, char *init_stress_nc)
 
   return 0;
 }
-
-int 
-fault_var_update(gdinfo_t *gdinfo, fault_wav_t FW, fault_t F, int it, int dt)
-{
-  {
-    dim3 block(8,8);
-    dim3 grid;
-    grid.x = (nj + block.x - 1) / block.x;
-    grid.y = (nk + block.y - 1) / block.y;
-    fault_var_update<<<gird, block >>> (
-                      );
-  }
-  return 0;
-}
-
-__global__ void
-fault_stress_update_first(size_t size, float coef, fault_t F)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    F.Tn [ix] = coef * F.tTn[ix];
-    F.Ts1[ix] = coef * F.tTs1[ix];
-    F.Ts2[ix] = coef * F.tTs2[ix];
-  }
-}
-
-__global__ void
-fault_stress_update(size_t size, float coef, fault_t F)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    F.Tn [ix] += coef * F.tTn [ix];
-    F.Ts1[ix] += coef * F.tTs1[ix];
-    F.Ts2[ix] += coef * F.tTs2[ix];
-  }
-}
-
-

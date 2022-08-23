@@ -704,11 +704,12 @@ io_fault_nc_create(iofault_t *iofault,
     if (nc_def_var(iofault_nc->ncid, "Tn" ,       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[3])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[4])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "Ts2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[5])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Vs1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[6])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "Vs2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[7])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "slip",      NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8])))  M_NCERR;
-    if (nc_def_var(iofault_nc->ncid, "slip1",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;   
-    if (nc_def_var(iofault_nc->ncid, "slip2",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "Vs",        NC_FLOAT, 3, dimid,   &(iofault_nc->varid[6])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[7])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "Vs2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "slip",      NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;
+    if (nc_def_var(iofault_nc->ncid, "slip1",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "slip2",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[11]))) M_NCERR;   
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
@@ -926,6 +927,80 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 
     if (nc_enddef(ncid[n])) M_NCERR;
   } // loop snap
+
+  return ierr;
+}
+
+int
+io_fault_nc_put(iofault_nc_t *iofault_nc,
+                gdinfo_t     *gdinfo,
+                fault_t  F,
+                float *buff,
+                int   it,
+                float time)
+{
+  int ierr = 0;
+
+  int   nj  = gdinfo->nj ;
+  int   nk  = gdinfo->nk ;
+
+  size_t startp[] = { it, 0, 0 };
+  size_t countp[] = { 1, nk, nj};
+  size_t start_tdim = it;
+
+  nc_put_var1_float(iofault_nc->ncid, iofault_nc->varid[0],
+                      &start_tdim, &time);
+
+  size_t size = sizeof(float) * nj * nk; 
+
+  CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[3], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[4], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[5], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[6], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[7], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[8], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[9], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[10], startp, countp, buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
+  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[11], startp, countp, buff);
+
+  return ierr;
+}
+
+int
+io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
+                      gdinfo_t     *gdinfo,
+                      fault_t  F,
+                      float *buff)
+{
+  int ierr = 0;
+
+  int   nj  = gdinfo->nj ;
+  int   nk  = gdinfo->nk ;
+
+  size_t size = sizeof(float) * nj * nk; 
+
+  CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
+  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[1], buff);
+
+  CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
+  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[2], buff);
 
   return ierr;
 }
