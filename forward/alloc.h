@@ -34,7 +34,7 @@ int
 init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d);
 
 int 
-init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d);
+init_fault_wav_device(fault_wav_t *FW, fault_wav_t *FW_d);
 
 int 
 init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);

@@ -155,13 +155,6 @@ int main(int argc, char** argv)
   // generate grid coord
   switch (par->grid_generation_itype)
   {
-    case PAR_GRID_IMPORT : {
-
-        if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
-        gd_curv_coord_import(gdcurv, blk->output_fname_part, par->grid_import_dir);
-
-        break;
-    }
     case PAR_GRID_FAULT_PLANE : {
 
         if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
@@ -200,7 +193,7 @@ int main(int argc, char** argv)
         if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
         gd_curv_metric_cal(gdinfo,
                            gdcurv,
-                           gdcurv_metric)
+                           gdcurv_metric);
 
         if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
         gd_curv_exchange(gdinfo,gdcurv_metric->v4d,gdcurv_metric->ncmp,mympi->neighid,mympi->topocomm);
@@ -210,7 +203,7 @@ int main(int argc, char** argv)
     case PAR_METRIC_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
+        //gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
 
         break;
     }
@@ -585,7 +578,7 @@ int main(int argc, char** argv)
   
   // fault slice
   io_fault_locate(gdinfo,iofault,
-                  par->fault_i_global_indx, 
+                  par->fault_i_global_index, 
                   blk->output_fname_part,
                   blk->output_dir);
                   
@@ -650,15 +643,13 @@ int main(int argc, char** argv)
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
   blk_macdrp_mesg_init(mympi, fd, gdinfo->ni, gdinfo->nj, gdinfo->nk,
-                  wav->ncmp, f_wav->ncmp);
+                  wav->ncmp, fault_wav->ncmp);
 
 //-------------------------------------------------------------------------------
 //-- qc
 //-------------------------------------------------------------------------------
 
   mympi_print(mympi);
-
-  blk_print(blk);
 
   gd_info_print(gdinfo);
 
@@ -681,10 +672,10 @@ int main(int argc, char** argv)
                             bdryfree,bdrypml, wav, mympi,
                             fault_coef,fault,fault_wav,
                             iorecv,ioline,iofault,ioslice,iosnap,
-                            dt,nt_total,t0,
+                            par->imethod, dt,nt_total,t0,
                             blk->output_fname_part,
                             blk->output_dir,
-                            par->fault_i_global_indx,
+                            par->fault_i_global_index,
                             par->check_nan_every_nummber_of_steps,
                             par->output_all,
                             verbose);
@@ -699,14 +690,14 @@ int main(int argc, char** argv)
 //-- save station and line seismo to sac
 //-------------------------------------------------------------------------------
   io_recv_output_sac(iorecv,dt,wav->ncmp,wav->cmp_name,
-                      src->evtnm,blk->output_dir,err_message);
+                      blk->output_dir,err_message);
 
   if(md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
     io_recv_output_sac_el_iso_strain(iorecv,md->lambda,md->mu,dt,
-                      src->evtnm,blk->output_dir,err_message);
+                      blk->output_dir,err_message);
   }
 
-  io_line_output_sac(ioline,dt,wav->cmp_name,src->evtnm,blk->output_dir);
+  io_line_output_sac(ioline,dt,wav->cmp_name,blk->output_dir);
 
 //-------------------------------------------------------------------------------
 //-- postprocess

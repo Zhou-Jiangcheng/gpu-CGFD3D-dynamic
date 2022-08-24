@@ -329,6 +329,9 @@ io_snap_pack_buff(float *var,
                   float *buff_d);
 
 int
+io_fault_nc_close(iofault_nc_t *iofault_nc);
+
+int
 io_slice_nc_close(ioslice_nc_t *ioslice_nc);
 
 int
@@ -365,7 +368,6 @@ io_recv_output_sac(iorecv_t *iorecv,
                    float dt,
                    int num_of_vars,
                    char **cmp_name,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message);
 int
@@ -373,7 +375,6 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
                    float * lam3d,
                    float * mu3d,
                    float dt,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message);
 
@@ -407,7 +408,7 @@ io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
 
 int
 io_line_output_sac(ioline_t *ioline,
-      float dt, char **cmp_name, char *evtnm, char *output_dir);
+      float dt, char **cmp_name, char *output_dir);
 
 int
 ioslice_print(ioslice_t *ioslice);

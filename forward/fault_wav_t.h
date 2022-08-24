@@ -3,6 +3,8 @@
 
 #include "gd_info.h"
 #include "fault_info.h"
+#include <cuda_runtime.h>
+
 
 /*************************************************
  * structure

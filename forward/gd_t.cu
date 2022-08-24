@@ -653,7 +653,6 @@ nc_read_fault_geometry(
   ierr = nc_get_vara_float(ncid, zid, start, count, fault_z); handle_nc_err(ierr);
 
   ierr = nc_close(ncid); handle_nc_err(ierr);
-  }
 
   return;
 }

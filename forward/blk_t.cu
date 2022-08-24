@@ -733,7 +733,7 @@ blk_macdrp_pack_fault_mesg_y1(
   {
     iptr     = (iz+nk1) * ny + (iy+nj1);
     iptr_b   = iz*ny1_g + iy;
-    for(int i=0; i<2*num_of_vars; i++)
+    for(int i=0; i<2*num_of_vars_fault; i++)
     {
       sbuff_y1_fault[iptr_b + i*ny1_g*nk] = fw_cur[iptr + i*siz_slice_yz];
     }
@@ -755,7 +755,7 @@ blk_macdrp_pack_fault_mesg_y2(
   {
     iptr     = (iz+nk1) * ny + (iy+nj2-ny2_g+1);
     iptr_b   = iz*ny2_g + iy;
-    for(int i=0; i<2*num_of_vars; i++)
+    for(int i=0; i<2*num_of_vars_fault; i++)
     {
       sbuff_y2_fault[iptr_b + i*ny2_g*nk] = fw_cur[iptr + i*siz_slice_yz];
     }
@@ -777,7 +777,7 @@ blk_macdrp_pack_fault_mesg_z1(
   {
     iptr     = (iz+nk1) * ny + (iy+nj1);
     iptr_b   = iz*nj + iy;
-    for(int i=0; i<2*num_of_vars; i++)
+    for(int i=0; i<2*num_of_vars_fault; i++)
     {
       sbuff_z1_fault[iptr_b + i*nz1_g*nj] = fw_cur[iptr + i*siz_slice_yz];
     }
@@ -799,7 +799,7 @@ blk_macdrp_pack_fault_mesg_z2(
   {
     iptr     = (iz+nk2-nz2_g+1) * ny + (iy+nj1);
     iptr_b   = iz*nj + iy;
-    for(int i=0; i<2*num_of_vars; i++)
+    for(int i=0; i<2*num_of_vars_fault; i++)
     {
       sbuff_z2_fault[iptr_b + i*nz2_g*nj] = fw_cur[iptr + i*siz_slice_yz];
     }
@@ -824,6 +824,7 @@ blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur,
   int nk2 = gdinfo->nk2;
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;
+  int ny = gdinfo->ny;
   size_t siz_slice_yz = gdinfo->siz_slice_yz;
   
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
@@ -838,9 +839,9 @@ blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur,
   size_t siz_rbuff_y2 = mympi->pair_siz_rbuff_y2[ipair_mpi][istage_mpi];
   size_t siz_rbuff_z1 = mympi->pair_siz_rbuff_z1[ipair_mpi][istage_mpi];
   size_t siz_rbuff_z2 = mympi->pair_siz_rbuff_z2[ipair_mpi][istage_mpi];
-  size_t siz_rbuff_y1_fault = mympi->pair_siz_rbuff_y_fault1[ipair_mpi][istage_mpi];
-  size_t siz_rbuff_y2_fault = mympi->pair_siz_rbuff_y_fault2[ipair_mpi][istage_mpi];
-  size_t siz_rbuff_z1_fault = mympi->pair_siz_rbuff_z_fault1[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_y1_fault = mympi->pair_siz_rbuff_y1_fault[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_y2_fault = mympi->pair_siz_rbuff_y2_fault[ipair_mpi][istage_mpi];
+  size_t siz_rbuff_z1_fault = mympi->pair_siz_rbuff_z1_fault[ipair_mpi][istage_mpi];
 
   mympi->rbuff_fault = mympi->rbuff + siz_rbuff_y1 + siz_rbuff_y2 + siz_rbuff_z1 + siz_rbuff_z2;
   float *rbuff_y1_fault = mympi->rbuff_fault;

@@ -16,6 +16,7 @@
 #include "sv_eq1st_curv_col_el_iso_fault_gpu.h"
 #include "trial_slipweakening.h"
 #include "transform.h"
+#include "fault_wav_t.h"
 #include "alloc.h"
 #include "cuda_common.h"
 
@@ -42,6 +43,7 @@ sv_eq1st_curv_col_allstep(
   iofault_t  *iofault,
   ioslice_t  *ioslice,
   iosnap_t   *iosnap,
+  int imethod,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
@@ -53,6 +55,7 @@ sv_eq1st_curv_col_allstep(
 {
   // retrieve from struct
   int num_rk_stages = fd->num_rk_stages;
+  int num_of_pairs =  fd->num_of_pairs;
   float *rk_a = fd->rk_a;
   float *rk_b = fd->rk_b;
   
@@ -87,7 +90,7 @@ sv_eq1st_curv_col_allstep(
   init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
   init_wave_device(wav, &wav_d);
   init_fault_coef_device(gdinfo, fault_coef, &fault_coef_d);
-  intit_fault_device(gdinfo, fault, &fault_d);
+  init_fault_device(gdinfo, fault, &fault_d);
   init_fault_wav_device(fault_wav, &fault_wav_d);
 
   // get device wavefield 
@@ -247,8 +250,8 @@ sv_eq1st_curv_col_allstep(
 
          wave2fault_onestage(
                         w_cur_d, w_rhs_d, wav_d, 
-                        f_cur_d, f_rhs_d, fault_wav_d,, 
-                        i0, fault_d, metric_d, gdinfo_d)
+                        f_cur_d, f_rhs_d, fault_wav_d, 
+                        i0, fault_d, metric_d, gdinfo_d);
 
           trial_slipweaking_onestage(
                         w_cur_d, f_cur_d, f_pre_d, 
@@ -262,7 +265,7 @@ sv_eq1st_curv_col_allstep(
           fault2wave_onestage(
                         w_cur_d, wav_d, 
                         f_cur_d, fault_wav_d,
-                        fault_d, metric_d, gdinfo_d);
+                        i0, fault_d, metric_d, gdinfo_d);
 
           sv_eq1st_curv_col_el_iso_onestage(
                         w_cur_d,w_rhs_d,wav_d,
@@ -274,7 +277,8 @@ sv_eq1st_curv_col_allstep(
 
           sv_eq1st_curv_col_el_iso_fault_onestage(
                         w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
-                        i0, isfree, wav_d, f_wav_d,
+                        i0, isfree, imethod, wav_d, 
+                        fault_wav_d, fault_d, fault_coef_d,
                         gdinfo_d, metric_d, md_d, bdryfree_d,  
                         fd->pair_fdx_op[ipair][istage],
                         fd->pair_fdy_op[ipair][istage],
@@ -284,7 +288,7 @@ sv_eq1st_curv_col_allstep(
           fault2wave_onestage(
                         w_cur_d, wav_d, 
                         f_cur_d, fault_wav_d,
-                        fault_d, metric_d, gdinfo_d);
+                        i0, fault_d, metric_d, gdinfo_d);
 
           break;
         }
@@ -474,7 +478,7 @@ sv_eq1st_curv_col_allstep(
         blk_macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       } else 
       {
-        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp,neighid_d);
         blk_macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
       }
     } // RK stages
@@ -546,14 +550,16 @@ sv_eq1st_curv_col_allstep(
   CUDACHECK(cudaFree(Dis_accu_d));
   CUDACHECK(cudaFree(neighid_d));
   dealloc_md_device(md_d);
-  dealloc_fd_device(fd_wav_d);
   dealloc_metric_device(metric_d);
+  dealloc_fault_coef_device(fault_coef_d);
+  dealloc_fault_device(fault_d);
+  dealloc_fault_wav_device(fault_wav_d);
   dealloc_bdryfree_device(bdryfree_d);
   dealloc_bdrypml_device(bdrypml_d);
   dealloc_wave_device(wav_d);
 
   // close nc
-  io_fault_nc_close(&ioslice_nc);
+  io_fault_nc_close(&iofault_nc);
   io_slice_nc_close(&ioslice_nc);
   io_snap_nc_close(&iosnap_nc);
   return;

@@ -211,6 +211,7 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
       }
     }
   }
+  return;
 }
 
 __global__ void
@@ -222,6 +223,7 @@ fault_stress_update_first(size_t size, float coef, fault_t F)
     F.Ts1[ix] = coef * F.tTs1[ix];
     F.Ts2[ix] = coef * F.tTs2[ix];
   }
+  return;
 }
 
 __global__ void
@@ -233,4 +235,5 @@ fault_stress_update(size_t size, float coef, fault_t F)
     F.Ts1[ix] += coef * F.tTs1[ix];
     F.Ts2[ix] += coef * F.tTs2[ix];
   }
+  return;
 }

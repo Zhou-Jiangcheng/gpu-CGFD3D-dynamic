@@ -35,6 +35,7 @@ sv_eq1st_curv_col_allstep(
   iofault_t  *iofault,
   ioslice_t  *ioslice,
   iosnap_t   *iosnap,
+  int imethod,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
@@ -42,7 +43,7 @@ sv_eq1st_curv_col_allstep(
   int fault_i_global_indx,
   int qc_check_nan_num_of_step,
   const int output_all, // qc all var
-  const int verbose)
+  const int verbose);
 
 int
 sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md);

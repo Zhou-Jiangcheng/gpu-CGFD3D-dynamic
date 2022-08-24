@@ -73,40 +73,40 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    wave2fault_gpu(Vx, Vy, Vy, Txx, Tyy, Tzz,
-                   Txz, Tyz, Txy, hTxx, hTyy, hTzz,
-                   hTxz,hTyz,hTxy,f_Vx, f_Vy, f_Vz,
-                   f_T2x, f_T2y, f_T2z,
-                   f_T3x, f_T3y, f_T3z,
-                   f_T1x, f_T1y, f_T1z,
-                   f_hT2x,f_hT2y,f_hT2z,
-                   f_hT3x,f_hT3y,f_hT3z,
-                   xi_x, xi_y, xi_z,
-                   et_x, et_y, et_z,
-                   zt_x, zt_y, zt_z,
-                   jac3d, i0, nj, nk, ny, 
-                   siz_line, siz_slice,
-                   siz_slice_yz, F);
-
+    wave2fault_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
+                                     Txz, Tyz, Txy, hTxx, hTyy, hTzz,
+                                     hTxz,hTyz,hTxy,f_Vx, f_Vy, f_Vz,
+                                     f_T2x, f_T2y, f_T2z,
+                                     f_T3x, f_T3y, f_T3z,
+                                     f_T1x, f_T1y, f_T1z,
+                                     f_hT2x,f_hT2y,f_hT2z,
+                                     f_hT3x,f_hT3y,f_hT3z,
+                                     xi_x, xi_y, xi_z,
+                                     et_x, et_y, et_z,
+                                     zt_x, zt_y, zt_z,
+                                     jac3d, i0, nj, nk, ny, 
+                                     siz_line, siz_slice,
+                                     siz_slice_yz, F);
+  }
   return 0;
 }
 
 __global__ void 
-wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
-               float * Txx, float * Tyy, float * Tzz,
-               float * Txz, float * Tyz, float * Txy,
-               float * hTxx,float * hTyy,float * hTzz,
-               float * hTxz,float * hTyz,float * hTxy,
+wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
+               float * Txx,   float * Tyy,   float * Tzz,
+               float * Txz,   float * Tyz,   float * Txy,
+               float * hTxx,  float * hTyy,  float * hTzz,
+               float * hTxz,  float * hTyz,  float * hTxy,
                float * f_Vx,  float * f_Vy,  float * f_Vz,
                float * f_T2x, float * f_T2y, float * f_T2z,
                float * f_T3x, float * f_T3y, float * f_T3z,
                float * f_T1x, float * f_T1y, float * f_T1z,
                float * f_hT2x,float * f_hT2y,float * f_hT2z,
                float * f_hT3x,float * f_hT3y,float * f_hT3z,
-               float * xi_x,  float * xi_y, float * xi_z,
-               float * et_x,  float * et_y, float * et_z,
-               float * zt_x,  float * zt_y, float * zt_z,
-               float * jac3d,  int i0, int nj, int nk, int ny, 
+               float * xi_x,  float * xi_y,  float * xi_z,
+               float * et_x,  float * et_y,  float * et_z,
+               float * zt_x,  float * zt_y,  float * zt_z,
+               float * jac3d, int i0, int nj, int nk, int ny, 
                size_t siz_line, size_t siz_slice, 
                size_t siz_slice_yz, fault_t F)
 {
@@ -121,8 +121,8 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
   // to
   //          fault (hT2x, ..., hT3x, ...)
  
-  int j = blockIdx.x * blockDim.x + threadIdx.x;
-  int k = blockIdx.y * blockDim.y + threadIdx.y;
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
   float jac;
   float metric[3][3], stress[3][3], traction[3][3];
   int iptr, iptr_f;
@@ -257,23 +257,24 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    fault2wave_gpu(Vx, Vy, Vy, Txx, Tyy, Tzz,
-                   Txz, Tyz, Txy, f_Vx, f_Vy, f_Vz,
-                   f_T2x, f_T2y, f_T2z, 
-                   f_T3x, f_T3y, f_T3z,
-                   f_T1x, f_T1y, f_T1z,
-                   xi_x, xi_y, xi_z,
-                   et_x, et_y, et_z,
-                   zt_x, zt_y, zt_z,
-                   jac3d, i0, nj, nk, ny, 
-                   siz_line, siz_slice, 
-                   siz_slice_yz, F);
+    fault2wave_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
+                                     Txz, Tyz, Txy, f_Vx, f_Vy, f_Vz,
+                                     f_T2x, f_T2y, f_T2z, 
+                                     f_T3x, f_T3y, f_T3z,
+                                     f_T1x, f_T1y, f_T1z,
+                                     xi_x, xi_y, xi_z,
+                                     et_x, et_y, et_z,
+                                     zt_x, zt_y, zt_z,
+                                     jac3d, i0, nj, nk, ny, 
+                                     siz_line, siz_slice, 
+                                     siz_slice_yz, F);
+  }
 
   return 0;
 }
 
 __global__ void 
-fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
+fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
                float * Txx, float * Tyy, float * Tzz,
                float * Txz, float * Tyz, float * Txy,
                float * f_Vx,  float * f_Vy,  float * f_Vz,

@@ -903,7 +903,7 @@ fault_set(fault_t *F,
           fault_coef_t *FC,
           gdinfo_t *gdinfo,
           int bdry_has_free,
-          float *fault_grid,
+          int *fault_grid,
           char *init_stress_nc)
 {
   int nj1 = gdinfo->nj1;

@@ -352,7 +352,7 @@ int init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d)
   return 0;
 }
 
-int init_fault_wave_device(fault_wav_t *FW, fault_wav_t *FW_d)
+int init_fault_wav_device(fault_wav_t *FW, fault_wav_t *FW_d)
 {
   int ny = FW->ny;
   int nz = FW->nz;

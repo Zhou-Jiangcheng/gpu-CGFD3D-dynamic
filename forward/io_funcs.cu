@@ -420,10 +420,10 @@ io_fault_locate(gdinfo_t *gdinfo,
   if(gd_info_gindx_is_inner_i(fault_i_global_indx, gdinfo)==1)
   {
     iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_i_global_indx, gdinfo);
-    sprintf(iofault->fault_fname,"%s/fault_i%d_%s.nc",
-              output_dir,fault_global_indx,output_fname_part);
+    sprintf(iofault->fault_fname[0],"%s/fault_i%d_%s.nc",
+              output_dir,fault_i_global_indx,output_fname_part);
 
-    ioslice->num_of_fault += 1;
+    iofault->num_of_fault += 1;
 
     size_t slice_siz = gdinfo->nj * gdinfo->nk;
     iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
@@ -687,12 +687,12 @@ io_fault_nc_create(iofault_t *iofault,
   int ierr = 0;
   int num_of_fault = iofault->num_of_fault;
   int num_of_var = 20;
-  ioslice_nc->varid = (int *)malloc(num_of_fault * num_of_var * sizeof(int));
+  iofault_nc->varid = (int *)malloc(num_of_fault * num_of_var * sizeof(int));
   int dimid[3];
   if(num_of_fault == 1) 
   {
     // fault slice
-    if (nc_create(iofault->fault_fname, NC_CLOBBER, &(iofault_nc->ncid))) M_NCERR;
+    if (nc_create(iofault->fault_fname[0], NC_CLOBBER, &(iofault_nc->ncid))) M_NCERR;
     if (nc_def_dim(iofault_nc->ncid, "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
     if (nc_def_dim(iofault_nc->ncid, "k"   , nk          , &dimid[1])) M_NCERR;
     if (nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2])) M_NCERR;
@@ -713,7 +713,7 @@ io_fault_nc_create(iofault_t *iofault,
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
-                   NC_INT,1,iofault->fault_local_indx);
+                   NC_INT,1,&iofault->fault_local_indx);
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,3,topoid);
 
@@ -1311,72 +1311,6 @@ io_snap_nc_put(iosnap_t *iosnap,
 }
 
 int
-io_fault_nc_put(iofault_nc_t *iofault_nc,
-                gdinfo_t     *gdinfo,
-                fault_t *F,
-                float *buff,
-                int   it,
-                float time)
-{
-  int ierr = 0;
-
-  int   ni1 = gdinfo->ni1;
-  int   ni2 = gdinfo->ni2;
-  int   nj1 = gdinfo->nj1;
-  int   nj2 = gdinfo->nj2;
-  int   nk1 = gdinfo->nk1;
-  int   nk2 = gdinfo->nk2;
-  int   ni  = gdinfo->ni ;
-  int   nj  = gdinfo->nj ;
-  int   nk  = gdinfo->nk ;
-  size_t   siz_line = gdinfo->siz_line;
-  size_t   siz_slice= gdinfo->siz_slice;
-  size_t   siz_volume = gdinfo->siz_volume;
-
-  //-- slice x, 
-  size_t startp[] = { it, 0, 0 };
-  size_t countp[] = { 1, nk, nj};
-  size_t start_tdim = it;
-
-  nc_put_var1_float(iofault_nc->ncid,iofault_nc->varid[0],&start_tdim, &time);
-
-  size_t size = sizeof(float) * nj * nk; 
-
-  cudaMemcpy(buff, F_d->Tn, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[3],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->Ts1, size , cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[4],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->Ts2, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[5],
-                    startp, countp, buff);
-  cudaMemcpy(buff, F_d->Vs1, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[6],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->Vs2, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[7],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->slip, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[8],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->slip1, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[9],
-                    startp, countp, buff);
-
-  cudaMemcpy(buff, F_d->slip2, size, cudaMemcpyDeviceToHost);
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[10],
-                    startp, countp, buff);
-
-  return ierr;
-}
-
-int
 io_snap_stress_to_strain_eliso(float *lam3d,
                                float *mu3d,
                                float *Txx,
@@ -1544,7 +1478,7 @@ io_fault_nc_close(iofault_nc_t *iofault_nc)
 {
     nc_close(iofault_nc->ncid);
 
-    retutn 0;
+    return 0;
 }
 
 int
@@ -1708,7 +1642,6 @@ io_recv_output_sac(iorecv_t *iorecv,
                    float dt,
                    int num_of_vars,
                    char **cmp_name,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message)
 {
@@ -1730,7 +1663,7 @@ io_recv_output_sac(iorecv_t *iorecv,
 
       float *this_trace = this_recv->seismo + icmp * iorecv->max_nt;
 
-      sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm,
+      sprintf(ou_file,"%s/%s.%s.sac", output_dir, 
                       this_recv->name, cmp_name[icmp]);
 
       //fprintf(stdout,"=== Debug: icmp=%d,ou_file=%s\n",icmp,ou_file);fflush(stdout);
@@ -1755,7 +1688,6 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
                      float *lam3d,
                      float *mu3d,
                      float dt,
-                     char *evtnm,
                      char *output_dir,
                      char *err_message)
 {
@@ -1800,32 +1732,32 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
     }
 
     // output to sca file
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exx");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exx");
     sacExport1C1R(ou_file,Txx,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Eyy");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyy");
     sacExport1C1R(ou_file,Tyy,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Ezz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Ezz");
     sacExport1C1R(ou_file,Tzz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Eyz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyz");
     sacExport1C1R(ou_file,Tyz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exz");
     sacExport1C1R(ou_file,Txz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exy");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exy");
     sacExport1C1R(ou_file,Txy,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
@@ -1876,7 +1808,7 @@ io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
 }
 int
 io_line_output_sac(ioline_t *ioline,
-      float dt, char **cmp_name, char *evtnm, char *output_dir)
+      float dt, char **cmp_name, char *output_dir)
 {
   // use fake evt_x etc. since did not implement gather evt_x by mpi
   float evt_x = 0.0;
@@ -1899,7 +1831,7 @@ io_line_output_sac(ioline_t *ioline,
       {
         float *this_trace = this_seismo + icmp * ioline->max_nt;
 
-        sprintf(ou_file,"%s/%s.%s.no%d.%s.sac", output_dir,evtnm,
+        sprintf(ou_file,"%s/%s.no%d.%s.sac", output_dir,
                   ioline->line_name[n],ioline->recv_seq[n][ir],
                   cmp_name[icmp]);
 

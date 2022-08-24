@@ -3,6 +3,7 @@
 
 #include "gd_info.h"
 #include "gd_t.h"
+#include "wav_t.h"
 #include "fault_info.h"
 #include "fault_wav_t.h"
 
@@ -12,7 +13,7 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
                     int i0, fault_t F, gdcurv_metric_t metric_d, gdinfo_t gdinfo_d);
 
 __global__ void 
-wave2fault_gpu(float * Vx,  float * Vy,  float * Vy,
+wave2fault_gpu(float * Vx,  float * Vy,  float * Vz,
                float * Txx, float * Tyy, float * Tzz,
                float * Txz, float * Tyz, float * Txy,
                float * hTxx,float * hTyy,float * hTzz,
@@ -36,7 +37,7 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
                     int i0, fault_t F, gdcurv_metric_t metric_d, gdinfo_t gdinfo_d);
 
 __global__ void 
-fault2wave_gpu(float * Vx,  float * Vy,  float * Vy,
+fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
                float * Txx, float * Tyy, float * Tzz,
                float * Txz, float * Tyz, float * Txy,
                float * f_Vx,  float * f_Vy,  float * f_Vz,

@@ -72,13 +72,12 @@ trial_slipweaking_onestage(
                          f_T2x, f_T2y, f_T2z,
                          f_T3x, f_T3y, f_T3z,
                          f_T1x, f_T1y, f_T1z,
-                         f_hVx, f_hVy, f_hVz,
                          f_mVx, f_mVy, f_mVz,
                          xi_x,  xi_y,  xi_z,
                          jac3d, i0, isfree, dt, 
                          nj, nk, ny, siz_line, 
                          siz_slice, siz_slice_yz, 
-                         jdir, kdir, F, FC)
+                         jdir, kdir, F, FC);
   }
   return 0;
 }
@@ -90,7 +89,6 @@ trial_slipweaking_gpu(
     float *f_T2x, float *f_T2y, float *f_T2z,
     float *f_T3x, float *f_T3y, float *f_T3z,
     float *f_T1x, float *f_T1y, float *f_T1z,
-    float *f_hVx, float *f_hVy, float *f_hVz,
     float *f_mVx, float *f_mVy, float *f_mVz,
     float *xi_x,  float *xi_y,  float *xi_z,
     float *jac3d, int i0, int isfree, int dt, 

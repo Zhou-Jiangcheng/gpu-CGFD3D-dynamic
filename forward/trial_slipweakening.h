@@ -34,7 +34,6 @@ trial_slipweaking_gpu(
                   float *f_T2x, float *f_T2y, float *f_T2z,
                   float *f_T3x, float *f_T3y, float *f_T3z,
                   float *f_T1x, float *f_T1y, float *f_T1z,
-                  float *f_hVx, float *f_hVy, float *f_hVz,
                   float *f_mVx, float *f_mVy, float *f_mVz,
                   float *xi_x,  float *xi_y,  float *xi_z,
                   float *jac3d, int i0, int isfree, int dt, 

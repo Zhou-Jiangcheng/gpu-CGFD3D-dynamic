@@ -98,7 +98,10 @@ typedef struct
  * function prototype
  ******************************************************************************/
 
-// set str
+int
+blk_init(blk_t *blk,
+         const int myid, const int verbose);
+
 int
 blk_set_output(blk_t *blk,
                mympi_t *mympi,
@@ -113,7 +116,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
                 int ni,
                 int nj,
                 int nk,
-                int num_of_vars
+                int num_of_vars,
                 int num_of_vars_fault);
 
 int
