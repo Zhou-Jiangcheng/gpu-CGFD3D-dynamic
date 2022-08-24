@@ -158,7 +158,7 @@ __global__ void
 fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
                      int nj, int nj1, int nk, int nk1, 
                      int ny, size_t siz_slice_yz,
-                     int it, int dt, int t_end, 
+                     int it, float dt, float t_end, 
                      fault_coef_t FC, fault_t F, fault_wav_t FW)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
