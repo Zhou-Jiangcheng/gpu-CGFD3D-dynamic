@@ -326,9 +326,9 @@ par_read_from_str(const char *str, par_t *par)
       }
     }
     // 3D grid import
-    if (subitem = cJSON_GetObjectItem(item, "3D_grid_with_fault")) {
+    if (subitem = cJSON_GetObjectItem(item, "grid_with_fault")) {
       par->grid_generation_itype = PAR_GRID_3D_GRID;
-      if (thirditem = cJSON_GetObjectItem(subitem, "3D_grid_file")) {
+      if (thirditem = cJSON_GetObjectItem(subitem, "grid_file")) {
          sprintf(par->grid_coord_nc, "%s", thirditem->valuestring);
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {

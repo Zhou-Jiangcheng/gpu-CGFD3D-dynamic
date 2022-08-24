@@ -37,8 +37,8 @@ cat << ieof > $PAR_FILE
   "number_of_total_grid_points_y" : 400,
   "number_of_total_grid_points_z" : 200,
 
-  "number_of_mpiprocs_y" : 1,
-  "number_of_mpiprocs_z" : 1,
+  "number_of_mpiprocs_y" : 2,
+  "number_of_mpiprocs_z" : 2,
 
   "size_of_time_step" : 0.015,
   "number_of_time_steps" : 300,
@@ -99,8 +99,8 @@ cat << ieof > $PAR_FILE
         "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
         "fault_inteval" : 100.0
       },
-      "#3D_grid_with_fault" : {
-        "3D_grid_file" : "${INPUTDIR}/fault_coord.nc",
+      "#grid_with_fault" : {
+        "grid_file" : "${INPUTDIR}/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
         "fault_i_gobal_index" : 100.0
       }

@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     case PAR_METRIC_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        //gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
+        gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->metric_import_dir);
 
         break;
     }

@@ -93,7 +93,6 @@ typedef struct{
   int fault_grid[4];
   int grid_generation_itype;
   int is_export_grid;
-  char grid_import_dir[PAR_MAX_STRLEN];
   char grid_export_dir[PAR_MAX_STRLEN];
 
   char fault_coord_nc[PAR_MAX_STRLEN];

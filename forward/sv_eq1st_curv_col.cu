@@ -115,10 +115,10 @@ sv_eq1st_curv_col_allstep(
   w_end_d = wav_d.v5d + wav_d.siz_ilevel * 3; // end level at n+1
 
   // get fault wavefield
-  //f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
-  //f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
-  //f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
-  //f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
+  f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
+  f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
+  f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
+  f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
 
   int   ipair, istage;
   float t_cur;
@@ -248,7 +248,7 @@ sv_eq1st_curv_col_allstep(
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
 
-         wave2fault_onestage(
+          wave2fault_onestage(
                         w_cur_d, w_rhs_d, wav_d, 
                         f_cur_d, f_rhs_d, fault_wav_d, 
                         i0, fault_d, metric_d, gdinfo_d);
