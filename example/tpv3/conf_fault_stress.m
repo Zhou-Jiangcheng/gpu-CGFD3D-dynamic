@@ -8,8 +8,8 @@ addmypath;
 ny = 400; 
 nz = 200;
 dh = 100;
-mu_s = 0.667; 
-mu_d = 0.442; 
+mu_s = 0.367; 
+mu_d = 0.242; 
 Dc = 0.4;
 j1 = 51;
 j2 = 351;
@@ -40,11 +40,11 @@ Stress_pri = [ SH, 0.0, 0.0; ...
               0.0, 0.0, Sh]*(-1.0e6);
 
 % azimuth of SH_max, degree in the East of North, x -axis
-Angle_SH = 87;
+Angle_SH = 60;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate
-angle = 220;
+angle = -90;
 Angle_x = 90 + angle; 
 
 % Degree in counter-clockwise,
@@ -85,14 +85,14 @@ str_init_z = zeros(ny, nz);
 for k = 1:nz
   for j = 1:ny
 
-      vec_n = squeeze(vec_n1(:,j,k));
-      vec_s1 = squeeze(vec_m(:,j,k));
-      vec_s2 = squeeze(vec_l(:,j,k));
-      temp_init_stress_xyz = Stress_tensor * vec_n;
-     depth = -z(j,k);
-     if depth < 5.0e3
-     temp_init_stress_xyz = temp_init_stress_xyz*max(depth, dh/3.0)/5.e3;
-     end
+    vec_n = squeeze(vec_n1(:,j,k));
+    vec_s1 = squeeze(vec_m(:,j,k));
+    vec_s2 = squeeze(vec_l(:,j,k));
+    temp_init_stress_xyz = Stress_tensor * vec_n;
+    depth = -z(j,k);
+    if depth < 5.0e3
+    temp_init_stress_xyz = temp_init_stress_xyz*max(depth, dh/3.0)/5.e3;
+    end
 
     % add nucleation patch
     if nucleation_shape == 1 % square

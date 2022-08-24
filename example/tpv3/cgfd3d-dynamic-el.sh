@@ -9,14 +9,14 @@ date
 MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../main_curv_col_el_3d
+EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project1
+PROJDIR=`pwd`/../../project1
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -33,9 +33,9 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 250,
-  "number_of_total_grid_points_y" : 200,
-  "number_of_total_grid_points_z" : 60,
+  "number_of_total_grid_points_x" : 100,
+  "number_of_total_grid_points_y" : 400,
+  "number_of_total_grid_points_z" : 200,
 
   "number_of_mpiprocs_y" : 1,
   "number_of_mpiprocs_z" : 1,
@@ -91,7 +91,7 @@ cat << ieof > $PAR_FILE
 
   "dynamic_method" : 1,
 
-  "fault_grid" : [51,400,51,400],
+  "fault_grid" : [51,351,51,200],
 
   "grid_generation_method" : {
       "fault_plane" : {
@@ -165,13 +165,13 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 190 ],
       "y_index" : [ 120 ],
       "z_index" : [ 59 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
       "grid_index_start" : [ 0, 0, 59 ],
@@ -197,11 +197,10 @@ echo "+ created $PAR_FILE"
 #-------------------------------------------------------------------------------
 
 #-- get np
-NUMPROCS_X=`grep number_of_mpiprocs_x ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
 NUMPROCS_Y=`grep number_of_mpiprocs_y ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
 NUMPROCS_Z=`grep number_of_mpiprocs_z ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
-NUMPROCS=$(( NUMPROCS_X*NUMPROCS_Y*NUMPROCS_Z ))
-echo $NUMPROCS_X $NUMPROCS_Y $NUMPROCS_Z $NUMPROCS
+NUMPROCS=$(( NUMPROCS_Y*NUMPROCS_Z ))
+echo $NUMPROCS_Y $NUMPROCS_Z $NUMPROCS
 
 #-- gen run script
 cat << ieof > ${PROJDIR}/cgfd_sim.sh
