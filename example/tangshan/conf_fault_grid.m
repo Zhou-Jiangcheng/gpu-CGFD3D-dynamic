@@ -5,18 +5,13 @@ clear;
 close all;
 
 addmypath;
-parfnm='../project/params.json'
-output_dir='../project/output'
-par = loadjson(parfnm);
-ny = par.number_of_total_grid_points_y;
-nz = par.number_of_total_grid_points_z;
-dh = par.fault_grid_dh; %grid physics length
-OUT = par.OUT;
-Fault_grid = par.Fault_grid;
-j1 = Fault_grid(1);
-j2 = Fault_grid(2);
-k1 = Fault_grid(3);
-k2 = Fault_grid(4);
+ny = 
+nz = 
+dh = 100; %grid physics length
+j1 = 51;
+j2 = ;
+k1 = 51;
+k2 = ;
 %read faults points and project
 [lonsrc,latsrc,v] = textread('tangshan_fault.txt','%f%f%d');
 [x1src,y1src]=coordtrans(latsrc,lonsrc);
@@ -97,12 +92,12 @@ xi = xi_s;
 % % b is fault strike direction index number
 b = length(xi)
 %left strong boundary, 100 grid length
-for i = 1:100
-    x(i) = xi(1)+(xi(2)-xi(1))*(i-101);
-    y(i) = yi(1)+(yi(2)-yi(1))*(i-101);
+for i = 1:50
+    x(i) = xi(1)+(xi(2)-xi(1))*(i-51);
+    y(i) = yi(1)+(yi(2)-yi(1))*(i-51);
 end
 %fault zone
-for i = 101:100+b
+for i = 51:50+b
     x(i) = xi(i-100);
     y(i) = yi(i-100);
 end
