@@ -361,51 +361,33 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
   float vecxi[5] = {0.0};
   float vecet[5] = {0.0};
   float veczt[5] = {0.0};
-  int fdx_indx[5] = {0};
-  int fdy_indx[5] = {0};
-  int fdz_indx[5] = {0};
+  int fdx_indx[5] = {-1,0,1,2,3};// Forward -1 ~ 3
+  int fdy_indx[5] = {-1,0,1,2,3};
+  int fdz_indx[5] = {-1,0,1,2,3};
   int n, iptr4vec;
-  if(idir == 1)
+  if(idir == 0)
   {
     for(int i=0; i<5; i++)
     {
-      fdx_indx[i] = i-1; // Forward -1 ~ 3
+      fdx_indx[i] = i-3; // Backward -1 ~ 3
     }
-  } else 
-  {
-    for(int i=0; i<5; i++)
-    {
-      fdx_indx[i] = i-3; // Backward -3 ~ 1
-    }
-  }
+  } 
 
-  if(jdir == 1)
+  if(jdir == 0)
   {
     for(int j=0; j<5; j++)
     {
-      fdy_indx[j] = j-1; // Forward -1 ~ 3
+      fdy_indx[j] = j-3; 
     }
   } else 
-  {
-    for(int j=0; j<5; j++)
-    {
-      fdy_indx[j] = j-3; // Backward -3 ~ 1
-    }
-  }
 
-  if(kdir == 1)
+  if(kdir == 0)
   {
     for(int k=0; k<5; k++)
     {
-      fdz_indx[k] = k-1; // Forward -1 ~ 3
+      fdz_indx[k] = k-3; 
     }
-  } else 
-  {
-    for(int k=0; k<5; k++)
-    {
-      fdz_indx[k] = k-3; // Backward -3 ~ 1
-    }
-  }
+  }  
 
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
