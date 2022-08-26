@@ -326,45 +326,8 @@ md_export(gdinfo_t  *gdinfo,
   return ierr;
 }
 
-/*
- * test
- */
-
 int
-md_gen_test_ac_iso(md_t *md)
-{
-  int ierr = 0;
-
-  int nx = md->nx;
-  int ny = md->ny;
-  int nz = md->nz;
-  size_t siz_line  = md->siz_line;
-  size_t siz_slice = md->siz_slice;
-
-  float *kappa3d = md->kappa;
-  float *rho3d = md->rho;
-
-  for (size_t k=0; k<nz; k++)
-  {
-    for (size_t j=0; j<ny; j++)
-    {
-      for (size_t i=0; i<nx; i++)
-      {
-        size_t iptr = i + j * siz_line + k * siz_slice;
-        float Vp=3000.0;
-        float rho=1500.0;
-        float kappa = Vp*Vp*rho;
-        kappa3d[iptr] = kappa;
-        rho3d[iptr] = rho;
-      }
-    }
-  }
-
-  return ierr;
-}
-
-int
-md_gen_test_el_iso(md_t *md)
+md_gen_uniform_el_iso(md_t *md, par_t *par)
 {
   int ierr = 0;
 
@@ -378,6 +341,10 @@ md_gen_test_el_iso(md_t *md)
   float  *mu3d = md->mu;
   float *rho3d = md->rho;
 
+  float Vp  = par->Vp;
+  float Vs  = par->Vs;
+  float rho = par->rho;
+
   for (size_t k=0; k<nz; k++)
   {
     for (size_t j=0; j<ny; j++)
@@ -385,9 +352,6 @@ md_gen_test_el_iso(md_t *md)
       for (size_t i=0; i<nx; i++)
       {
         size_t iptr = i + j * siz_line + k * siz_slice;
-        float Vp=3000.0;
-        float Vs=2000.0;
-        float rho=1500.0;
         float mu = Vs*Vs*rho;
         float lam = Vp*Vp*rho - 2.0*mu;
         lam3d[iptr] = lam;
@@ -401,7 +365,7 @@ md_gen_test_el_iso(md_t *md)
 }
 
 int
-md_gen_test_Qs(md_t *md, float Qs_freq)
+md_gen_uniform_Qs(md_t *md, float Qs_freq)
 {
   int ierr = 0;
 
@@ -431,7 +395,7 @@ md_gen_test_Qs(md_t *md, float Qs_freq)
 }
 
 int
-md_gen_test_el_vti(md_t *md)
+md_gen_uniform_el_vti(md_t *md, par_t *par)
 {
   int ierr = 0;
 
@@ -440,7 +404,12 @@ md_gen_test_el_vti(md_t *md)
   int nz = md->nz;
   size_t siz_line  = md->siz_line;
   size_t siz_slice = md->siz_slice;
-
+  float rho = par->rho; 
+  float c11 = par->c11;
+  float c13 = par->c13;
+  float c33 = par->c33;
+  float c55 = par->c55;
+  float c66 = par->c66;
   for (size_t k=0; k<nz; k++)
   {
     for (size_t j=0; j<ny; j++)
@@ -449,17 +418,13 @@ md_gen_test_el_vti(md_t *md)
       {
         size_t iptr = i + j * siz_line + k * siz_slice;
 
-        float rho=1500.0;
-
-        md->rho[iptr] = rho;
-
-	      md->c11[iptr] = 25.2*1e9;//lam + 2.0f*mu;
-	      md->c13[iptr] = 10.9620*1e9;//lam;
-	      md->c33[iptr] = 18.0*1e9;//lam + 2.0f*mu;
-	      md->c55[iptr] = 5.12*1e9;//mu;
-        md->c66[iptr] = 7.1680*1e9;//mu;
+        md->rho[iptr] = rho; 
+	      md->c11[iptr] = c11;
+	      md->c13[iptr] = c13;
+	      md->c33[iptr] = c33;
+	      md->c55[iptr] = c55;
+        md->c66[iptr] = c66;
         //-- Vp ~ sqrt(c11/rho) = 4098
-        
       }
     }
   }
@@ -468,7 +433,7 @@ md_gen_test_el_vti(md_t *md)
 }
 
 int
-md_gen_test_el_aniso(md_t *md)
+md_gen_uniform_el_aniso(md_t *md, par_t *par)
 {
   int ierr = 0;
 
@@ -478,6 +443,29 @@ md_gen_test_el_aniso(md_t *md)
   size_t siz_line  = md->siz_line;
   size_t siz_slice = md->siz_slice;
 
+  float rho = par->rho; 
+  float c11 = par->c11;
+  float c12 = par->c12;
+  float c13 = par->c13;
+  float c14 = par->c14;
+  float c15 = par->c15;
+  float c16 = par->c16;
+  float c22 = par->c22;
+  float c23 = par->c23;
+  float c24 = par->c24;
+  float c25 = par->c25;
+  float c26 = par->c26;
+  float c33 = par->c33;
+  float c34 = par->c34;
+  float c35 = par->c35;
+  float c36 = par->c36;
+  float c44 = par->c44;
+  float c45 = par->c45;
+  float c46 = par->c46;
+  float c55 = par->c55;
+  float c56 = par->c56;
+  float c66 = par->c66;
+
   for (size_t k=0; k<nz; k++)
   {
     for (size_t j=0; j<ny; j++)
@@ -486,34 +474,29 @@ md_gen_test_el_aniso(md_t *md)
       {
         size_t iptr = i + j * siz_line + k * siz_slice;
 
-        float rho=1500.0;
-
-        md->rho[iptr] = rho;
-
-	      md->c11[iptr] = 25.2*1e9;//lam + 2.0f*mu;
-	      md->c12[iptr] = 0.0;//lam;
-	      md->c13[iptr] = 10.9620*1e9;//lam;
-	      md->c14[iptr] = 0.0;
-	      md->c15[iptr] = 0.0;
-	      md->c16[iptr] = 0.0;
-	      md->c22[iptr] = 0.0;//lam + 2.0f*mu;
-	      md->c23[iptr] = 0.0;//lam;
-	      md->c24[iptr] = 0.0;
-	      md->c25[iptr] = 0.0;
-	      md->c26[iptr] = 0.0;
-	      md->c33[iptr] = 18.0*1e9;//lam + 2.0f*mu;
-	      md->c34[iptr] = 0.0;
-	      md->c35[iptr] = 0.0;
-	      md->c36[iptr] = 0.0;
-	      md->c44[iptr] = 0.0;//mu;
-	      md->c45[iptr] = 0.0;
-	      md->c46[iptr] = 0.0;
-	      md->c55[iptr] = 5.12*1e9;//mu;
-	      md->c56[iptr] = 0.0;
-        md->c66[iptr] = 7.1680*1e9;//mu;
-
+        md->rho[iptr] = rho; 
+	      md->c11[iptr] = c11;
+	      md->c12[iptr] = c12;
+	      md->c13[iptr] = c13;
+	      md->c14[iptr] = c14;
+	      md->c15[iptr] = c15;
+	      md->c16[iptr] = c16;
+	      md->c22[iptr] = c22;
+	      md->c23[iptr] = c23;
+	      md->c24[iptr] = c24;
+	      md->c25[iptr] = c25;
+	      md->c26[iptr] = c26;
+	      md->c33[iptr] = c33;
+	      md->c34[iptr] = c34;
+	      md->c35[iptr] = c35;
+	      md->c36[iptr] = c36;
+	      md->c44[iptr] = c44;
+	      md->c45[iptr] = c45;
+	      md->c46[iptr] = c46;
+	      md->c55[iptr] = c55;
+	      md->c56[iptr] = c56;
+        md->c66[iptr] = c66;
         //-- Vp ~ sqrt(c11/rho) = 4098
-
         // convert to VTI media
         md->c12[iptr] = md->c11[iptr] - 2.0*md->c66[iptr]; 
 	      md->c22[iptr] = md->c11[iptr];

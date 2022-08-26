@@ -19,7 +19,7 @@
 #define PAR_METRIC_IMPORT    2
 
 #define PAR_MEDIA_IMPORT 1
-#define PAR_MEDIA_CODE   2
+#define PAR_MEDIA_UNIFORM   2
 #define PAR_MEDIA_3LAY   3
 #define PAR_MEDIA_3GRD   4
 #define PAR_MEDIA_3BIN   5
@@ -155,6 +155,14 @@ typedef struct{
   char bin_file_c55[PAR_MAX_STRLEN];
   char bin_file_c56[PAR_MAX_STRLEN];
   char bin_file_c66[PAR_MAX_STRLEN];
+  
+  float Vp, Vs, rho;
+  float c11, c12, c13, c14, c15, c16;
+  float      c22, c23, c24, c25, c26;
+  float           c33, c34, c35, c36;
+  float                c44, c45, c46;
+  float                     c55, c56;
+  float                          c66;
 
   // following not used 
   char media_input_rho[PAR_MAX_STRLEN];

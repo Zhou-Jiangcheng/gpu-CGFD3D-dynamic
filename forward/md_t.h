@@ -2,6 +2,7 @@
 #define MD_EL_ISO_H
 
 #include "gd_info.h"
+#include "par_t.h"
 
 /*************************************************
  * structure
@@ -80,24 +81,18 @@ md_export(gdinfo_t  *gdinfo,
                  char *output_dir);
 
 int
-md_gen_test_ac_iso(md_t *md);
+md_gen_uniform_el_iso(md_t *md, par_t *par);
 
 int
-md_gen_test_el_iso(md_t *md);
+md_gen_uniform_Qs(md_t *md, float Qs_freq);
 
 int
-md_gen_test_Qs(md_t *md, float Qs_freq);
+md_gen_uniform_el_vti(md_t *md, par_t *par);
 
 int
-md_gen_test_el_vti(md_t *md);
-
-int
-md_gen_test_el_aniso(md_t *md);
+md_gen_uniform_el_aniso(md_t *md, par_t *par);
 
 int
 md_rho_to_slow(float *rho, size_t siz_volume);
-
-int
-md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_volume);
 
 #endif

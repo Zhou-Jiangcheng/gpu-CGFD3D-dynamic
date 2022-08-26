@@ -399,12 +399,110 @@ par_read_from_str(const char *str, par_t *par)
     }
 
     // if input by code
-    if (strcmp(par->media_input_way,"code") == 0)
+    if (strcmp(par->media_input_way,"half_space") == 0)
     {
-      par->media_input_itype = PAR_MEDIA_CODE;
-      if (subitem = cJSON_GetObjectItem(item, "code")) 
+      par->media_input_itype = PAR_MEDIA_UNIFORM;
+      if (subitem = cJSON_GetObjectItem(item, "iso_half_space")) 
       {
-        // implement read func name later
+        if (thirditem = cJSON_GetObjectItem(subitem, "Vp")) {
+          par->Vp = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "Vs")) {
+          par->Vs = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "rho")) {
+          par->rho = thirditem->valuedouble;
+        }
+      }
+      if (subitem = cJSON_GetObjectItem(item, "vti_half_space")) 
+      {
+        if (thirditem = cJSON_GetObjectItem(subitem, "rho")) {
+          par->rho = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c11")) {
+          par->c11 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c13")) {
+          par->c13 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c33")) {
+          par->c33 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c55")) {
+          par->c55 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c66")) {
+          par->c66 = thirditem->valuedouble;
+        }
+      }
+      if (subitem = cJSON_GetObjectItem(item, "aniso_half_space")) 
+      {
+        if (thirditem = cJSON_GetObjectItem(subitem, "rho")) {
+          par->rho = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c11")) {
+          par->c11 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c12")) {
+          par->c12 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c13")) {
+          par->c13 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c14")) {
+          par->c14 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c15")) {
+          par->c15 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c16")) {
+          par->c16 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c22")) {
+          par->c22 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c23")) {
+          par->c23 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c24")) {
+          par->c24 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c25")) {
+          par->c25 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c26")) {
+          par->c26 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c33")) {
+          par->c33 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c34")) {
+          par->c34 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c35")) {
+          par->c35 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c36")) {
+          par->c36 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c44")) {
+          par->c44 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c45")) {
+          par->c45 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c46")) {
+          par->c46 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c55")) {
+          par->c55 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c56")) {
+          par->c56 = thirditem->valuedouble;
+        }
+        if (thirditem = cJSON_GetObjectItem(subitem, "c66")) {
+          par->c66 = thirditem->valuedouble;
+        }
       }
     }
 
@@ -978,8 +1076,8 @@ par_print(par_t *par)
   fprintf(stdout, " media_type = %s\n", par->media_type);
   fprintf(stdout, " media_export_dir = %s\n", par->media_export_dir);
 
-  if (par->media_input_itype == PAR_MEDIA_CODE) {
-    fprintf(stdout, "\n --> use internal media funcs\n");
+  if (par->media_input_itype == PAR_MEDIA_UNIFORM) {
+    fprintf(stdout, "\n --> uniform media \n");
   } else if (par->media_input_itype == PAR_MEDIA_IMPORT) {
     fprintf(stdout, "\n --> import from dir = %s\n", par->media_import_dir);
   } else if (par->media_input_itype == PAR_MEDIA_3LAY) {
