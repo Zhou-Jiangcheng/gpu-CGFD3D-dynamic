@@ -75,6 +75,7 @@ sv_eq1st_curv_col_allstep(
   gdinfo_t   gdinfo_d;
   md_t   md_d;
   wav_t  wav_d;
+  fd_device_t fd_device_d;
   bdryfree_t bdryfree_d;
   bdrypml_t  bdrypml_d;
   gdcurv_metric_t metric_d;
@@ -85,6 +86,7 @@ sv_eq1st_curv_col_allstep(
   // init device struct, and copy data from host to device
   init_gdinfo_device(gdinfo, &gdinfo_d);
   init_md_device(md, &md_d);
+  init_fd_device(fd, &fd_device_d);
   init_metric_device(metric, &metric_d);
   init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
   init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
@@ -268,8 +270,8 @@ sv_eq1st_curv_col_allstep(
                         i0, fault_d, metric_d, gdinfo_d);
 
           sv_eq1st_curv_col_el_iso_onestage(
-                        w_cur_d,w_rhs_d,wav_d,
-                        gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, 
+                        w_cur_d, w_rhs_d, wav_d, gdinfo_d, fd_device_d, 
+                        metric_d, md_d, bdryfree_d, bdrypml_d, 
                         fd->pair_fdx_op[ipair][istage],
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
@@ -551,6 +553,7 @@ sv_eq1st_curv_col_allstep(
   CUDACHECK(cudaFree(neighid_d));
   dealloc_md_device(md_d);
   dealloc_metric_device(metric_d);
+  dealloc_fd_device(fd_device_d);
   dealloc_fault_coef_device(fault_coef_d);
   dealloc_fault_device(fault_d);
   dealloc_fault_wav_device(fault_wav_d);

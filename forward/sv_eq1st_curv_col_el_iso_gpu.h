@@ -21,8 +21,9 @@ sv_eq1st_curv_col_el_iso_onestage(
   float  *rhs_d, 
   wav_t  wav_d,
   gdinfo_t   gdinfo_d,
+  fd_device_t fd_device_d,
   gdcurv_metric_t  metric_d,
-  md_t mdeliso_d,
+  md_t md_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
   // include different order/stentil
@@ -45,7 +46,9 @@ sv_eq1st_curv_col_el_iso_rhs_inner_gpu(
     float * lam3d, float * mu3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_line, size_t siz_slice,
-    int idir, int jdir, int kdir,
+    int * lfdx_shift, float * lfdx_coef,
+    int * lfdy_shift, float * lfdy_coef,
+    int * lfdz_shift, float * lfdz_coef,
     const int myid, const int verbose);
 
 __global__ void
@@ -59,6 +62,9 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
     float * jac3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
     size_t siz_line, size_t siz_slice, 
+    int fdx_len, int * fdx_indx, 
+    int fdy_len, int * fdy_indx, 
+    int fdz_len, int * fdz_indx, 
     int idir, int jdir, int kdir,
     const int myid, const int verbose);
 
@@ -90,8 +96,10 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml(
     float * zt_x, float * zt_y, float * zt_z,
     float * lam3d, float *  mu3d, float * slw3d,
     int nk2, size_t siz_line, size_t siz_slice,
+    int *lfdx_shift, float *lfdx_coef,
+    int *lfdy_shift, float *lfdy_coef,
+    int *lfdz_shift, float *lfdz_coef,
     bdrypml_t bdrypml, bdryfree_t bdryfree,
-    int idir, int jdir, int kdir,
     const int myid, const int verbose);
 
 __global__ void
@@ -108,8 +116,10 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu(
     float * zt_x, float * zt_y, float * zt_z,
     float * lam3d, float *  mu3d, float * slw3d,
     int nk2, size_t siz_line, size_t siz_slice,
+    int *lfdx_shift, float *lfdx_coef,
+    int *lfdy_shift, float *lfdy_coef,
+    int *lfdz_shift, float *lfdz_coef,
     bdrypml_t bdrypml, bdryfree_t bdryfree,
-    int idir, int jdir, int kdir,
     const int myid, const int verbose);
 
 __global__ void

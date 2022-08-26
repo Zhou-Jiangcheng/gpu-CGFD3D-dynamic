@@ -121,6 +121,25 @@ int init_md_device(md_t *md, md_t *md_d)
   return 0;
 }
 
+int init_fd_device(fd_t *fd, fd_device_t *fd_device_d)
+{
+  int max_len = fd->fdz_max_len; //=5 
+
+  fd_device_d->fdx_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
+  fd_device_d->fdy_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
+  fd_device_d->fdz_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
+
+  fd_device_d->fdx_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
+  fd_device_d->fdy_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
+  fd_device_d->fdz_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
+
+  fd_device_d->fdx_shift_d    = (int *) cuda_malloc(sizeof(size_t)*max_len);
+  fd_device_d->fdy_shift_d    = (int *) cuda_malloc(sizeof(size_t)*max_len);
+  fd_device_d->fdz_shift_d    = (int *) cuda_malloc(sizeof(size_t)*max_len);
+
+  return 0;
+}
+
 int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
 {
   size_t siz_volume = metric->siz_volume;
@@ -541,6 +560,22 @@ int dealloc_md_device(md_t md_d)
   return 0;
 }
 
+int dealloc_fd_device(fd_device_t fd_device_d)
+{
+  CUDACHECK(cudaFree(fd_device_d.fdx_coef_d));
+  CUDACHECK(cudaFree(fd_device_d.fdy_coef_d));
+  CUDACHECK(cudaFree(fd_device_d.fdz_coef_d));
+
+  CUDACHECK(cudaFree(fd_device_d.fdx_indx_d));
+  CUDACHECK(cudaFree(fd_device_d.fdy_indx_d));
+  CUDACHECK(cudaFree(fd_device_d.fdz_indx_d));
+
+  CUDACHECK(cudaFree(fd_device_d.fdx_shift_d));
+  CUDACHECK(cudaFree(fd_device_d.fdy_shift_d));
+  CUDACHECK(cudaFree(fd_device_d.fdz_shift_d));
+
+  return 0;
+}
 int dealloc_metric_device(gdcurv_metric_t metric_d)
 {
   CUDACHECK(cudaFree(metric_d.jac   )); 
