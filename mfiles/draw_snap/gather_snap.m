@@ -1,10 +1,5 @@
 function [V,varargout] =gather_snap(snapinfo,nlayer,varnm,varargin)
 
-% gather snapshot data
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.05.31
-
 %-- flags --
 nargs=nargin-3;
 n=1;

@@ -1,14 +1,11 @@
-% Draw the snapshot on multi slices by using surf style
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.05.31
-
 clear all;
+close all;
+clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project/test.json';
-output_dir='../project/output';
+parfnm='../../project/test.json';
+output_dir='../../project/output';
 
 % which slice to plot
 % slice 1

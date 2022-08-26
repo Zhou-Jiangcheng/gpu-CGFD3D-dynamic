@@ -1,18 +1,14 @@
-% Draw a cross-section of media by using surf style
-% Author:       Yuanhang Huo
-% Email:        yhhuo@mail.ustc.edu.cn
-% Affiliation:  University of Science and Technology of China
-% Date:         2021.06.06
-
 clear all;
+close all;
+clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
 
 %media_type = 'ac_iso';
 media_type = 'el_iso';
-parfnm='../project/test.json'
-output_dir='../project/output'
+parfnm='../../project/test.json'
+output_dir='../../project/output'
 
 % which media profile to plot
 subs=[1,50,1];      % start from index '1'
@@ -32,8 +28,6 @@ flag_title  = 1;
 scl_daspect =[1 1 1];
 clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
-
-
 
 % load media data
 mediainfo=locate_media(parfnm,'start',subs,'count',subc,'stride',subt,'mediadir',output_dir);

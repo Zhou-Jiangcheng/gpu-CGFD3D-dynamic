@@ -1,17 +1,11 @@
-% Draw a cross-section of media by using pcolor style
-% Author:       Yuanhang Huo
-% Email:        yhhuo@mail.ustc.edu.cn
-% Affiliation:  University of Science and Technology of China
-% Date:         2021.06.06
-
 clear all;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
 %media_type = 'ac_iso';
 media_type = 'el_vti';
-parfnm='../project/test.json'
-output_dir='../project/output'
+parfnm='../../project/test.json'
+output_dir='../../project/output'
 
 %media_type = 'el_vti';
 
@@ -19,10 +13,6 @@ output_dir='../project/output'
 subs=[1,1,50];      % start from index '1'
 subc=[-1,-1,1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
-
-%subs=[50,1,1];      % start from index '1'
-%subc=[1,-1,-1];     % '-1' to plot all points in this dimension
-%subt=[1,1,1];
 
 % variable to plot
 % 'Vp', 'Vs', 'rho', 'lambda', 'mu'
@@ -37,8 +27,6 @@ flag_title  = 1;
 scl_daspect = [1 1 1];
 clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
-
-
 
 % load media data
 mediainfo=locate_media(parfnm,'start',subs,'count',subc,'stride',subt,'mediadir',output_dir);

@@ -1,10 +1,5 @@
 function [V,varargout] = gather_metric(metricinfo,varargin)
 
-% gather metric data
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.06.06
-
 nargs=nargin-1;
 
 n=1;

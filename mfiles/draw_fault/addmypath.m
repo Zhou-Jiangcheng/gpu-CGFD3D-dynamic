@@ -1,2 +1,2 @@
- dirnm = '../mfiles'
+ dirnm = '../../mfiles'
  addpath(genpath(dirnm))

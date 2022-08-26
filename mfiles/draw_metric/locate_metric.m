@@ -1,10 +1,5 @@
 function metricinfo = locate_metric(parfnm,varargin)
 
-% locate metric index in mpi threads
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.06.06
-
 gtstart  = 1;
 gtcount  = -1;
 gtstride = 1;

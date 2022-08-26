@@ -1,13 +1,5 @@
 function [x,y,z] = gather_coord(coordinfo,varargin)
 
-% gather coordinates of the snapshot
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.05.31
-
-% ChangeLog:
-% 20210814: read both cart and curv coord, --zw
-
 %-- flags --
 nargs=nargin-1;
 n=1;

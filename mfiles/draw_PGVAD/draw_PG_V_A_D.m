@@ -5,8 +5,8 @@ close all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project/params.json'
-output_dir='../project/output'
+parfnm='../../project/params.json'
+output_dir='../../project/output'
 PG_dir = output_dir;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.

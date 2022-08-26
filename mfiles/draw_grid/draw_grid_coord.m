@@ -1,15 +1,11 @@
-% Plot the grid
-% Author:       Yuanhang Huo
-% Email:        yhhuo@mail.ustc.edu.cn
-% Affiliation:  University of Science and Technology of China
-% Date:         2021.06.06
-
 clear all;
+close all;
+clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project/params.json'
-output_dir='../project/output'
+parfnm='../../project/params.json'
+output_dir='../../project/output'
 
 % which grid profile to plot
 subs=[1,1,1];     % start from index '1'
@@ -23,8 +19,6 @@ flag_print  = 0;
 flag_title  = 1;
 scl_daspect = [1 1 1];
 % ---------------------------------------------------------------------- %
-
-
 
 % load grid coordinate
 coordinfo=locate_coord(parfnm,'start',subs,'count',subc,'stride',subt,'coorddir',output_dir);

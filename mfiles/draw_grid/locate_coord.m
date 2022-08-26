@@ -1,10 +1,5 @@
 function coordinfo = locate_coord(parfnm,varargin)
 
-% locate coordinate index in mpi threads
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.06.06
-
 gtstart  = 1;
 gtcount  = -1;
 gtstride = 1;
@@ -84,7 +79,7 @@ for i=1:length(coordlist)
     if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
         length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
         length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
-       px(n)=str2num(coordlist(i).name( strfind(coordlist(i).name,'px' )+2 : ...
+        px(n)=str2num(coordlist(i).name( strfind(coordlist(i).name,'px' )+2 : ...
                                          strfind(coordlist(i).name,'_py')-1));
         py(n)=str2num(coordlist(i).name( strfind(coordlist(i).name,'py' )+2 : ...
                                          strfind(coordlist(i).name,'_pz')-1));

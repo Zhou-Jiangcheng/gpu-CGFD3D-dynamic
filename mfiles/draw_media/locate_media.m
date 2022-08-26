@@ -1,10 +1,5 @@
 function mediainfo = locate_media(parfnm,varargin)
 
-% locate media index in mpi threads
-% Author:   Yuanhang Huo
-% Email:    yhhuo@mail.ustc.edu.cn
-% Date:     2021.06.06
-
 gtstart  = 1;
 gtcount  = -1;
 gtstride = 1;
