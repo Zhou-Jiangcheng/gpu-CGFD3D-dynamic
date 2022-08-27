@@ -255,7 +255,7 @@ sv_eq1st_curv_col_allstep(
                         f_cur_d, f_rhs_d, fault_wav_d, 
                         i0, fault_d, metric_d, gdinfo_d);
 
-          trial_slipweaking_onestage(
+          trial_slipweakening_onestage(
                         w_cur_d, f_cur_d, f_pre_d, 
                         i0, isfree, dt,
                         gdinfo_d, metric_d, wav_d, 

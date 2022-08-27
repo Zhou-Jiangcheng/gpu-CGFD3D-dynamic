@@ -1,11 +1,11 @@
 clear all;
-close all;
+% close all;
 clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json'
-output_dir='../../project/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 
 % which snapshot to plot
 id=1;
@@ -26,9 +26,9 @@ subt=[1,1,1];
 %subt=[1,1,1];
 
 % variable and time to plot
-varnm='Vx';
-ns=300;
-ne=300;
+varnm='Vz';
+ns=100;
+ne=100;
 nt=50;
 
 
@@ -36,7 +36,7 @@ nt=50;
 flag_km     = 1;
 flag_emlast = 1;
 flag_print  = 0;
-savegif = 1;
+savegif = 0;
 % scl_caxis=[-1.0 1.0];
 filename1 = ['Vx.gif'];
 scl_daspect =[1 1 1];

@@ -46,7 +46,7 @@ sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
                        float * xi_x,  float * xi_y, float * xi_z,
                        float * et_x,  float * et_y, float * et_z,
                        float * zt_x,  float * zt_y, float * zt_z,
-                       float * jac3d, float * slw3d, fault_t F,  
+                       float * jac3d, float * slw3d, fault_t F, fault_coef_t FC, 
                        int i0, int isfree, int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
                        int idir, int jdir, int kdir);
@@ -70,7 +70,7 @@ sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        int isfree, int imethod, fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
-                       int idir, int jdir, int kdir);
+                       int jdir, int kdir);
 
 __global__ void 
 sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
@@ -90,6 +90,6 @@ sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        int isfree, int imethod, fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
-                       int idir, int jdir, int kdir);
+                       int jdir, int kdir);
 
 #endif

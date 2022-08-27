@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project1
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -89,19 +89,19 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-  "dynamic_method" : 1,
+  "dynamic_method" : 2,
 
   "fault_grid" : [51,351,51,200],
 
   "grid_generation_method" : {
       "fault_plane" : {
-        "fault_geometry_file" : "${INPUTDIR}/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
+        "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
         "fault_inteval" : 100.0
       },
       "#grid_with_fault" : {
-        "grid_file" : "${INPUTDIR}/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
+        "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
         "fault_i_gobal_index" : 100.0
       }
   },
@@ -135,7 +135,7 @@ cat << ieof > $PAR_FILE
         "Vs" : 2000,
         "rho": 1500
       },
-      "vti_half_space" : {
+      "#vti_half_space" : {
          "rho" : 1500,
          "c11" : 25200000000,
          "c13" : 10962000000,
@@ -143,7 +143,7 @@ cat << ieof > $PAR_FILE
          "c55" : 5120000000,
          "c66" : 7168000000
        },
-      "aniso_half_space" : {
+      "#aniso_half_space" : {
         "rho" : 1500,
         "c11" : 25200000000,
         "c12" : 0,
@@ -201,17 +201,17 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "#slice" : {
-      "x_index" : [ 190 ],
+  "slice" : {
+      "x_index" : [ 40 ],
       "y_index" : [ 120 ],
-      "z_index" : [ 59 ]
+      "z_index" : [ 199 ]
   },
 
-  "#snapshot" : [
+  "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 59 ],
-      "grid_index_count" : [ 250,200, 1 ],
+      "grid_index_start" : [ 0, 0, 199 ],
+      "grid_index_count" : [ 100,400, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,

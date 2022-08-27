@@ -5,8 +5,8 @@ close all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json'
-output_dir='../../project/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 PG_dir = output_dir;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.
@@ -79,6 +79,9 @@ shading flat;
 set(gcf,'color','white','renderer','painters');
 colormap( 'jet' );
 colorbar();
+if exist('scl_daspect')
+   daspect(scl_daspect);
+end
 % caxis([0,3]);
 title(varnm);
 

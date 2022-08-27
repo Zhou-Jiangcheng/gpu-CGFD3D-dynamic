@@ -3,8 +3,8 @@ addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
 %media_type = 'ac_iso';
-media_type = 'el_vti';
-parfnm='../../project/test.json'
+media_type = 'el_iso';
+parfnm='../../project/params.json'
 output_dir='../../project/output'
 
 %media_type = 'el_vti';
@@ -16,7 +16,7 @@ subt=[1,1,1];
 
 % variable to plot
 % 'Vp', 'Vs', 'rho', 'lambda', 'mu'
-varnm='rho';
+varnm='Vp';
 
 % figure control parameters
 flag_km     = 1;

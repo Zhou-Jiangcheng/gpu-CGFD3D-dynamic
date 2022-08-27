@@ -667,7 +667,7 @@ int main(int argc, char** argv)
   if (myid==0 && verbose>0) fprintf(stdout,"start solver ...\n"); 
   
   time_t t_start = time(NULL);
-  
+
   sv_eq1st_curv_col_allstep(fd,gdinfo,gdcurv_metric,md,
                             bdryfree,bdrypml, wav, mympi,
                             fault_coef,fault,fault_wav,
@@ -679,7 +679,7 @@ int main(int argc, char** argv)
                             par->check_nan_every_nummber_of_steps,
                             par->output_all,
                             verbose);
-  
+
   time_t t_end = time(NULL);
   
   if (myid==0 && verbose>0) {

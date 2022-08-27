@@ -4,18 +4,18 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json';
+parfnm='../../project/params.json';
 output_dir='../../project/output';
 
 % which metric profile to plot
-subs=[10,30,1];     % start from index '1'
+subs=[1,30,1];     % start from index '1'
 subc=[-1,-1,1];     % '-1' to plot all points in this dimension
-subt=[2,1,2];
+subt=[1,1,1];
 
 % variable to plot
 % 'jac', 'xi_x', 'xi_y', 'xi_z', 'eta_x', 'eta_y', 'eta_z',
 % 'zeta_x', 'zeta_y', 'zeta_z'
-varnm='zeta_x';
+varnm='zeta_z';
 
 % figure control parameters
 flag_km     = 1;
@@ -26,8 +26,6 @@ flag_title  = 1;
 scl_daspect = [1 1 1];
 clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
-
-
 
 % locate metric data
 metricinfo=locate_metric(parfnm,'start',subs,'count',subc,'stride',subt,'metricdir',output_dir);

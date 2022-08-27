@@ -4,7 +4,7 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json';
+parfnm='../../project/params.json';
 output_dir='../../project/output';
 
 % metric profiles to plot

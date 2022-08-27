@@ -4,13 +4,13 @@
 #include "fdlib_math.h"
 
 int 
-trial_slipweaking_onestage(
+trial_slipweakening_onestage(
                   float *w_cur_d,
                   float *f_cur_d,
                   float *f_pre_d,
                   int i0,
                   int isfree,
-                  int dt,
+                  float dt,
                   gdinfo_t gdinfo_d,
                   gdcurv_metric_t metric_d,
                   wav_t wav_d,
@@ -52,9 +52,11 @@ trial_slipweaking_onestage(
   float *xi_z  = metric_d.xi_z;
   float *jac3d = metric_d.jac;
 
-  int nj = gdinfo_d.nj;
-  int nk = gdinfo_d.nk;
-  int ny = gdinfo_d.ny;
+  int nj1 = gdinfo_d.nj1;
+  int nk1 = gdinfo_d.nk1;
+  int nj  = gdinfo_d.nj;
+  int nk  = gdinfo_d.nk;
+  int ny  = gdinfo_d.ny;
 
   size_t siz_line   = gdinfo_d.siz_line;
   size_t siz_slice  = gdinfo_d.siz_slice;
@@ -62,12 +64,13 @@ trial_slipweaking_onestage(
 
   int jdir = fdy_op->dir;
   int kdir = fdz_op->dir;
+  
   {
     dim3 block(8,8);
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    trial_slipweaking_gpu <<<grid, block>>>(
+    trial_slipweakening_gpu <<<grid, block>>>(
                          Txx, Tyy, Tzz, Tyz, Txz, Txy, 
                          f_T2x, f_T2y, f_T2z,
                          f_T3x, f_T3y, f_T3z,
@@ -75,15 +78,16 @@ trial_slipweaking_onestage(
                          f_mVx, f_mVy, f_mVz,
                          xi_x,  xi_y,  xi_z,
                          jac3d, i0, isfree, dt, 
-                         nj, nk, ny, siz_line, 
+                         nj1, nj, nk1, nk, ny, siz_line, 
                          siz_slice, siz_slice_yz, 
                          jdir, kdir, F, FC);
   }
+ 
   return 0;
 }
 
 __global__ void 
-trial_slipweaking_gpu(
+trial_slipweakening_gpu(
     float *Txx,   float *Tyy,   float *Tzz,
     float *Tyz,   float *Txz,   float *Txy,
     float *f_T2x, float *f_T2y, float *f_T2z,
@@ -91,8 +95,8 @@ trial_slipweaking_gpu(
     float *f_T1x, float *f_T1y, float *f_T1z,
     float *f_mVx, float *f_mVy, float *f_mVz,
     float *xi_x,  float *xi_y,  float *xi_z,
-    float *jac3d, int i0, int isfree, int dt, 
-    int nj, int nk, int ny,
+    float *jac3d, int i0, int isfree, float dt, 
+    int nj1, int nj, int nk1, int nk, int ny,
     size_t siz_line, size_t siz_slice, 
     size_t siz_slice_yz, int jdir, int kdir,
     fault_t F, fault_coef_t FC)
@@ -130,11 +134,8 @@ trial_slipweaking_gpu(
       // m = 1 -> plus
       // T1x T1y T1z
       // 0 1 2 3 4 5 6 index 0,1,2 minus, 3 fault, 4,5,6 plus
-      iptr_f = (iy+3) + (iz+3) * ny; 
-      iptr = i0 + (iy+3) * siz_line + (iz+3) * siz_slice;
-      xix = xi_x [iptr];
-      xiy = xi_y [iptr];
-      xiz = xi_z [iptr];
+      iptr_f = (iy+nj1) + (iz+nk1) * ny; 
+      iptr = i0 + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
       jac = jac3d[iptr];
       rho = FC.rho_f[iptr_f + m * siz_slice_yz];
       // dh = 1, so omit dh in formula
@@ -143,7 +144,7 @@ trial_slipweaking_gpu(
       // fault traction image method by zhang wenqiang 
       for (int l = 1; l <= 3; l++)
       {
-        iptr = (i0+(2*m-1)*l) + (iy+3) * siz_line + (iz+3) * siz_slice;
+        iptr = (i0+(2*m-1)*l) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
         xix = xi_x[iptr];
         xiy = xi_y[iptr];
         xiz = xi_z[iptr];
@@ -195,7 +196,7 @@ trial_slipweaking_gpu(
       {
         for (int l=-3; l<=3 ; l++)
         {
-          iptr_f = (iy+3) + (iz+3+l) * ny + m*siz_slice_yz;
+          iptr_f = (iy+nj1) + (iz+nk1+l) * ny + m*siz_slice_yz;
           vecT3x[l+3] = f_T3x[iptr_f];
           vecT3y[l+3] = f_T3y[iptr_f];
           vecT3z[l+3] = f_T3z[iptr_f];
@@ -216,7 +217,7 @@ trial_slipweaking_gpu(
         M_FD_VEC(DzT3z, vecT3z+3, kdir);
       } 
       
-      iptr_f = (iy+3) + (iz+3) * ny;
+      iptr_f = (iy+nj1) + (iz+nk1) * ny;
       if (m == 0){ // "-" side
         Rx[m] =
           a_1 * f_T1x[2*siz_slice_yz+iptr_f] +
@@ -251,7 +252,7 @@ trial_slipweaking_gpu(
     } // end m
 
     // dv = (V+) - (V-)
-    //iptr_f = (iy+3) + (iz+3) * ny;
+    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
     float dVx = f_mVx[iptr_f + siz_slice_yz] - f_mVx[iptr_f];
     float dVy = f_mVy[iptr_f + siz_slice_yz] - f_mVy[iptr_f];
     float dVz = f_mVz[iptr_f + siz_slice_yz] - f_mVz[iptr_f];
@@ -269,7 +270,7 @@ trial_slipweaking_gpu(
     float vec_s2[3];
     float vec_n0;
 
-    //iptr_f = (iy+3) + (iz+3) * ny;
+    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
     vec_s1[0] = FC.vec_s1[iptr_f * 3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f * 3 + 1];
     vec_s1[2] = FC.vec_s1[iptr_f * 3 + 2];
@@ -277,7 +278,7 @@ trial_slipweaking_gpu(
     vec_s2[1] = FC.vec_s2[iptr_f * 3 + 1];
     vec_s2[2] = FC.vec_s2[iptr_f * 3 + 2];
 
-    iptr = i0 + (iy+3) * siz_line + (iz+3) * siz_slice;
+    iptr = i0 + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
     vec_n[0] = xi_x[iptr];
     vec_n[1] = xi_y[iptr];
     vec_n[2] = xi_z[iptr];
@@ -290,31 +291,31 @@ trial_slipweaking_gpu(
         vec_n[i] /= vec_n0;
     }
     
-    // iptr_t = iy + iz * nj; 
+    //iptr_t = iy + iz * nj; 
     Trial_local[0] = Trial[0]/jacvec + F.T0x[iptr_t];
     Trial_local[1] = Trial[1]/jacvec + F.T0y[iptr_t];
     Trial_local[2] = Trial[2]/jacvec + F.T0z[iptr_t];
 
-    float Trial_n = fdlib_math_dot_product(Trial_local, vec_n);
+    float Trial_n0 = fdlib_math_dot_product(Trial_local, vec_n);
     // Ts = T - n * Tn
-    Trial_s[0] = Trial_local[0] - vec_n[0]*Trial_n;
-    Trial_s[1] = Trial_local[1] - vec_n[1]*Trial_n;
-    Trial_s[2] = Trial_local[2] - vec_n[2]*Trial_n;
+    Trial_s[0] = Trial_local[0] - vec_n[0]*Trial_n0;
+    Trial_s[1] = Trial_local[1] - vec_n[1]*Trial_n0;
+    Trial_s[2] = Trial_local[2] - vec_n[2]*Trial_n0;
 
 
     float Trial_s0;
     Trial_s0 = fdlib_math_norm3(Trial_s);
 
-    float Tau_n = Trial_n;
+    float Tau_n = Trial_n0;
     float Tau_s = Trial_s0;
 
-    float ifchange = 0; // false
-    if(Trial_n >= 0.0){
+    int ifchange = 0; // false
+    if(Trial_n0 >= 0.0){
       // fault can not open
       Tau_n = 0.0;
       ifchange = 1;
     }else{
-      Tau_n = Trial_n;
+      Tau_n = Trial_n0;
     }
 
     float mu_s = F.mu_s[iptr_t];
@@ -343,7 +344,7 @@ trial_slipweaking_gpu(
     }
 
     float Tau[3];
-    if(ifchange){
+    if(ifchange == 1){
       // to avoid divide by 0, 1e-1 is a small value compared to stress
       if(fabs(Trial_s0) < 1e-1){
         Tau[0] = Tau_n * vec_n[0];
@@ -360,8 +361,8 @@ trial_slipweaking_gpu(
       Tau[2] = Trial_local[2];
     }
 
-    //iptr_f = (iy+3) + (iz+3) * ny;
-    if(ifchange){
+    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(ifchange == 1){
       f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
       f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
       f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;

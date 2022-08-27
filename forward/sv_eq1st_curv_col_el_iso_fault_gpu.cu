@@ -122,16 +122,17 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
                                                 f_T3x, f_T3y, f_T3z,
                                                 f_hVx, f_hVy, f_hVz, 
                                                 f_T1x, f_T1y, f_T1z,
-                                                xi_x,  xi_y, xi_z,
+                                                xi_x, xi_y, xi_z,
                                                 et_x, et_y, et_z, 
                                                 zt_x, zt_y, zt_z,
                                                 jac3d, slw3d, 
-                                                F, i0, isfree,
+                                                F, FC, i0, isfree,
                                                 nj1, nj, nk1, nk, ny, 
                                                 siz_line, siz_slice, siz_slice_yz,
                                                 idir, jdir, kdir);
     CUDACHECK( cudaDeviceSynchronize() );
   }
+
   {
     dim3 block(8,8);
     dim3 grid;
@@ -156,7 +157,7 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
                                                        i0, isfree, imethod, F, FC,
                                                        nj1, nj, nk1, nk, ny, 
                                                        siz_line, siz_slice, siz_slice_yz,
-                                                       idir, jdir, kdir);
+                                                       jdir, kdir);
     }
     if(idir == 0) 
     {
@@ -177,7 +178,7 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
                                                        i0, isfree, imethod, F, FC,
                                                        nj1, nj, nk1, nk, ny, 
                                                        siz_line, siz_slice, siz_slice_yz,
-                                                       idir, jdir, kdir);
+                                                       jdir, kdir);
     }
     CUDACHECK( cudaDeviceSynchronize() );
   }
@@ -197,7 +198,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
                        float * xi_x,  float * xi_y, float * xi_z,
                        float * et_x,  float * et_y, float * et_z,
                        float * zt_x,  float * zt_y, float * zt_z,
-                       float * jac3d, float * slw3d, fault_t F,  
+                       float * jac3d, float * slw3d, fault_t F, fault_coef_t FC,  
                        int i0, int isfree, int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
                        int idir, int jdir, int kdir)
@@ -221,9 +222,9 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
   float vecT2x[7], vecT2y[7], vecT2z[7];
   float vecT3x[7], vecT3y[7], vecT3z[7];
   iptr_t = iy + iz * nj;
-  if (iy < nj && iz < nk ) 
+
+  if (iy < nj && iz < nk && F.united[iptr_t] == 0) 
   { 
-    if(F.united[iptr_t] == 1) return;
     int km = nk - (iz+1); 
     int n_free = km+3;
 
@@ -349,6 +350,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
                   + a_2*f_T1z[iptr_f+5*siz_slice_yz]
                   + a_3*f_T1z[iptr_f+6*siz_slice_yz];
       }
+
       T2x_ptr = f_T2x + m*siz_slice_yz + iptr_f;
       T2y_ptr = f_T2y + m*siz_slice_yz + iptr_f;
       T2z_ptr = f_T2z + m*siz_slice_yz + iptr_f;
@@ -407,9 +409,10 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
       } 
 
       iptr = i0 + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
-      rrhojac = slw3d[iptr] / jac3d[iptr];
-
       iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_slice_yz; 
+      
+      rrhojac = 1.0 / (FC.rho_f[iptr_f] * jac3d[iptr]);
+
       f_hVx[iptr_f] = (DxT1x+DyT2x+DzT3x)*rrhojac;
       f_hVy[iptr_f] = (DxT1y+DyT2y+DzT3y)*rrhojac;
       f_hVz[iptr_f] = (DxT1z+DyT2z+DzT3z)*rrhojac;
@@ -436,7 +439,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        int isfree, int imethod,  fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
-                       int idir, int jdir, int kdir)
+                       int jdir, int kdir)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -534,16 +537,16 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_F(DyVx[4],f_Vx_ptr,siz_line);
-      MAC22_F(DyVy[4],f_Vy_ptr,siz_line);
-      MAC22_F(DyVz[4],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MAC22(DyVx[4],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVy[4],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVz[4],f_Vz_ptr,1,jdir);
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_F(DyVx[3],f_Vx_ptr,siz_line);
-      MAC22_F(DyVy[3],f_Vy_ptr,siz_line);
-      MAC22_F(DyVz[3],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MAC22(DyVx[3],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVy[3],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVz[3],f_Vz_ptr,1,jdir);
     }
     if(F.rup_index_y[iptr_t] == 0)
     {
@@ -551,50 +554,51 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_F(DyVx[4],f_Vx_ptr,siz_line);
-      MACDRP_F(DyVy[4],f_Vy_ptr,siz_line);
-      MACDRP_F(DyVz[4],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MACDRP(DyVx[4],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVy[4],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVz[4],f_Vz_ptr,1,jdir);
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_F(DyVx[3],f_Vx_ptr,siz_line);
-      MACDRP_F(DyVy[3],f_Vy_ptr,siz_line);
-      MACDRP_F(DyVz[3],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MACDRP(DyVx[3],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVy[3],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVz[3],f_Vz_ptr,1,jdir);
     }
     if(F.rup_index_z[iptr_t] == 1){
       iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_F(DzVx[4],f_Vx_ptr,siz_slice);
-      MAC22_F(DzVy[4],f_Vy_ptr,siz_slice);
-      MAC22_F(DzVz[4],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MAC22(DzVx[4],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVy[4],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVz[4],f_Vz_ptr,ny,kdir);
       iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_F(DzVx[3],f_Vx_ptr,siz_slice);
-      MAC22_F(DzVy[3],f_Vy_ptr,siz_slice);
-      MAC22_F(DzVz[3],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MAC22(DzVx[3],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVy[3],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVz[3],f_Vz_ptr,ny,kdir);
     }
     if(F.rup_index_z[iptr_t] == 0){
       iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_F(DzVx[4],f_Vx_ptr,siz_slice);
-      MACDRP_F(DzVy[4],f_Vy_ptr,siz_slice);
-      MACDRP_F(DzVz[4],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MACDRP(DzVx[4],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVy[4],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVz[4],f_Vz_ptr,ny,kdir);
       iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_F(DzVx[3],f_Vx_ptr,siz_slice);
-      MACDRP_F(DzVy[3],f_Vy_ptr,siz_slice);
-      MACDRP_F(DzVz[3],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MACDRP(DzVx[3],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVy[3],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVz[3],f_Vz_ptr,ny,kdir);
     }
 
+    //idx = ((iy+3) + (iz+3) * ny)*3*3
     for (int i = 0; i < 3; i++){
       for (int j = 0; j < 3; j++){
         matPlus2Min1[i][j] = FC.matPlus2Min1[idx + i*3 + j];
@@ -603,9 +607,9 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
         matPlus2Min4[i][j] = FC.matPlus2Min4[idx + i*3 + j];
         matPlus2Min5[i][j] = FC.matPlus2Min5[idx + i*3 + j];
 
-        matT1toVx_Min[i][j] = FC.matT1toVx_Min[idx + i*3 + j];
-        matVytoVx_Min[i][j] = FC.matVytoVx_Min[idx + i*3 + j];
-        matVztoVx_Min[i][j] = FC.matVztoVx_Min[idx + i*3 + j];
+        matT1toVx_Min[i][j]  = FC.matT1toVx_Min[idx + i*3 + j];
+        matVytoVx_Min[i][j]  = FC.matVytoVx_Min[idx + i*3 + j];
+        matVztoVx_Min[i][j]  = FC.matVztoVx_Min[idx + i*3 + j];
         matT1toVx_Plus[i][j] = FC.matT1toVx_Plus[idx + i*3 + j];
         matVytoVx_Plus[i][j] = FC.matVytoVx_Plus[idx + i*3 + j];
         matVztoVx_Plus[i][j] = FC.matVztoVx_Plus[idx + i*3 + j];
@@ -688,15 +692,15 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
     {
       for (int i = 0; i < 3; i++){
         for (int j = 0; j < 3; j++){
-          matVx2Vz1    [i][j] = FC.matVx2Vz1    [(iy+3)*9 + i*3 + j];
-          matVx2Vz2    [i][j] = FC.matVx2Vz2    [(iy+3)*9 + i*3 + j];
-          matVy2Vz1    [i][j] = FC.matVy2Vz1    [(iy+3)*9 + i*3 + j];
-          matVy2Vz2    [i][j] = FC.matVy2Vz2    [(iy+3)*9 + i*3 + j];
-          matPlus2Min1f[i][j] = FC.matPlus2Min1f[(iy+3)*9 + i*3 + j];
-          matPlus2Min2f[i][j] = FC.matPlus2Min2f[(iy+3)*9 + i*3 + j];
-          matPlus2Min3f[i][j] = FC.matPlus2Min3f[(iy+3)*9 + i*3 + j];
-          matT1toVxf_Min[i][j] = FC.matT1toVxf_Min[(iy+3)*9 + i*3 + j];
-          matVytoVxf_Min[i][j] = FC.matVytoVxf_Min[(iy+3)*9 + i*3 + j];
+          matVx2Vz1    [i][j]   = FC.matVx2Vz1      [(iy+3)*9 + i*3 + j];
+          matVx2Vz2    [i][j]   = FC.matVx2Vz2      [(iy+3)*9 + i*3 + j];
+          matVy2Vz1    [i][j]   = FC.matVy2Vz1      [(iy+3)*9 + i*3 + j];
+          matVy2Vz2    [i][j]   = FC.matVy2Vz2      [(iy+3)*9 + i*3 + j];
+          matPlus2Min1f[i][j]   = FC.matPlus2Min1f  [(iy+3)*9 + i*3 + j];
+          matPlus2Min2f[i][j]   = FC.matPlus2Min2f  [(iy+3)*9 + i*3 + j];
+          matPlus2Min3f[i][j]   = FC.matPlus2Min3f  [(iy+3)*9 + i*3 + j];
+          matT1toVxf_Min[i][j]  = FC.matT1toVxf_Min [(iy+3)*9 + i*3 + j];
+          matVytoVxf_Min[i][j]  = FC.matVytoVxf_Min [(iy+3)*9 + i*3 + j];
           matT1toVxf_Plus[i][j] = FC.matT1toVxf_Plus[(iy+3)*9 + i*3 + j];
           matVytoVxf_Plus[i][j] = FC.matVytoVxf_Plus[(iy+3)*9 + i*3 + j];
         }
@@ -784,36 +788,36 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
     if(isfree == 1 && (km==1 || km==2) )
     {
       if(km==1){
-        iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC22_F(DzVx[4], f_Vx_ptr, siz_slice);
-        MAC22_F(DzVy[4], f_Vy_ptr, siz_slice);
-        MAC22_F(DzVz[4], f_Vz_ptr, siz_slice);
-        iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+        M_FD_SHIFT_PTR_MAC22(DzVx[4],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVy[4],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVz[4],f_Vz_ptr,ny,kdir);
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC22_F(DzVx[3], f_Vx_ptr, siz_slice);
-        MAC22_F(DzVy[3], f_Vy_ptr, siz_slice);
-        MAC22_F(DzVz[3], f_Vz_ptr, siz_slice);
+        M_FD_SHIFT_PTR_MAC22(DzVx[3],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVy[3],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVz[3],f_Vz_ptr,ny,kdir);
       }
       if(km==2){
-        iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC24_F(DzVx[4], f_Vx_ptr, siz_slice);
-        MAC24_F(DzVy[4], f_Vy_ptr, siz_slice);
-        MAC24_F(DzVz[4], f_Vz_ptr, siz_slice);
-        iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+        M_FD_SHIFT_PTR_MAC24(DzVx[4],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVy[4],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVz[4],f_Vz_ptr,ny,kdir);
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC24_F(DzVx[3], f_Vx_ptr, siz_slice);
-        MAC24_F(DzVy[3], f_Vy_ptr, siz_slice);
-        MAC24_F(DzVz[3], f_Vz_ptr, siz_slice);
+        M_FD_SHIFT_PTR_MAC24(DzVx[3],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVy[3],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVz[3],f_Vz_ptr,ny,kdir);
       }
 
       //idx = ((iy+3) + (iz+3) * ny)*3*3;
@@ -825,9 +829,9 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
           matPlus2Min4[i][j] = FC.matPlus2Min4[idx + i*3 + j];
           matPlus2Min5[i][j] = FC.matPlus2Min5[idx + i*3 + j];
 
-          matT1toVx_Min[i][j] = FC.matT1toVx_Min[idx + i*3 + j];
-          matVytoVx_Min[i][j] = FC.matVytoVx_Min[idx + i*3 + j];
-          matVztoVx_Min[i][j] = FC.matVztoVx_Min[idx + i*3 + j];
+          matT1toVx_Min[i][j]  = FC.matT1toVx_Min[idx + i*3 + j];
+          matVytoVx_Min[i][j]  = FC.matVytoVx_Min[idx + i*3 + j];
+          matVztoVx_Min[i][j]  = FC.matVztoVx_Min[idx + i*3 + j];
           matT1toVx_Plus[i][j] = FC.matT1toVx_Plus[idx + i*3 + j];
           matVytoVx_Plus[i][j] = FC.matVytoVx_Plus[idx + i*3 + j];
           matVztoVx_Plus[i][j] = FC.matVztoVx_Plus[idx + i*3 + j];
@@ -981,48 +985,48 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
     f_hT3z[iptr_f] = vecg1[2] + vecg2[2] + vecg3[2];
 
     // point E
-    iptr = (i0-1) + (iy+3) *siz_line + (iz+3) * siz_slice;
+    iptr = (i0-1) + (iy+nj1) *siz_line + (iz+nk1) * siz_slice;
     iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
     DxVx[2] = (f_Vx[iptr_f] - Vx[iptr]); 
     DxVy[2] = (f_Vy[iptr_f] - Vy[iptr]); 
     DxVz[2] = (f_Vz[iptr_f] - Vz[iptr]); 
 
     // point F
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[0] = Vx[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vx[iptr];
-    iptr_t = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vx[iptr_t];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[0] = Vx[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vx[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vx[iptr_t];
     VEC_24_F(DxVx[1], vec_3);
 
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[0] = Vy[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vy[iptr];
-    iptr_t = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vy[iptr_t];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[0] = Vy[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vy[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vy[iptr_t];
     VEC_24_F(DxVy[1], vec_3);
 
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[0] = Vz[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vz[iptr];
-    iptr_t = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vz[iptr_t];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[0] = Vz[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vz[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vz[iptr_t];
     VEC_24_F(DxVz[1], vec_3);
 
     // point G
-    iptr = (i0-4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[0] = Vx[iptr];
-    iptr = (i0-3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vx[iptr];
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vx[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vx[iptr];
-    iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vx[iptr_f];
+    iptr = (i0-4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[0] = Vx[iptr];
+    iptr = (i0-3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vx[iptr];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vx[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vx[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vx[iptr_f];
     VEC_DRP_F(DxVx[0], vec_5);
 
-    iptr = (i0-4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[0] = Vy[iptr];
-    iptr = (i0-3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vy[iptr];
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vy[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vy[iptr];
-    iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vy[iptr_f];
+    iptr = (i0-4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[0] = Vy[iptr];
+    iptr = (i0-3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vy[iptr];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vy[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vy[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vy[iptr_f];
     VEC_DRP_F(DxVy[0], vec_5);
 
-    iptr = (i0-4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[0] = Vz[iptr];
-    iptr = (i0-3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vz[iptr];
-    iptr = (i0-2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vz[iptr];
-    iptr = (i0-1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vz[iptr];
-    iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vz[iptr_f];
+    iptr = (i0-4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[0] = Vz[iptr];
+    iptr = (i0-3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vz[iptr];
+    iptr = (i0-2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vz[iptr];
+    iptr = (i0-1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vz[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vz[iptr_f];
     VEC_DRP_F(DxVz[0], vec_5);
 
     for (int n = 0; n < 8 ; n++)
@@ -1036,9 +1040,8 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
         m = n-4;
       }
       if(m==0) continue; // do not update i0
-      int i = i0+m;
 
-      iptr = i + (iy+3) * siz_line + (iz+3) * siz_slice;
+      iptr = (i0+m) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
       Vx_ptr = Vx + iptr;
       Vy_ptr = Vy + iptr;
       Vz_ptr = Vz + iptr;
@@ -1050,6 +1053,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
       M_FD_SHIFT_PTR_MACDRP(DzVy[n],Vy_ptr,siz_slice,kdir);
       M_FD_SHIFT_PTR_MACDRP(DzVz[n],Vz_ptr,siz_slice,kdir);
 
+      //idx = ((iy+3) + (iz+3) * ny)*3*3
       if(isfree==1 && km==0){
         DzVx[n] = matVx2Vz[idx + 3*0 + 0] * DxVx[n]
                 + matVx2Vz[idx + 3*0 + 1] * DxVy[n]
@@ -1083,7 +1087,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
         M_FD_SHIFT_PTR_MAC24(DzVz[n],Vz_ptr,siz_slice,kdir);
       }
 
-      // iptr = i + (iy+3) * siz_line + (iz+3) * siz_slice;
+      // iptr = (i0+m) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
       lam = lam3d[iptr]; mu = mu3d[iptr];
       lam2mu  = lam + 2.0*mu;
       xix = xi_x[iptr]; xiy = xi_y[iptr]; xiz = xi_z[iptr];
@@ -1102,20 +1106,17 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
                     + lam    * ( xix*DxVx[n] + etx*DyVx[n] + ztx*DzVx[n]
                                 +xiy*DxVy[n] + ety*DyVy[n] + zty*DzVy[n]);
 
-      hTxy[iptr] =  mu *(
-                    xiy*DxVx[n] + xix*DxVy[n] +
-                    ety*DyVx[n] + etx*DyVy[n] +
-                    zty*DzVx[n] + ztx*DzVy[n] );
+      hTxy[iptr] =  mu * (xiy*DxVx[n] + xix*DxVy[n] 
+                       +  ety*DyVx[n] + etx*DyVy[n] 
+                       +  zty*DzVx[n] + ztx*DzVy[n] );
 
-      hTxz[iptr] =  mu *(
-                    xiz*DxVx[n] + xix*DxVz[n] +
-                    etz*DyVx[n] + etx*DyVz[n] +
-                    ztz*DzVx[n] + ztx*DzVz[n] ); 
+      hTxz[iptr] =  mu * (xiz*DxVx[n] + xix*DxVz[n] 
+                       +  etz*DyVx[n] + etx*DyVz[n] 
+                       +  ztz*DzVx[n] + ztx*DzVz[n] ); 
 
-      hTyz[iptr] =  mu *(
-                    xiz*DxVy[n] + xiy*DxVz[n] +
-                    etz*DyVy[n] + ety*DyVz[n] +
-                    ztz*DzVy[n] + zty*DzVz[n] );
+      hTyz[iptr] =  mu * (xiz*DxVy[n] + xiy*DxVz[n] 
+                       +  etz*DyVy[n] + ety*DyVz[n] 
+                       +  ztz*DzVy[n] + zty*DzVz[n] );
     } 
   } 
   return;
@@ -1139,7 +1140,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        int isfree, int imethod, fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
-                       int idir, int jdir, int kdir)
+                       int jdir, int kdir)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1238,16 +1239,16 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_B(DyVx[3],f_Vx_ptr,siz_line);
-      MAC22_B(DyVy[3],f_Vy_ptr,siz_line);
-      MAC22_B(DyVz[3],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MAC22(DyVx[3],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVy[3],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVz[3],f_Vz_ptr,1,jdir);
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_B(DyVx[4],f_Vx_ptr,siz_line);
-      MAC22_B(DyVy[4],f_Vy_ptr,siz_line);
-      MAC22_B(DyVz[4],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MAC22(DyVx[4],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVy[4],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MAC22(DyVz[4],f_Vz_ptr,1,jdir);
     }
     if(F.rup_index_y[iptr_t] == 0)
     {
@@ -1255,50 +1256,51 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_B(DyVx[3],f_Vx_ptr,siz_line);
-      MACDRP_B(DyVy[3],f_Vy_ptr,siz_line);
-      MACDRP_B(DyVz[3],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MACDRP(DyVx[3],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVy[3],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVz[3],f_Vz_ptr,1,jdir);
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_B(DyVx[4],f_Vx_ptr,siz_line);
-      MACDRP_B(DyVy[4],f_Vy_ptr,siz_line);
-      MACDRP_B(DyVz[4],f_Vz_ptr,siz_line);
+      M_FD_SHIFT_PTR_MACDRP(DyVx[4],f_Vx_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVy[4],f_Vy_ptr,1,jdir);
+      M_FD_SHIFT_PTR_MACDRP(DyVz[4],f_Vz_ptr,1,jdir);
     }
     if(F.rup_index_z[iptr_t] == 1){
-      iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_B(DzVx[4],f_Vx_ptr,siz_slice);
-      MAC22_B(DzVy[4],f_Vy_ptr,siz_slice);
-      MAC22_B(DzVz[4],f_Vz_ptr,siz_slice);
-      iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+      M_FD_SHIFT_PTR_MAC22(DzVx[3],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVy[3],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVz[3],f_Vz_ptr,ny,kdir);
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MAC22_B(DzVx[3],f_Vx_ptr,siz_slice);
-      MAC22_B(DzVy[3],f_Vy_ptr,siz_slice);
-      MAC22_B(DzVz[3],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MAC22(DzVx[4],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVy[4],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MAC22(DzVz[4],f_Vz_ptr,ny,kdir);
     }
     if(F.rup_index_z[iptr_t] == 0){
-      iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_B(DzVx[3],f_Vx_ptr,siz_slice);
-      MACDRP_B(DzVy[3],f_Vy_ptr,siz_slice);
-      MACDRP_B(DzVz[3],f_Vz_ptr,siz_slice);
-      iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+      M_FD_SHIFT_PTR_MACDRP(DzVx[3],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVy[3],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVz[3],f_Vz_ptr,ny,kdir);
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
       f_Vz_ptr = f_Vz + iptr_f;
-      MACDRP_B(DzVx[4],f_Vx_ptr,siz_slice);
-      MACDRP_B(DzVy[4],f_Vy_ptr,siz_slice);
-      MACDRP_B(DzVz[4],f_Vz_ptr,siz_slice);
+      M_FD_SHIFT_PTR_MACDRP(DzVx[4],f_Vx_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVy[4],f_Vy_ptr,ny,kdir);
+      M_FD_SHIFT_PTR_MACDRP(DzVz[4],f_Vz_ptr,ny,kdir);
     }
 
+    //idx = ((iy+3) + (iz+3) * ny)*3*3;
     for (int i = 0; i < 3; i++){
       for (int j = 0; j < 3; j++){
         matMin2Plus1[i][j] = FC.matMin2Plus1[idx + i*3 + j];
@@ -1344,7 +1346,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
     if(imethod == 2)
     {
       if(F.faultgrid[iptr_t] == 1){
-        iptr_f = (iy+3)+(iz+3)*ny;
+        iptr_f = (iy+nj1)+(iz+nk1)*ny;
         dtT1[0] = f_hT1x[iptr_f];
         dtT1[1] = f_hT1y[iptr_f];
         dtT1[2] = f_hT1z[iptr_f];
@@ -1395,9 +1397,11 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
           matVx2Vz2    [i][j] = FC.matVx2Vz2    [(iy+3)*9 + i*3 + j];
           matVy2Vz1    [i][j] = FC.matVy2Vz1    [(iy+3)*9 + i*3 + j];
           matVy2Vz2    [i][j] = FC.matVy2Vz2    [(iy+3)*9 + i*3 + j];
+
           matMin2Plus1f[i][j] = FC.matMin2Plus1f[(iy+3)*9 + i*3 + j];
           matMin2Plus2f[i][j] = FC.matMin2Plus2f[(iy+3)*9 + i*3 + j];
           matMin2Plus3f[i][j] = FC.matMin2Plus3f[(iy+3)*9 + i*3 + j];
+
           matT1toVxf_Min[i][j] = FC.matT1toVxf_Min[(iy+3)*9 + i*3 + j];
           matVytoVxf_Min[i][j] = FC.matVytoVxf_Min[(iy+3)*9 + i*3 + j];
           matT1toVxf_Plus[i][j] = FC.matT1toVxf_Plus[(iy+3)*9 + i*3 + j];
@@ -1427,7 +1431,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
       if(imethod == 2)
       {
         if(F.faultgrid[iptr_t] == 1){
-          iptr_f = (iy+3)+(iz+3)*ny;
+          iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
           dtT1[2] = f_hT1z[iptr_f];
@@ -1486,36 +1490,36 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
     if(isfree == 1 && (km==1 || km==2) )
     {
       if(km==1){
-        iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC22_B(DzVx[3], f_Vx_ptr, siz_slice);
-        MAC22_B(DzVy[3], f_Vy_ptr, siz_slice);
-        MAC22_B(DzVz[3], f_Vz_ptr, siz_slice);
-        iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+        M_FD_SHIFT_PTR_MAC22(DzVx[3],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVy[3],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVz[3],f_Vz_ptr,ny,kdir);
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC22_B(DzVx[4], f_Vx_ptr, siz_slice);
-        MAC22_B(DzVy[4], f_Vy_ptr, siz_slice);
-        MAC22_B(DzVz[4], f_Vz_ptr, siz_slice);
+        M_FD_SHIFT_PTR_MAC22(DzVx[4],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVy[4],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC22(DzVz[4],f_Vz_ptr,ny,kdir);
       }
       if(km==2){
-        iptr_f = (iy+3) + (iz+3) * ny + 0 * siz_slice_yz;
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC24_B(DzVx[3], f_Vx_ptr, siz_slice);
-        MAC24_B(DzVy[3], f_Vy_ptr, siz_slice);
-        MAC24_B(DzVz[3], f_Vz_ptr, siz_slice);
-        iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;
+        M_FD_SHIFT_PTR_MAC24(DzVx[3],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVy[3],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVz[3],f_Vz_ptr,ny,kdir);
+        iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
         f_Vx_ptr = f_Vx + iptr_f;
         f_Vy_ptr = f_Vy + iptr_f;
         f_Vz_ptr = f_Vz + iptr_f;
-        MAC24_B(DzVx[4], f_Vx_ptr, siz_slice);
-        MAC24_B(DzVy[4], f_Vy_ptr, siz_slice);
-        MAC24_B(DzVz[4], f_Vz_ptr, siz_slice);
+        M_FD_SHIFT_PTR_MAC24(DzVx[4],f_Vx_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVy[4],f_Vy_ptr,ny,kdir);
+        M_FD_SHIFT_PTR_MAC24(DzVz[4],f_Vz_ptr,ny,kdir);
       }
 
       //idx = ((iy+3) + (iz+3) * ny)*3*3;
@@ -1558,7 +1562,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
       if(imethod == 2)
       {
         if(F.faultgrid[iptr_t] == 1) {
-          iptr_f = (iy+3)+(iz+3)*ny;
+          iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
           dtT1[2] = f_hT1z[iptr_f];
@@ -1684,46 +1688,46 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
     f_hT3z[iptr_f] = vecg1[2] + vecg2[2] + vecg3[2];
 
 
-    iptr = (i0+1) + (iy+3) *siz_line + (iz+3) * siz_slice;
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
     iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
     DxVx[5] = (Vx[iptr] - f_Vx[iptr_f]); 
     DxVy[5] = (Vy[iptr] - f_Vy[iptr_f]); 
     DxVz[5] = (Vz[iptr] - f_Vz[iptr_f]); 
 
-    iptr_t = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vx[iptr_t];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vx[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[2] = Vx[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vx[iptr_t];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vx[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[2] = Vx[iptr];
     VEC_24_B(DxVx[6], vec_3);
 
-    iptr_t = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vy[iptr_t];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vy[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[2] = Vy[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vy[iptr_t];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vy[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[2] = Vy[iptr];
     VEC_24_B(DxVy[6], vec_3);
 
-    iptr_t = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vz[iptr_t];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[1] = Vz[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_3[2] = Vz[iptr];
+    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vz[iptr_t];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[1] = Vz[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_3[2] = Vz[iptr];
     VEC_24_B(DxVz[6], vec_3);
 
-    iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vx[iptr_f];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vx[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vx[iptr];
-    iptr = (i0+3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vx[iptr];
-    iptr = (i0+4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[4] = Vx[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vx[iptr_f];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vx[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vx[iptr];
+    iptr = (i0+3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vx[iptr];
+    iptr = (i0+4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[4] = Vx[iptr];
     VEC_DRP_B(DxVx[7], vec_5);
 
-    iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vy[iptr_f];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vy[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vy[iptr];
-    iptr = (i0+3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vy[iptr];
-    iptr = (i0+4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[4] = Vy[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vy[iptr_f];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vy[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vy[iptr];
+    iptr = (i0+3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vy[iptr];
+    iptr = (i0+4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[4] = Vy[iptr];
     VEC_DRP_B(DxVy[7], vec_5);
 
-    iptr_f = (iy+3) + (iz+3) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vz[iptr_f];
-    iptr = (i0+1) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[1] = Vz[iptr];
-    iptr = (i0+2) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[2] = Vz[iptr];
-    iptr = (i0+3) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[3] = Vz[iptr];
-    iptr = (i0+4) + (iy+3) * siz_line + (iz+3) * siz_slice; vec_5[4] = Vz[iptr];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vz[iptr_f];
+    iptr = (i0+1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[1] = Vz[iptr];
+    iptr = (i0+2) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[2] = Vz[iptr];
+    iptr = (i0+3) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[3] = Vz[iptr];
+    iptr = (i0+4) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice; vec_5[4] = Vz[iptr];
     VEC_DRP_B(DxVz[7], vec_5);
 
     for (int n = 0; n < 8 ; n++)
@@ -1737,9 +1741,8 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
         m = n-4;
       }
       if(m==0) continue; // do not update i0, n=3,4
-      int i = i0+m;
 
-      iptr = i + (iy+3) * siz_line + (iz+3) * siz_slice;
+      iptr = (i0+m) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
       Vx_ptr = Vx + iptr;
       Vy_ptr = Vy + iptr;
       Vz_ptr = Vz + iptr;
@@ -1784,7 +1787,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
         M_FD_SHIFT_PTR_MAC24(DzVz[n],Vz_ptr,siz_slice,kdir);
       }
 
-      // iptr = i + (iy+3) * siz_line + (iz+3) * siz_slice;
+      // iptr = (i0+m) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
       lam = lam3d[iptr]; mu = mu3d[iptr];
       lam2mu  = lam + 2.0*mu;
       xix = xi_x[iptr]; xiy = xi_y[iptr]; xiz = xi_z[iptr];
@@ -1803,20 +1806,17 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
                     + lam    * ( xix*DxVx[n] + etx*DyVx[n] + ztx*DzVx[n]
                                 +xiy*DxVy[n] + ety*DyVy[n] + zty*DzVy[n]);
 
-      hTxy[iptr] =  mu *(
-                    xiy*DxVx[n] + xix*DxVy[n] +
-                    ety*DyVx[n] + etx*DyVy[n] +
-                    zty*DzVx[n] + ztx*DzVy[n] );
+      hTxy[iptr] =  mu * (xiy*DxVx[n] + xix*DxVy[n] 
+                       +  ety*DyVx[n] + etx*DyVy[n] 
+                       +  zty*DzVx[n] + ztx*DzVy[n] );
 
-      hTxz[iptr] =  mu *(
-                    xiz*DxVx[n] + xix*DxVz[n] +
-                    etz*DyVx[n] + etx*DyVz[n] +
-                    ztz*DzVx[n] + ztx*DzVz[n] ); 
+      hTxz[iptr] =  mu * (xiz*DxVx[n] + xix*DxVz[n] 
+                       +  etz*DyVx[n] + etx*DyVz[n] 
+                       +  ztz*DzVx[n] + ztx*DzVz[n] ); 
 
-      hTyz[iptr] =  mu *(
-                    xiz*DxVy[n] + xiy*DxVz[n] +
-                    etz*DyVy[n] + ety*DyVz[n] +
-                    ztz*DzVy[n] + zty*DzVz[n] );
+      hTyz[iptr] =  mu * (xiz*DxVy[n] + xiy*DxVz[n] 
+                       +  etz*DyVy[n] + ety*DyVz[n] 
+                       +  ztz*DzVy[n] + zty*DzVz[n] );
     } 
   } 
   return;
