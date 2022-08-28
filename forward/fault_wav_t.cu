@@ -165,14 +165,15 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iptr_f, iptr_t;
   float Vs1, Vs2, Vs;
+  float dVx, dVy, dVz;
   float vec_s1[3], vec_s2[3];
+  iptr_t = iy + iz*nj;
+  iptr_f = (iy+nj1) + (iz+nk1)*ny;
   if(iy<nj && iz<nk && F.united[iptr_t] == 0)
   {
-    iptr_t = iy + iz*nj;
-    iptr_f = (iy+nj1) + (iz+nk1)*ny;
-    float dVx = f_Vx[iptr_f + siz_slice_yz] - f_Vx[iptr_f];
-    float dVy = f_Vy[iptr_f + siz_slice_yz] - f_Vy[iptr_f];
-    float dVz = f_Vz[iptr_f + siz_slice_yz] - f_Vz[iptr_f];
+    dVx = f_Vx[iptr_f + siz_slice_yz] - f_Vx[iptr_f];
+    dVy = f_Vy[iptr_f + siz_slice_yz] - f_Vy[iptr_f];
+    dVz = f_Vz[iptr_f + siz_slice_yz] - f_Vz[iptr_f];
     vec_s1[0] = FC.vec_s1[iptr_f*3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f*3 + 1];
     vec_s1[2] = FC.vec_s1[iptr_f*3 + 2];
@@ -201,7 +202,10 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     FW.mT1y[iptr_t] = FW.T1y[iptr_t+3*siz_slice_yz];
     FW.mT1z[iptr_t] = FW.T1z[iptr_t+3*siz_slice_yz];
 
-    if(Vs > F.peak_Vs[iptr_t]) F.peak_Vs[iptr_t] = Vs;
+    if(Vs > F.peak_Vs[iptr_t]) 
+    {
+      F.peak_Vs[iptr_t] = Vs;
+    }
 
     if(F.init_t0_flag[iptr_t] == 0) {
       if (Vs > 1e-3) {

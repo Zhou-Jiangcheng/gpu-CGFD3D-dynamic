@@ -941,8 +941,8 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 {
   int ierr = 0;
 
-  int   nj  = gdinfo->nj ;
-  int   nk  = gdinfo->nk ;
+  int   nj  = gdinfo->nj;
+  int   nk  = gdinfo->nk;
 
   size_t startp[] = { it, 0, 0 };
   size_t countp[] = { 1, nk, nj};
