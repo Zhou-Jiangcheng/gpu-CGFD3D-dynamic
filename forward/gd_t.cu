@@ -509,7 +509,7 @@ gd_curv_gen_fault(gd_t *gdcurv,
 
   size_t siz_line  = gdinfo->siz_line;
   size_t siz_slice = gdinfo->siz_slice;
-  size_t iptr, iptr_c;
+  size_t iptr, iptr_b, iptr_c;
 
   float *x3d = gdcurv->x3d;
   float *y3d = gdcurv->y3d;
@@ -543,79 +543,87 @@ gd_curv_gen_fault(gd_t *gdcurv,
 
   // extend to ghosts. 
   // x1, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < ni1; i++)
+
+  for (int k = 0; k < nz; k++){
+    for (int j = 0; j < ny; j++) {
+      for (int i = 0; i < ni1; i++)
       {
         iptr   = i + j * siz_line + k * siz_slice;
-        iptr_c = ni1 + j * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ni1*2-i];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ni1*2-i];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ni1*2-i];
+        iptr_b = ni1 + j * siz_line + k * siz_slice;
+        iptr_c = (ni1*2-i) + j * siz_line + k * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
   // x2, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = ni2+1; i < nx; i++)
+  for (int k = 0; k < nz; k++){
+    for (int j = 0; j < ny; j++) {
+      for (int i = ni2+1; i < nx; i++)
       {
         iptr = i + j * siz_line + k * siz_slice;
-        iptr_c = ni2 + j * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ni2*2-i];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ni2*2-i];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ni2*2-i];
+        iptr_b = ni2 + j * siz_line + k * siz_slice;
+        iptr_c = (ni2*2-i) + j * siz_line + k * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
   // y1, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < nj1; j++) {
-      for (size_t i = 0; i < nx; i++) {
+  for (int k = 0; k < nz; k++){
+    for (int j = 0; j < nj1; j++) {
+      for (int i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
-        iptr_c = i + nj1 * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nj1*2-j) * siz_line];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nj1*2-j) * siz_line];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nj1*2-j) * siz_line];
+        iptr_b = i + nj1 * siz_line + k * siz_slice;
+        iptr_c = i + (nj1*2-j) * siz_line + k * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
   // y2, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = nj2+1; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++) {
+  for (int k = 0; k < nz; k++){
+    for (int j = nj2+1; j < ny; j++) {
+      for (int i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
-        iptr_c = i + nj2 * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nj2*2-j) * siz_line];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nj2*2-j) * siz_line];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nj2*2-j) * siz_line];
+        iptr_b = i + nj2 * siz_line + k * siz_slice;
+        iptr_c = i + (nj2*2-j) * siz_line + k * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
   // z1, mirror
-  for (size_t k = 0; k < nk1; k++) {
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++) {
+  for (int k = 0; k < nk1; k++) {
+    for (int j = 0; j < ny; j++) {
+      for (int i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
-        iptr_c = i + j * siz_line + nk1 * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nk1*2-k) * siz_slice];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nk1*2-k) * siz_slice];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nk1*2-k) * siz_slice];
+        iptr_b = i + j * siz_line + nk1 * siz_slice;
+        iptr_c = i + j * siz_line + (nk1*2-k) * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
   // z2, mirror
-  for (size_t k = nk2+1; k < nz; k++) {
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++) {
+  for (int k = nk2+1; k < nz; k++) {
+    for (int j = 0; j < ny; j++) {
+      for (int i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
-        iptr_c = i + j * siz_line + nk2 * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nk2*2-k) * siz_slice];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nk2*2-k) * siz_slice];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nk2*2-k) * siz_slice];
+        iptr_b = i + j * siz_line + nk2 * siz_slice;
+        iptr_c = i + j * siz_line + (nk2*2-k) * siz_slice;
+        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
       }
     }
   }
+   
   free(fault_x);
   free(fault_y);
   free(fault_z);

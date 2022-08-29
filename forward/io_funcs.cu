@@ -710,6 +710,7 @@ io_fault_nc_create(iofault_t *iofault,
     if (nc_def_var(iofault_nc->ncid, "slip",      NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9])))  M_NCERR;
     if (nc_def_var(iofault_nc->ncid, "slip1",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]))) M_NCERR;   
     if (nc_def_var(iofault_nc->ncid, "slip2",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[11]))) M_NCERR;   
+    if (nc_def_var(iofault_nc->ncid, "final_slip",NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[12])))  M_NCERR;   
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
@@ -1001,6 +1002,9 @@ io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
 
   CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
   nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[2], buff);
+  // final slip
+  CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
+  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[12], buff);
 
   return ierr;
 }
