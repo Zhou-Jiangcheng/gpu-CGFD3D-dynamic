@@ -8,8 +8,8 @@ parfnm='../../project1/params.json';
 output_dir='../../project1/output';
 
 % which slice to plot
-slicedir='z';
-sliceid=199;
+slicedir='x';
+sliceid=51;
 
 % which variable and time to plot
 varnm='Vx';
