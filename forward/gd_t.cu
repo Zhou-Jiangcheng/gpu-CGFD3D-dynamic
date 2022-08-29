@@ -549,9 +549,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       {
         iptr   = i + j * siz_line + k * siz_slice;
         iptr_c = ni1 + j * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (ni1-i)*2];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (ni1-i)*2];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (ni1-i)*2];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ni1*2-i];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ni1*2-i];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ni1*2-i];
       }
     }
   }
@@ -562,9 +562,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       {
         iptr = i + j * siz_line + k * siz_slice;
         iptr_c = ni2 + j * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (ni2-i)*2];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (ni2-i)*2];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (ni2-i)*2];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ni2*2-i];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ni2*2-i];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ni2*2-i];
       }
     }
   }
@@ -574,9 +574,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       for (size_t i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
         iptr_c = i + nj1 * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ((nj1-j)*2) * siz_line];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ((nj1-j)*2) * siz_line];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ((nj1-j)*2) * siz_line];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nj1*2-j) * siz_line];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nj1*2-j) * siz_line];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nj1*2-j) * siz_line];
       }
     }
   }
@@ -586,9 +586,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       for (size_t i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
         iptr_c = i + nj2 * siz_line + k * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ((nj2-j)*2) * siz_line];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ((nj2-j)*2) * siz_line];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ((nj2-j)*2) * siz_line];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nj2*2-j) * siz_line];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nj2*2-j) * siz_line];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nj2*2-j) * siz_line];
       }
     }
   }
@@ -598,9 +598,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       for (size_t i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
         iptr_c = i + j * siz_line + nk1 * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ((nk1-k)*2) * siz_slice];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ((nk1-k)*2) * siz_slice];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ((nk1-k)*2) * siz_slice];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nk1*2-k) * siz_slice];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nk1*2-k) * siz_slice];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nk1*2-k) * siz_slice];
       }
     }
   }
@@ -610,9 +610,9 @@ gd_curv_gen_fault(gd_t *gdcurv,
       for (size_t i = 0; i < nx; i++) {
         iptr = i + j * siz_line + k * siz_slice;
         iptr_c = i + j * siz_line + nk2 * siz_slice;
-        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + ((nk2-k)*2) * siz_slice];
-        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + ((nk2-k)*2) * siz_slice];
-        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + ((nk2-k)*2) * siz_slice];
+        x3d[iptr] = 2.0*x3d[iptr_c] - x3d[iptr + (nk2*2-k) * siz_slice];
+        y3d[iptr] = 2.0*y3d[iptr_c] - y3d[iptr + (nk2*2-k) * siz_slice];
+        z3d[iptr] = 2.0*z3d[iptr_c] - z3d[iptr + (nk2*2-k) * siz_slice];
       }
     }
   }
