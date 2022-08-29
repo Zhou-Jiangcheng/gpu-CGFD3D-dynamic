@@ -1,27 +1,27 @@
 % this script is generate fault grid, include strong boundary
-% ny,nz is readed by json, determined by script fault_index_length.m
+% ny,nz is determined by script fault_index_length.m
 clc;
 clear;
 close all;
 
 addmypath;
-ny =400; 
-nz =200; 
+nj =400; % without ghost points 
+nk =200; 
 dh = 100; %grid physics length
 j1 = 51;
 j2 = 351;
 k1 = 51;
 k2 = 200;
 
-x = zeros(ny, nz);
-y = zeros(ny, nz);
-z = zeros(ny, nz);
+x = zeros(nj, nk);
+y = zeros(nj, nk);
+z = zeros(nj, nk);
 
-for j = 1:ny
-    for k = 1:nz
+for j = 1:nj
+    for k = 1:nk
         x(j,k) = 0;
-        y(j,k) = (j-1-ny/2)*dh;
-        z(j,k) = (k-nz)*dh;
+        y(j,k) = (j-1-nj/2)*dh;
+        z(j,k) = (k-nk)*dh;
     end
 end
 
@@ -33,14 +33,14 @@ axis image
 
 
 disp('calculating metric and base vectors...')
-metric = cal_metric(x,y,z, dh);
+metric = cal_metric(x,y,z);
 [vec_n, vec_m, vec_l] = cal_basevectors(metric);
 jac = metric.jac;
 disp('write output...')
 fnm_out = "./fault_coord.nc"
 ncid = netcdf.create(fnm_out, 'CLOBBER');
-dimid(1) = netcdf.defDim(ncid,'ny',ny);
-dimid(2) = netcdf.defDim(ncid,'nz',nz);
+dimid(1) = netcdf.defDim(ncid,'nj',nj);
+dimid(2) = netcdf.defDim(ncid,'nk',nk);
 dimid3(1) = netcdf.defDim(ncid, 'dim', 3);
 dimid3(2) = dimid(1);
 dimid3(3) = dimid(2);

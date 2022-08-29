@@ -5,8 +5,8 @@ clear all;
 % if use this script, some parameters is determined by 
 % this script, not json.
 addmypath;
-ny = 400; 
-nz = 200;
+nj = 400; 
+nk = 200;
 dh = 100;
 mu_s = 0.367; 
 mu_d = 0.242; 
@@ -73,17 +73,17 @@ vec_n1 = ncread(fnm_grid, 'vec_n');
 vec_m = ncread(fnm_grid, 'vec_m');
 vec_l = ncread(fnm_grid, 'vec_l');
 
-C0 = zeros(ny, nz);
-Ts1 = zeros(ny, nz);
-Ts2 = zeros(ny, nz);
-Tn = zeros(ny, nz);
-str_init_x = zeros(ny, nz);
-str_init_y = zeros(ny, nz);
-str_init_z = zeros(ny, nz);
+C0 = zeros(nj, nk);
+Ts1 = zeros(nj, nk);
+Ts2 = zeros(nj, nk);
+Tn = zeros(nj, nk);
+str_init_x = zeros(nj, nk);
+str_init_y = zeros(nj, nk);
+str_init_z = zeros(nj, nk);
 
 
-for k = 1:nz
-  for j = 1:ny
+for k = 1:nk
+  for j = 1:nj
 
     vec_n = squeeze(vec_n1(:,j,k));
     vec_s1 = squeeze(vec_m(:,j,k));
@@ -146,26 +146,26 @@ surf(x1, y1, z1, miu0(j1:j2,k1:k2)); axis equal; shading interp; view([60, 30]);
 title(['tangshan fault',char(10),'left initial rupture',char(10),'Ts/(u*Tn)']);
 colormap('jet');colorbar;set(gcf,'color','w');
 %%
-mu_s_mat = zeros(ny, nz);
-mu_d_mat = zeros(ny, nz);
-Dc_mat = zeros(ny,nz);
+mu_s_mat = zeros(nj, nk);
+mu_d_mat = zeros(nj, nk);
+Dc_mat = zeros(nj,nk);
 mu_s_mat(:, :) = 1000.0;
 mu_s_mat(j1:j2, k1:k2) = mu_s;
 mu_d_mat(:, :) = mu_d;
 Dc_mat(:, :) = Dc;
 
 % figure; surf(x, y, z, mu_s_mat ); axis equal; shading interp; view([60, 30]); title('mu_s' );colormap('jet');colorbar
-dTx = zeros(ny, nz);
-dTy = zeros(ny, nz);
-dTz = zeros(ny, nz);
+dTx = zeros(nj, nk);
+dTy = zeros(nj, nk);
+dTz = zeros(nj, nk);
 save_to_file = 1;
 if save_to_file
   outfile = fnm_stress;
   disp(['To write file: ', outfile, ' ...'])
 
   ncid = netcdf.create(outfile, 'NC_CLOBBER');
-  ydimid = netcdf.defDim(ncid, 'ny', ny);
-  zdimid = netcdf.defDim(ncid, 'nz', nz);
+  ydimid = netcdf.defDim(ncid, 'nj', nj);
+  zdimid = netcdf.defDim(ncid, 'nk', nk);
   dimid2 = [ydimid, zdimid];
   
   varid1 = netcdf.defVar(ncid, 'x', 'float', dimid2);
