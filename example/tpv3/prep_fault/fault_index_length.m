@@ -2,8 +2,7 @@
 clc;
 clear;
 addmypath;
-par = loadjson('params.json');
-dh = par.DH; %grid physics length
+dh = 100; %grid physics length
 
 %read faults points and project
 [lonsrc,latsrc,v] = textread('tangshan_fault.txt','%f%f%d');

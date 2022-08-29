@@ -27,8 +27,8 @@ subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vz';
-ns=100;
-ne=100;
+ns=50;
+ne=300;
 nt=50;
 
 

@@ -1,50 +1,43 @@
 %plot slip and init_t0
-clc;
 clear all;
 close all;
+clc;
 addmypath;
-parfile = 'params.json';
-par = loadjson(parfile);
-TMAX = par.TMAX;
-TSKP = par.EXPORT_TIME_SKIP;
-Fault_grid = par.Fault_grid; 
-DT = par.DT;
-dh = par.DH;
-rho = par.rho1;
-vs= par.vs1;
-NT = floor(TMAX/(DT*TSKP));
-j1 = Fault_grid(1);
-j2 = Fault_grid(2);
-k1 = Fault_grid(3);
-k2 = Fault_grid(4);
-NT = floor(TMAX/(DT*TSKP));
-%calculate Mw
-faultfile   = 'fault_coord.nc';
-jac  = ncread(faultfile, 'jac');
-D = gather_snap(parfile,'Us0',NT);
-miu = rho*vs^2;
-A = jac*dh*dh;
-M0 = miu*sum(sum(D.*A));
-Mw = roundn(2*log10(M0)/3.0-6.06,-2);
 
-[x,y,z] = gather_coord(parfile);
-x = x*1e-3;
-y = y*1e-3;
-z = z*1e-3;
+% -------------------------- parameters input -------------------------- %
+% file and path name
+parfnm='../../project/params.json'
+output_dir='../../project/output'
 
+par = loadjson(parfnm);
+nproi=1;
+nproj=par.number_of_mpiprocs_y;
+nprok=par.number_of_mpiprocs_z;
+j1 = par.fault_grid(1);
+j2 = par.fault_grid(2);
+k1 = par.fault_grid(3);
+k2 = par.fault_grid(4);
+
+varnm1 = 'final_slip1';
+varnm2 = 'final_slip2';
+varnm3 = 'init_t0';
+[Us1, x, y, z] = gather_fault_x_final_time(output_dir,varnm1,nproj,nprok);
+[Us2, x, y, z] = gather_fault_x_final_time(output_dir,varnm2,nproj,nprok);
+[t0, x, y, z] = gather_fault_x_final_time(output_dir,varnm3,nproj,nprok);
+Us1 = Us1';
+Us2 = Us2';
+x = x';
+y = y';
+z = z';
+t0 = t0';
 x1 = x(j1:j2,k1:k2);
 y1 = y(j1:j2,k1:k2);
 z1 = z(j1:j2,k1:k2);
-
-Us1 = gather_snap(parfile,'Us1',NT);
-Us2 = gather_snap(parfile,'Us2',NT);
-
-t = gather_snap(parfile,'init_t0');
-t1 = t(j1:j2 , k1:k2);
+t1 = t0(j1:j2,k1:k2);
 % figure control parameters
 flag_print = 0;
 % get time contour
-vec_t = 1:1:25;
+vec_t = 1:1:10;
 
 h0 = figure;
 [C1,h] = contour(x1,z1,t1,vec_t,'k','ShowText','on');
@@ -78,11 +71,11 @@ figure(1)
 surf(x1, y1, z1, Us1(j1:j2,k1:k2) ); 
 hold on;
 temp = 0;
-for ii = 1:2
-    plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
-    temp = temp + n(ii);
-    hold on;
-end
+% for ii = 1:2
+%     plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
+%     temp = temp + n(ii);
+%     hold on;
+% end
 axis equal; 
 shading interp;
 view([60, 30]);
@@ -121,11 +114,11 @@ figure(2)
 surf(x1, y1, z1, Us2(j1:j2,k1:k2) ); 
 hold on;
 temp = 0;
-for ii = 1:count
-    plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
-    temp = temp + n(ii);
-    hold on;
-end
+% for ii = 1:count
+%     plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
+%     temp = temp + n(ii);
+%     hold on;
+% end
 axis equal; 
 shading interp;
 view([60, 30]);

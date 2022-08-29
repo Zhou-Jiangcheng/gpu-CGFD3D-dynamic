@@ -18,7 +18,7 @@ y = zeros(nj, nk);
 z = zeros(nj, nk);
 
 for j = 1:nj
-    for k = 1:nk
+  for k = 1:nk
         x(j,k) = 0;
         y(j,k) = (j-1-nj/2)*dh;
         z(j,k) = (k-nk)*dh;

@@ -35,9 +35,7 @@ taut=0.5;
 
 % read parameter file
 par=loadjson(parfnm);
-ni=par.number_of_total_grid_points_x;
-nj=par.number_of_total_grid_points_y;
-nk=par.number_of_total_grid_points_z;
+
 nproi=1;
 nproj=par.number_of_mpiprocs_y;
 nprok=par.number_of_mpiprocs_z;

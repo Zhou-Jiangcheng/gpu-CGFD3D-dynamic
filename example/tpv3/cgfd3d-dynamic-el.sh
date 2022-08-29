@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project1
+PROJDIR=`pwd`/../../project
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -41,7 +41,7 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_z" : 2,
 
   "size_of_time_step" : 0.015,
-  "number_of_time_steps" : 300,
+  "number_of_time_steps" : 800,
   "#time_window_length" : 4,
   "check_stability" : 1,
 
@@ -89,7 +89,7 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-  "dynamic_method" : 2,
+  "dynamic_method" : 1,
 
   "fault_grid" : [51,351,51,200],
 
@@ -202,7 +202,7 @@ cat << ieof > $PAR_FILE
   ],
 
   "slice" : {
-      "x_index" : [ 40 ],
+      "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
   },
