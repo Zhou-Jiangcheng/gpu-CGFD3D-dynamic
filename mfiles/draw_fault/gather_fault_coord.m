@@ -1,4 +1,4 @@
-function [V, X, Y, Z] = gather_fault_x_final_time(output_dir,varnm,nproj,nprok)
+function [X,Y,Z] = gather_fault_coord(output_dir,nproj,nprok)
 
 
 
@@ -12,13 +12,6 @@ function [V, X, Y, Z] = gather_fault_x_final_time(output_dir,varnm,nproj,nprok)
       pnj=pnjstruct.Length;
       pnkstruct=nc_getdiminfo(faultnm_dir,'k');
       pnk=pnkstruct.Length;
-      if jp==0
-          VV=nc_varget(faultnm_dir,varnm,[0,0],[pnk,pnj],[1,1]);
-      else
-          VV0=nc_varget(faultnm_dir,varnm,[0,0],[pnk,pnj],[1,1]);
-          VV=horzcat(VV,VV0);
-      end
-      
       % coordinate data
       ip=str2num(faultnm( strfind(faultnm,'px')+2 : strfind(faultnm,'_py')-1 ));
       coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'_pz',num2str(kp),'.nc'];
@@ -41,12 +34,10 @@ function [V, X, Y, Z] = gather_fault_x_final_time(output_dir,varnm,nproj,nprok)
       end             
     end % end jp
     if kp==0
-        V=VV;
         X=XX;
         Y=YY;
         Z=ZZ;
     else
-        V=vertcat(V,VV);
         X=vertcat(X,XX);
         Y=vertcat(Y,YY);
         Z=vertcat(Z,ZZ);
@@ -54,4 +45,5 @@ function [V, X, Y, Z] = gather_fault_x_final_time(output_dir,varnm,nproj,nprok)
   end  % end kp
 
 end % end function
+
 

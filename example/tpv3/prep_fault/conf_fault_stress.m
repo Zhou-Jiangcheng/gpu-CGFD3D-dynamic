@@ -4,13 +4,13 @@ close all;
 clear all;
 % if use this script, some parameters is determined by 
 % this script, not json.
-addmypath;
+% addmypath;
 nj = 400; 
 nk = 200;
 dh = 100;
-mu_s = 0.367; 
-mu_d = 0.242; 
-Dc = 0.4;
+mu_s = 0.357; 
+mu_d = 0.265; 
+Dc = 0.5;
 j1 = 51;
 j2 = 351;
 k1 = 51;
@@ -40,11 +40,11 @@ Stress_pri = [ SH, 0.0, 0.0; ...
               0.0, 0.0, Sh]*(-1.0e6);
 
 % azimuth of SH_max, degree in the East of North, x -axis
-Angle_SH = 60;
+Angle_SH = 87;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate
-angle = -90;
+angle = 220;
 Angle_x = 90 + angle; 
 
 % Degree in counter-clockwise,
@@ -66,17 +66,17 @@ x  = ncread(fnm_grid, 'x');
 y  = ncread(fnm_grid, 'y');
 z  = ncread(fnm_grid, 'z');
 
-x1 = x(j1:j2 , k1:k2);
-y1 = y(j1:j2 , k1:k2);
-z1 = z(j1:j2 , k1:k2);
+x1 = x(j1:j2, k1:k2);
+y1 = y(j1:j2, k1:k2);
+z1 = z(j1:j2, k1:k2);
 vec_n1 = ncread(fnm_grid, 'vec_n');
 vec_m = ncread(fnm_grid, 'vec_m');
 vec_l = ncread(fnm_grid, 'vec_l');
 
-C0 = zeros(nj, nk);
+C0  = zeros(nj, nk);
 Ts1 = zeros(nj, nk);
 Ts2 = zeros(nj, nk);
-Tn = zeros(nj, nk);
+Tn  = zeros(nj, nk);
 str_init_x = zeros(nj, nk);
 str_init_y = zeros(nj, nk);
 str_init_z = zeros(nj, nk);
@@ -125,7 +125,7 @@ for k = 1:nk
 
     Ts1(j,k) = dot(temp_init_stress_xyz , vec_s1);
     Ts2(j,k) = dot(temp_init_stress_xyz , vec_s2);
-    Tn(j,k) = dot(temp_init_stress_xyz , vec_n);
+    Tn (j,k) = dot(temp_init_stress_xyz , vec_n);
   end
 end
 
@@ -142,7 +142,7 @@ miu0 = -taus./(mu_s*Tn);
 % surf(x1, y1, z1, Tn(j1:j2,k1:k2)/1.0e6 ); axis equal; shading interp; view([60, 30]); 
 % title('Tn Normal stress' );colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
 figure(4);
-surf(x1, y1, z1, miu0(j1:j2,k1:k2)); axis equal; shading interp; view([60, 30]); 
+surf(x1, y1, z1, miu0(j1:j2, k1:k2)); axis equal; shading interp; view([60, 30]); 
 title(['tangshan fault',char(10),'left initial rupture',char(10),'Ts/(u*Tn)']);
 colormap('jet');colorbar;set(gcf,'color','w');
 %%
@@ -150,7 +150,7 @@ mu_s_mat = zeros(nj, nk);
 mu_d_mat = zeros(nj, nk);
 Dc_mat = zeros(nj,nk);
 mu_s_mat(:, :) = 1000.0;
-mu_s_mat(j1:j2, k1:k2) = mu_s;
+mu_s_mat(j1:j2,k1:k2) = mu_s;
 mu_d_mat(:, :) = mu_d;
 Dc_mat(:, :) = Dc;
 
@@ -164,9 +164,8 @@ if save_to_file
   disp(['To write file: ', outfile, ' ...'])
 
   ncid = netcdf.create(outfile, 'NC_CLOBBER');
-  ydimid = netcdf.defDim(ncid, 'nj', nj);
-  zdimid = netcdf.defDim(ncid, 'nk', nk);
-  dimid2 = [ydimid, zdimid];
+  dimid2(1) = netcdf.defDim(ncid, 'nj', nj);
+  dimid2(2) = netcdf.defDim(ncid, 'nk', nk);
   
   varid1 = netcdf.defVar(ncid, 'x', 'float', dimid2);
   varid2 = netcdf.defVar(ncid, 'y', 'float', dimid2);

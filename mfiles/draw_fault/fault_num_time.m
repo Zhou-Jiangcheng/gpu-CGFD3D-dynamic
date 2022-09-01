@@ -5,6 +5,6 @@ function [nt] = fault_num_time(output_dir)
   faultnm=faultstruct.name;
   faultnm_dir=[output_dir,'/',faultnm];
   ntstruct=nc_getdiminfo(faultnm_dir,'time');
-  nt=ntstruct.Length-1;
+  nt=ntstruct.Length;
 
 end % end function

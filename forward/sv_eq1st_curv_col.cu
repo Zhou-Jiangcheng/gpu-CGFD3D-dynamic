@@ -297,6 +297,7 @@ sv_eq1st_curv_col_allstep(
       //  synchronize onestage device func.
       CUDACHECK(cudaDeviceSynchronize());
       }
+
       // recv mesg
       MPI_Startall(num_of_r_reqs, mympi->pair_r_reqs[ipair_mpi][istage_mpi]);
 
@@ -349,7 +350,9 @@ sv_eq1st_curv_col_allstep(
           dim3 block(256);
           dim3 grid;
           grid.x = (fault_size + block.x - 1) / block.x;
-          fault_stress_update_first <<<grid, block>>> (fault_size, coef_b, fault_d);
+
+          float coef = coef_b / dt;
+          fault_stress_update_first <<<grid, block>>> (fault_size, coef, fault_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -412,7 +415,9 @@ sv_eq1st_curv_col_allstep(
           dim3 block(256);
           dim3 grid;
           grid.x = (fault_size + block.x - 1) / block.x;
-          fault_stress_update <<<grid, block>>> (fault_size, coef_b, fault_d);
+
+          float coef = coef_b / dt;
+          fault_stress_update <<<grid, block>>> (fault_size, coef, fault_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -444,7 +449,9 @@ sv_eq1st_curv_col_allstep(
           dim3 block(256);
           dim3 grid;
           grid.x = (fault_size + block.x - 1) / block.x;
-          fault_stress_update <<<grid, block>>> (fault_size, coef_b, fault_d);
+
+          float coef = coef_b / dt;
+          fault_stress_update <<<grid, block>>> (fault_size, coef, fault_d);
         }
 
         // apply Qs
@@ -507,7 +514,7 @@ sv_eq1st_curv_col_allstep(
     }
 
     // calculate fault slip, Vs, ... at each dt  
-    fault_var_update(f_end_d, it, dt, t_end, gdinfo_d, fault_d, fault_coef_d, fault_wav_d);
+    fault_var_update(f_end_d, it, dt, gdinfo_d, fault_d, fault_coef_d, fault_wav_d);
 
     //-- recv by interp
     io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);

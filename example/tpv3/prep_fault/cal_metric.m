@@ -28,8 +28,8 @@ ztx  = zeros(nj, nk);
 zty  = zeros(nj, nk);
 ztz  = zeros(nj, nk);
 
-for j = 1:nj
-  for k = 1:nk
+for k = 1:nk
+  for j = 1:nj
     x_g(j+3,k+3) = x(j,k);
     y_g(j+3,k+3) = y(j,k);
     z_g(j+3,k+3) = z(j,k);
@@ -40,20 +40,20 @@ y_g = extend_symm(y_g);
 z_g = extend_symm(z_g);
 
 % 6th order center finite difference
-c1 = -0.02084;
-c2 =  0.1667;
-c3 = -0.7709;
+%c1 = -0.02084;
+%c2 =  0.1667;
+%c3 = -0.7709;
+%c4 = 0;
+%c5 = 0.7709;
+%c6 = -0.1667;
+%c7 = 0.02084;
+c1 = -1/60;
+c2 =  3/20;
+c3 = -3/4;
 c4 = 0;
-c5 = 0.7709;
-c6 = -0.1667;
-c7 = 0.02084;
-% c1 = -1/60;
-% c2 =  3/20;
-% c3 = -3/4;
-% c4 = 0;
-% c5 = 3/4;
-% c6 = -3/20;
-% c7 = 1/60;
+c5 = 3/4;
+c6 = -3/20;
+c7 = 1/60;
 
 x_xi(:,:) = 1.0;
 y_xi(:,:) = 0.0;
@@ -86,8 +86,8 @@ jac = x_xi.*y_et.*z_zt+...
       x_zt.*y_et.*z_xi;
 
 
-for j = 1:nj
-  for k = 1:nk
+for k = 1:nk
+  for j = 1:nj
     M = [ x_xi(j,k), x_et(j,k), x_zt(j,k);
           y_xi(j,k), y_et(j,k), y_zt(j,k);
           z_xi(j,k), z_et(j,k), z_zt(j,k);];

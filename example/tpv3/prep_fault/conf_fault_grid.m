@@ -4,7 +4,7 @@ clc;
 clear;
 close all;
 
-addmypath;
+% addmypath;
 nj =400; % without ghost points 
 nk =200; 
 dh = 100; %grid physics length
@@ -17,8 +17,8 @@ x = zeros(nj, nk);
 y = zeros(nj, nk);
 z = zeros(nj, nk);
 
-for j = 1:nj
-  for k = 1:nk
+for k = 1:nk
+  for j = 1:nj
         x(j,k) = 0;
         y(j,k) = (j-1-nj/2)*dh;
         z(j,k) = (k-nk)*dh;

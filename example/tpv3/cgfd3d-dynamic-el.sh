@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project1
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -40,14 +40,16 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : 2,
   "number_of_mpiprocs_z" : 2,
 
+  "dynamic_method" : 1,
+
   "size_of_time_step" : 0.015,
-  "number_of_time_steps" : 800,
+  "number_of_time_steps" : 1000,
   "#time_window_length" : 4,
   "check_stability" : 1,
 
   "boundary_x_left" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -55,7 +57,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_x_right" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -63,7 +65,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_front" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -71,7 +73,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_back" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -79,7 +81,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_z_bottom" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -89,7 +91,6 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-  "dynamic_method" : 1,
 
   "fault_grid" : [51,351,51,200],
 
@@ -201,13 +202,13 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
       "grid_index_start" : [ 0, 0, 199 ],

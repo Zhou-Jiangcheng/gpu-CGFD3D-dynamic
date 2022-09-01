@@ -4,8 +4,8 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project/params.json'
+output_dir='../../project/output'
 
 % which snapshot to plot
 id=1;
@@ -27,8 +27,8 @@ subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vz';
-ns=50;
-ne=300;
+ns=100;
+ne=100;
 nt=50;
 
 

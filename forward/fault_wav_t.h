@@ -68,7 +68,7 @@ fault_wav_init(gdinfo_t *gdinfo,
                int number_of_levels);
 
 int 
-fault_var_update(float *f_end_d, int it, float dt, float t_end, 
+fault_var_update(float *f_end_d, int it, float dt, 
                  gdinfo_t gdinfo_d, fault_t F, 
                  fault_coef_t FC, fault_wav_t FW);
 
@@ -76,8 +76,8 @@ __global__ void
 fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
                      int nj, int nj1, int nk, int nk1, 
                      int ny, size_t siz_slice_yz,
-                     int it, float dt, float t_end, 
-                     fault_coef_t FC, fault_t F, fault_wav_t FW);
+                     int it, float dt, fault_coef_t FC, 
+                     fault_t F, fault_wav_t FW);
 
 __global__ void
 fault_stress_update_first(size_t size, float coef, fault_t F);

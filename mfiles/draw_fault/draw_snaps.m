@@ -1,56 +1,47 @@
-close all
+% close all
 clc;
 clear;
 addmypath;
-parfile = 'params.json';
-par = loadjson( parfile);
-DT = par.DT;
-dh = par.DH;
-rho = par.rho1;
-vs= par.vs1;
-TMAX = par.TMAX;
-TSKP = par.EXPORT_TIME_SKIP;
-Faultgrid = par.Fault_grid;
-j1 = Faultgrid(1);
-j2 = Faultgrid(2);
-k1 = Faultgrid(3);
-k2 = Faultgrid(4);
-NT = floor(TMAX/(DT*TSKP));
-%calculate Mw
-faultfile   = 'fault_coord.nc';
-jac  = ncread(faultfile, 'jac');
-D = gather_snap(parfile,'Us0',NT);
-miu = rho*vs^2;
-A = jac*dh*dh;
-M0 = miu*sum(sum(D.*A));
-Mw = roundn(2*log10(M0)/3.0-6.06,-2);
 
-savegif = 1;
-filename1 = ['Vs-ts-l-7.44.gif'];
-its = 50:25:NT;
-its = floor(its);
-nt = length(its);
+% -------------------------- parameters input -------------------------- %
+% file and path name
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 
-[x,y,z] = gather_coord(parfile);
-x = x*1e-3;
-y = y*1e-3;
-z = z*1e-3;
+par = loadjson(parfnm);
+nproi=1;
+nproj=par.number_of_mpiprocs_y;
+nprok=par.number_of_mpiprocs_z;
+j1 = par.fault_grid(1);
+j2 = par.fault_grid(2);
+k1 = par.fault_grid(3);
+k2 = par.fault_grid(4);
 
-x1 = x(j1:j2,k1:k2);
-y1 = y(j1:j2,k1:k2);
-z1 = z(j1:j2,k1:k2);
+savegif = 0;
+filename = ['Vs-ts-l-7.44.gif'];
+nt = fault_num_time(output_dir);
+[x,y,z] = gather_fault_coord(output_dir,nproj,nprok);
 
-figure(1);
-for i = 1  : nt
-it = its(i);
-disp(it);
-Vs1 = gather_snap(parfile,'Vs1',it);
-Vs2 = gather_snap(parfile,'Vs2',it);
+x = x * 1e-3;
+y = y * 1e-3;
+z = z * 1e-3;
 
-% V = Vs2(j1:j2,k1:k2);
-V = sqrt(Vs1(j1:j2,k1:k2).^2+Vs2(j1:j2,k1:k2).^2);
+x1 = x(k1:k2, j1:j2);
+y1 = y(k1:k2, j1:j2);
+z1 = z(k1:k2, j1:j2);
 
-surf(x1, y1, z1, V );
+figure;
+for nlayer = 200 : 25 :200
+% disp(it);
+[Vs,t] = gather_fault(output_dir,nlayer,'Vs',nproj,nprok);
+[Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);
+
+% V = Vs2(k1:k2, j1:j2);
+% V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
+% Vs = sqrt(Vs1.^2+Vs2.^2);
+% surf(x1, y1, z1, V);
+surf(x1, y1, z1, Vs(k1:k2, j1:j2));
+
 axis equal; 
 shading interp;
 view([60, 30]);    
@@ -74,9 +65,10 @@ zlabel('Depth (km)','fontsize',9.4);
 
 % c.Position(2)=0.3;
 set(gcf,'color','w');
-title(['tangshan fault ',newline,'Mw = ',num2str(Mw),newline,'Vs t=' num2str(it*DT*TSKP),'s'],'FontSize',12)
+%title(['tangshan fault ',newline,'Mw = ',num2str(Mw),newline,'Vs t=' num2str(t),'s'],'FontSize',12);
+title(['tangshan fault ',newline,'Vs t=' num2str(t),'s'],'FontSize',12);
 % set(gca,'FontSize',12);
-% set(gca,'Clim',[0,8]);
+set(gca,'Clim',[0,0.1]);
 
 drawnow;
 pause(0.5);

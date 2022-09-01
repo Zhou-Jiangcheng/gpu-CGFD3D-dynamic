@@ -646,8 +646,8 @@ nc_read_fault_geometry(
   int ierr;
   int ncid;
   int xid, yid, zid;
-  static size_t start[] = {gdinfo->gnk1, gdinfo->gnj1};
-  static size_t count[] = {nk, nj};
+  size_t start[] = {gdinfo->gnk1, gdinfo->gnj1};
+  size_t count[] = {nk, nj};
   
   ierr = nc_open(in_grid_fault_nc, NC_NOWRITE, &ncid); handle_nc_err(ierr);
 

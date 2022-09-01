@@ -5,8 +5,8 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json'
-output_dir='../../project/output'
+parfnm='../../project2/params.json'
+output_dir='../../project2/output'
 PG_dir = output_dir;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.
@@ -24,7 +24,7 @@ clrmp       = 'parula';
 % variable to plot
 % 'PGV', 'PGVx', 'PGVy', 'PGVz', 'PGA', 'PGAx', 'PGAy','PGAz', 
 % 'PGD', 'PGDx', 'PGDy','PGDz'
-varnm='PGVz';
+varnm='PGVx';
 
 % ---------------------------------------------------------------------- %
 

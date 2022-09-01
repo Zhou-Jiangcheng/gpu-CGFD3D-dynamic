@@ -17,27 +17,32 @@ j1 = par.fault_grid(1);
 j2 = par.fault_grid(2);
 k1 = par.fault_grid(3);
 k2 = par.fault_grid(4);
+nt = fault_num_time(output_dir);
 
-varnm1 = 'final_slip1';
-varnm2 = 'final_slip2';
+[x,y,z] = gather_fault_coord(output_dir,nproj,nprok);
+
+x = x * 1e-3;
+y = y * 1e-3;
+z = z * 1e-3;
+
+x1 = x(k1:k2, j1:j2);
+y1 = y(k1:k2, j1:j2);
+z1 = z(k1:k2, j1:j2);
+varnm1 = 'slip1';
+varnm2 = 'slip2';
 varnm3 = 'init_t0';
-[Us1, x, y, z] = gather_fault_x_final_time(output_dir,varnm1,nproj,nprok);
-[Us2, x, y, z] = gather_fault_x_final_time(output_dir,varnm2,nproj,nprok);
-[t0, x, y, z] = gather_fault_x_final_time(output_dir,varnm3,nproj,nprok);
-Us1 = Us1';
-Us2 = Us2';
-x = x';
-y = y';
-z = z';
-t0 = t0';
-x1 = x(j1:j2,k1:k2);
-y1 = y(j1:j2,k1:k2);
-z1 = z(j1:j2,k1:k2);
-t1 = t0(j1:j2,k1:k2);
+[Us1] = gather_fault(output_dir,nt,varnm1,nproj,nprok);
+[Us2] = gather_fault(output_dir,nt,varnm2,nproj,nprok);
+[t0] = gather_fault_final(output_dir,varnm3,nproj,nprok);
+
+x1 = x(k1:k2, j1:j2);
+y1 = y(k1:k2, j1:j2);
+z1 = z(k1:k2, j1:j2);
+t1 = t0(k1:k2, j1:j2);
 % figure control parameters
 flag_print = 0;
 % get time contour
-vec_t = 1:1:10;
+vec_t = 1:1:7;
 
 h0 = figure;
 [C1,h] = contour(x1,z1,t1,vec_t,'k','ShowText','on');
@@ -71,11 +76,11 @@ figure(1)
 surf(x1, y1, z1, Us1(j1:j2,k1:k2) ); 
 hold on;
 temp = 0;
-% for ii = 1:2
-%     plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
-%     temp = temp + n(ii);
-%     hold on;
-% end
+for ii = 1:2
+    plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
+    temp = temp + n(ii);
+    hold on;
+end
 axis equal; 
 shading interp;
 view([60, 30]);
@@ -114,11 +119,11 @@ figure(2)
 surf(x1, y1, z1, Us2(j1:j2,k1:k2) ); 
 hold on;
 temp = 0;
-% for ii = 1:count
-%     plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
-%     temp = temp + n(ii);
-%     hold on;
-% end
+for ii = 1:count
+    plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
+    temp = temp + n(ii);
+    hold on;
+end
 axis equal; 
 shading interp;
 view([60, 30]);

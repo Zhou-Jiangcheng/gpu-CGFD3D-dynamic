@@ -363,13 +363,19 @@ trial_slipweakening_gpu(
 
     //iptr_f = (iy+nj1) + (iz+nk1) * ny;
     if(ifchange == 1){
-      f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
-      f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
-      f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
+      //f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
+      //f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
+      //f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
+      f_T1x[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1y[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1z[iptr_f+3*siz_slice_yz] = 10000;
     }else{
-      f_T1x[iptr_f+3*siz_slice_yz] = Trial[0];
-      f_T1y[iptr_f+3*siz_slice_yz] = Trial[1];
-      f_T1z[iptr_f+3*siz_slice_yz] = Trial[2];
+      //f_T1x[iptr_f+3*siz_slice_yz] = Trial[0];
+      //f_T1y[iptr_f+3*siz_slice_yz] = Trial[1];
+      //f_T1z[iptr_f+3*siz_slice_yz] = Trial[2];
+      f_T1x[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1y[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1z[iptr_f+3*siz_slice_yz] = 10000;
     }
 
     F.tTs1[iptr_t] = fdlib_math_dot_product(Tau, vec_s1);

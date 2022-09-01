@@ -1,10 +1,10 @@
 function [n,m,l] = cal_basevectors(metric);
 
-[nj, nk] = size(metric.xix);
+[nk, nj] = size(metric.xix);
 
-n = zeros(3, nj, nk);
-m = zeros(3, nj, nk);
-l = zeros(3, nj, nk);
+n = zeros(3, nk, nj);
+m = zeros(3, nk, nj);
+l = zeros(3, nk, nj);
 
 n(1,:,:) = metric.xix;
 n(2,:,:) = metric.xiy;
