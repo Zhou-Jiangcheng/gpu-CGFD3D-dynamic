@@ -80,10 +80,19 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
                      fault_t F, fault_wav_t FW);
 
 __global__ void
-fault_stress_update_first(size_t size, float coef, fault_t F);
+fault_stress_update_first(int nj, int nk, float coef, fault_t F);
 
 __global__ void
-fault_stress_update(size_t size, float coef, fault_t F);
+fault_stress_update(int nj, int nk, float coef, fault_t F);
 
+__global__ void
+fault_wav_update(gdinfo_t gdinfo_d, int num_of_vars, 
+                 float coef, fault_t F,
+                 float *w_update, float *w_input1, float *w_input2);
+
+__global__ void
+fault_wav_update_end(gdinfo_t gdinfo_d, int num_of_vars, 
+                     float coef, fault_t F,
+                     float *w_update, float *w_input2);
 #endif
 

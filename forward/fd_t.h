@@ -6,10 +6,10 @@
  *******************************************************************************/
 
 // fault traction image coef
-#define a_0  -1.2500392
-#define a_1   1.5417647
-#define a_2  -0.3334118
-#define a_3   0.0416862
+#define a_0   1.2500392377
+#define a_1   1.5417647610
+#define a_2  -0.3334118088
+#define a_3   0.0416862855
 
 //macdrp 2nd op
 
@@ -121,14 +121,21 @@
            -(c_4 * *(var_ptr - 2))     \
            -(c_5 * *(var_ptr - 3)))
 
-//certer 7th op
-#define d_1  -0.02084
-#define d_2  0.1667
-#define d_3  -0.7709
-#define d_4  0.0
-#define d_5  0.7709
-#define d_6  -0.1667
-#define d_7  0.02084
+//certer 6th op
+//#define d_1  -0.02084
+//#define d_2  0.1667
+//#define d_3  -0.7709
+//#define d_4  0.0
+//#define d_5  0.7709
+//#define d_6  -0.1667
+//#define d_7  0.02084
+#define d_1  -0.01666667
+#define d_2   0.15000000
+#define d_3  -0.75000000
+#define d_4   0.0
+#define d_5   0.75000000
+#define d_6  -0.15000000
+#define d_7   0.01666667
 
 #define M_FD_SHIFT_PTR_CENTER(deriv, var_ptr, stride) \
  ( deriv =   (d_1 * *(var_ptr - 3*stride))            \

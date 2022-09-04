@@ -116,12 +116,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
   // Matrix form used by inversion and multiply. 
   // Convenient calculation
   float D11_1[3][3], D12_1[3][3], D13_1[3][3];
-  float D21_1[3][3], D22_1[3][3], D23_1[3][3];
-  float D31_1[3][3], D32_1[3][3], D33_1[3][3];
-
   float D11_2[3][3], D12_2[3][3], D13_2[3][3];
-  float D21_2[3][3], D22_2[3][3], D23_2[3][3];
-  float D31_2[3][3], D32_2[3][3], D33_2[3][3];
   // temp  matrix
   float mat1[3][3], mat2[3][3], mat3[3][3], mat4[3][3];
   float vec_n[3], vec_s1[3], vec_s2[3];
@@ -378,20 +373,6 @@ fault_coef_cal(gdinfo_t *gdinfo,
           FC->D31_2[iptr_f*9+ij] *= jac;
           FC->D32_2[iptr_f*9+ij] *= jac;
           FC->D33_2[iptr_f*9+ij] *= jac;
-
-          D21_1[ii][jj] = FC->D21_1[iptr_f*9+ij];
-          D22_1[ii][jj] = FC->D22_1[iptr_f*9+ij];
-          D23_1[ii][jj] = FC->D23_1[iptr_f*9+ij];
-          D31_1[ii][jj] = FC->D31_1[iptr_f*9+ij];
-          D32_1[ii][jj] = FC->D32_1[iptr_f*9+ij];
-          D33_1[ii][jj] = FC->D33_1[iptr_f*9+ij];
-
-          D21_2[ii][jj] = FC->D21_2[iptr_f*9+ij];
-          D22_2[ii][jj] = FC->D22_2[iptr_f*9+ij];
-          D23_2[ii][jj] = FC->D23_2[iptr_f*9+ij];
-          D31_2[ii][jj] = FC->D31_2[iptr_f*9+ij];
-          D32_2[ii][jj] = FC->D32_2[iptr_f*9+ij];
-          D33_2[ii][jj] = FC->D33_2[iptr_f*9+ij];
         }                           
       }                             
     

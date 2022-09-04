@@ -475,7 +475,7 @@ int main(int argc, char** argv)
 
   float   t0 = par->time_start;
   float   dt = par->size_of_time_step;
-  int     nt_total = par->number_of_time_steps+1;
+  int     nt_total = par->number_of_time_steps;
 
   if (par->time_check_stability==1)
   {

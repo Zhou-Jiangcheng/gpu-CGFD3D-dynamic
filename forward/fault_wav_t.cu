@@ -169,17 +169,24 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
-  size_t iptr_f, iptr_t;
+
+  size_t iptr_t = iy + iz*nj;
+  size_t iptr_f = (iy+nj1) + (iz+nk1)*ny;
+
   float Vs1, Vs2, Vs;
   float dVx, dVy, dVz;
   float vec_s1[3], vec_s2[3];
-  iptr_t = iy + iz*nj;
-  iptr_f = (iy+nj1) + (iz+nk1)*ny;
+
   if(iy<nj && iz<nk && F.united[iptr_t] == 0)
   {
     dVx = f_Vx[iptr_f + siz_slice_yz] - f_Vx[iptr_f];
     dVy = f_Vy[iptr_f + siz_slice_yz] - f_Vy[iptr_f];
     dVz = f_Vz[iptr_f + siz_slice_yz] - f_Vz[iptr_f];
+    
+    //printf("dVx is %f\n",dVx);
+    //printf("dVy is %f\n",dVy);
+    //printf("dVz is %f\n",dVz);
+
     vec_s1[0] = FC.vec_s1[iptr_f*3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f*3 + 1];
     vec_s1[2] = FC.vec_s1[iptr_f*3 + 2];
@@ -231,25 +238,79 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
 }
 
 __global__ void
-fault_stress_update_first(size_t size, float coef, fault_t F)
+fault_stress_update_first(int nj, int nk, float coef, fault_t F)
 {
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    F.Tn [ix] = coef * F.tTn[ix];
-    F.Ts1[ix] = coef * F.tTs1[ix];
-    F.Ts2[ix] = coef * F.tTs2[ix];
+  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_t = iy + iz*nj;
+  if(iy<nj && iz<nk && F.united[iptr_t]==0){
+    F.Tn [iptr_t] = coef * F.tTn [iptr_t];
+    F.Ts1[iptr_t] = coef * F.tTs1[iptr_t];
+    F.Ts2[iptr_t] = coef * F.tTs2[iptr_t];
   }
   return;
 }
 
 __global__ void
-fault_stress_update(size_t size, float coef, fault_t F)
+fault_stress_update(int nj, int nk, float coef, fault_t F)
 {
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix<size){
-    F.Tn [ix] += coef * F.tTn [ix];
-    F.Ts1[ix] += coef * F.tTs1[ix];
-    F.Ts2[ix] += coef * F.tTs2[ix];
+  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iptr_t = iy + iz*nj;
+  if(iy<nj && iz<nk && F.united[iptr_t]==0){
+    F.Tn [iptr_t] += coef * F.tTn [iptr_t];
+    F.Ts1[iptr_t] += coef * F.tTs1[iptr_t];
+    F.Ts2[iptr_t] += coef * F.tTs2[iptr_t];
   }
   return;
+}
+
+__global__ void
+fault_wav_update(gdinfo_t gdinfo_d, int num_of_vars, 
+                 float coef, fault_t F,
+                 float *w_update, float *w_input1, float *w_input2)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
+
+  int nj = gdinfo_d.nj;
+  int nk = gdinfo_d.nk;
+  int nj1 = gdinfo_d.nj1;
+  int nk1 = gdinfo_d.nk1;
+  int ny = gdinfo_d.ny;
+  size_t siz_slice_yz = gdinfo_d.siz_slice_yz;
+
+  size_t iptr_t = iy+iz*nj;
+  size_t iptr_f;
+  if(ix < 2*num_of_vars && iy < nj && iz < nk && F.united[iptr_t]==0)
+  {
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
+    w_update[iptr_f] = w_input1[iptr_f] + coef * w_input2[iptr_f];
+  }
+}
+
+__global__ void
+fault_wav_update_end(gdinfo_t gdinfo_d, int num_of_vars, 
+                     float coef, fault_t F,
+                     float *w_update, float *w_input2)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
+      
+  int nj = gdinfo_d.nj;
+  int nk = gdinfo_d.nk;
+  int nj1 = gdinfo_d.nj1;
+  int nk1 = gdinfo_d.nk1;
+  int ny = gdinfo_d.ny;
+  size_t siz_slice_yz = gdinfo_d.siz_slice_yz;
+
+  size_t iptr_t = iy+iz*nj;
+  size_t iptr_f;
+  if(ix < 2*num_of_vars && iy < nj && iz < nk && F.united[iptr_t]==0)
+  {
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
+    w_update[iptr_f] += coef * w_input2[iptr_f];
+  }
 }

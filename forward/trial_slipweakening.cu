@@ -157,6 +157,7 @@ trial_slipweakening_gpu(
         f_T1z[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T1z;
       }
 
+      iptr_f = (iy+nj1) + (iz+nk1) * ny; 
       T2x_ptr = f_T2x + iptr_f + m*siz_slice_yz;
       T2y_ptr = f_T2y + iptr_f + m*siz_slice_yz;
       T2z_ptr = f_T2z + iptr_f + m*siz_slice_yz;
@@ -175,6 +176,7 @@ trial_slipweakening_gpu(
         M_FD_SHIFT_PTR_MACDRP(DyT2z, T2z_ptr, 1, jdir);
       }
 
+      iptr_f = (iy+nj1) + (iz+nk1) * ny; 
       T3x_ptr = f_T3x + m*siz_slice_yz + iptr_f;
       T3y_ptr = f_T3y + m*siz_slice_yz + iptr_f;
       T3z_ptr = f_T3z + m*siz_slice_yz + iptr_f;
@@ -246,17 +248,19 @@ trial_slipweakening_gpu(
           a_3 * f_T1z[6*siz_slice_yz+iptr_f] ;
       }
       // dh = 1, so omit dh in formula
-      Rx[m] = 0.5*((2*m-1)*Rx[m] + (DyT2x + DzT3x));
-      Ry[m] = 0.5*((2*m-1)*Ry[m] + (DyT2y + DzT3y));
-      Rz[m] = 0.5*((2*m-1)*Rz[m] + (DyT2z + DzT3z));
+      Rx[m] = 0.5*((2*m-1)*Rx[m] + 0*(DyT2x + DzT3x));
+      Ry[m] = 0.5*((2*m-1)*Ry[m] + 0*(DyT2y + DzT3y));
+      Rz[m] = 0.5*((2*m-1)*Rz[m] + 0*(DyT2z + DzT3z));
     } // end m
 
     // dv = (V+) - (V-)
-    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
     float dVx = f_mVx[iptr_f + siz_slice_yz] - f_mVx[iptr_f];
     float dVy = f_mVy[iptr_f + siz_slice_yz] - f_mVy[iptr_f];
     float dVz = f_mVz[iptr_f + siz_slice_yz] - f_mVz[iptr_f];
-
+    dVx =0.4; 
+    dVy =0.4; 
+    dVz =0.4; 
     float Trial[3];       // stress variation
     float Trial_local[3]; // + init background stress
     float Trial_s[3];     // shear stress
@@ -270,7 +274,7 @@ trial_slipweakening_gpu(
     float vec_s2[3];
     float vec_n0;
 
-    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
     vec_s1[0] = FC.vec_s1[iptr_f * 3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f * 3 + 1];
     vec_s1[2] = FC.vec_s1[iptr_f * 3 + 2];
@@ -285,13 +289,12 @@ trial_slipweakening_gpu(
     vec_n0 = fdlib_math_norm3(vec_n);
 
     jacvec = jac3d[iptr] * vec_n0;
-
     for (int i=0; i<3; i++)
     {
         vec_n[i] /= vec_n0;
     }
     
-    //iptr_t = iy + iz * nj; 
+    iptr_t = iy + iz * nj; 
     Trial_local[0] = Trial[0]/jacvec + F.T0x[iptr_t];
     Trial_local[1] = Trial[1]/jacvec + F.T0y[iptr_t];
     Trial_local[2] = Trial[2]/jacvec + F.T0z[iptr_t];
@@ -302,6 +305,19 @@ trial_slipweakening_gpu(
     Trial_s[1] = Trial_local[1] - vec_n[1]*Trial_n0;
     Trial_s[2] = Trial_local[2] - vec_n[2]*Trial_n0;
 
+     if(iy == 180 && iz== 100)
+     {
+       printf("Trial_local[0] is %f\n",Trial_local[0]);
+       printf("Trial_local[1] is %f\n",Trial_local[1]);
+       printf("Trial_local[2] is %f\n",Trial_local[2]);
+       printf("Trial_n0 is %f\n",Trial_n0);
+       printf("Trial_s[0] is %f\n",Trial_s[0]);
+       printf("Trial_s[1] is %f\n",Trial_s[1]);
+       printf("Trial_s[2] is %f\n",Trial_s[2]);
+       printf("Trial[0] is %f\n",Trial[0]/1e4);
+       printf("Trial[1] is %f\n",Trial[1]/1e4);
+       printf("Trial[2] is %f\n",Trial[2]/1e4);
+     }
 
     float Trial_s0;
     Trial_s0 = fdlib_math_norm3(Trial_s);
@@ -361,22 +377,23 @@ trial_slipweakening_gpu(
       Tau[2] = Trial_local[2];
     }
 
-    //iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
     if(ifchange == 1){
-      //f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
-      //f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
-      //f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
-      f_T1x[iptr_f+3*siz_slice_yz] = 10000;
-      f_T1y[iptr_f+3*siz_slice_yz] = 10000;
-      f_T1z[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
+      f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
+      f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
     }else{
-      //f_T1x[iptr_f+3*siz_slice_yz] = Trial[0];
-      //f_T1y[iptr_f+3*siz_slice_yz] = Trial[1];
-      //f_T1z[iptr_f+3*siz_slice_yz] = Trial[2];
-      f_T1x[iptr_f+3*siz_slice_yz] = 10000;
-      f_T1y[iptr_f+3*siz_slice_yz] = 10000;
-      f_T1z[iptr_f+3*siz_slice_yz] = 10000;
+      f_T1x[iptr_f+3*siz_slice_yz] = Trial[0];
+      f_T1y[iptr_f+3*siz_slice_yz] = Trial[1];
+      f_T1z[iptr_f+3*siz_slice_yz] = Trial[2];
     }
+
+if(iy == 180 && iz== 100)
+ {
+   printf("f_T11 is %f\n",f_T1x[iptr_f+3*siz_slice_yz]/1e4);
+   printf("f_T12 is %f\n",f_T1y[iptr_f+3*siz_slice_yz]/1e4);
+   printf("f_T13 is %f\n",f_T1z[iptr_f+3*siz_slice_yz]/1e4);
+ }
 
     F.tTs1[iptr_t] = fdlib_math_dot_product(Tau, vec_s1);
     F.tTs2[iptr_t] = fdlib_math_dot_product(Tau, vec_s2);

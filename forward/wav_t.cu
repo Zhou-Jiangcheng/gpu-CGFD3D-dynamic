@@ -229,7 +229,7 @@ wav_update_end(size_t size, float coef, float *w_update, float *w_input2)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   if(ix<size){
-    w_update[ix] = w_update[ix] + coef * w_input2[ix];
+    w_update[ix] += coef * w_input2[ix];
   }
 }
 

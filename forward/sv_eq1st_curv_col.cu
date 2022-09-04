@@ -63,7 +63,6 @@ sv_eq1st_curv_col_allstep(
   int ni = gdinfo->ni;
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;
-  size_t fault_size = nj * nk;
   // fault x index with ghost
   int i0 = fault_i_global_indx + gdinfo->fdx_nghosts;
   // mpi
@@ -250,10 +249,10 @@ sv_eq1st_curv_col_allstep(
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
 
-          wave2fault_onestage(
-                        w_cur_d, w_rhs_d, wav_d, 
-                        f_cur_d, f_rhs_d, fault_wav_d, 
-                        i0, fault_d, metric_d, gdinfo_d);
+          //wave2fault_onestage(
+          //              w_cur_d, w_rhs_d, wav_d, 
+          //              f_cur_d, f_rhs_d, fault_wav_d, 
+          //              i0, fault_d, metric_d, gdinfo_d);
 
           trial_slipweakening_onestage(
                         w_cur_d, f_cur_d, f_pre_d, 
@@ -313,7 +312,15 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
-          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_a, f_tmp_d, f_pre_d, f_rhs_d);
+        }
+        {
+          dim3 block(4,8,8);
+          dim3 grid;
+          grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
+          grid.y = (nj + block.y - 1) / block.y;
+          grid.z = (nk + block.z - 1) / block.z;
+          fault_wav_update <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_a, 
+                                              fault_d, f_tmp_d, f_pre_d, f_rhs_d);
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
@@ -344,15 +351,24 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_pre_d, w_rhs_d);
-          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_pre_d, f_rhs_d);
         }
         {
-          dim3 block(256);
+          dim3 block(4,8,8);
           dim3 grid;
-          grid.x = (fault_size + block.x - 1) / block.x;
+          grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
+          grid.y = (nj + block.y - 1) / block.y;
+          grid.z = (nk + block.z - 1) / block.z;
+          fault_wav_update <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_b, 
+                                              fault_d, f_end_d, f_pre_d, f_rhs_d);
+        }
+        {
+          dim3 block(8,8);
+          dim3 grid;
+          grid.x = (nj + block.x - 1) / block.x;
+          grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update_first <<<grid, block>>> (fault_size, coef, fault_d);
+          fault_stress_update_first <<<grid, block>>> (nj, nk, coef, fault_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -378,8 +394,16 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
-          wav_update <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_a, f_tmp_d, f_pre_d, f_rhs_d);
           //CUDACHECK(cudaDeviceSynchronize());
+        }
+        {
+          dim3 block(4,8,8);
+          dim3 grid;
+          grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
+          grid.y = (nj + block.y - 1) / block.y;
+          grid.z = (nk + block.z - 1) / block.z;
+          fault_wav_update <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_a, 
+                                              fault_d, f_tmp_d, f_pre_d, f_rhs_d);
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
@@ -409,15 +433,24 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update_end <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
-          wav_update_end <<<grid, block>>> (fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
         }
         {
-          dim3 block(256);
+          dim3 block(4,8,8);
           dim3 grid;
-          grid.x = (fault_size + block.x - 1) / block.x;
+          grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
+          grid.y = (nj + block.y - 1) / block.y;
+          grid.z = (nk + block.z - 1) / block.z;
+          fault_wav_update_end <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_b, 
+                                                  fault_d, f_end_d, f_rhs_d);
+        }
+        {
+          dim3 block(8,8);
+          dim3 grid;
+          grid.x = (nj + block.x - 1) / block.x;
+          grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update <<<grid, block>>> (fault_size, coef, fault_d);
+          fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
         }
         // pml_end
         for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -443,15 +476,24 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update_end <<<grid, block>>>(wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
-          wav_update_end <<<grid, block>>>(fault_wav_d.siz_ilevel, coef_b, f_end_d, f_rhs_d);
         }
         {
-          dim3 block(256);
+          dim3 block(4,8,8);
           dim3 grid;
-          grid.x = (fault_size + block.x - 1) / block.x;
+          grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
+          grid.y = (nj + block.y - 1) / block.y;
+          grid.z = (nk + block.z - 1) / block.z;
+          fault_wav_update_end <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_b, 
+                                                  fault_d, f_end_d, f_rhs_d);
+        }
+        {
+          dim3 block(8,8);
+          dim3 grid;
+          grid.x = (nj + block.x - 1) / block.x;
+          grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update <<<grid, block>>> (fault_size, coef, fault_d);
+          fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
         }
 
         // apply Qs
