@@ -9,7 +9,7 @@ void setDeviceBeforeInit()
     rank = atoi(localRankStr);
   }
   CUDACHECK(cudaGetDeviceCount(&devCount));
-  CUDACHECK(cudaSetDevice((rank%devCount+4)));
+  CUDACHECK(cudaSetDevice((rank%devCount)));
   //debug
   fprintf(stdout,"rank is %d\n",rank);
   fprintf(stdout,"device count is %d\n",devCount);
