@@ -182,10 +182,6 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     dVx = f_Vx[iptr_f + siz_slice_yz] - f_Vx[iptr_f];
     dVy = f_Vy[iptr_f + siz_slice_yz] - f_Vy[iptr_f];
     dVz = f_Vz[iptr_f + siz_slice_yz] - f_Vz[iptr_f];
-    
-    //printf("dVx is %f\n",dVx);
-    //printf("dVy is %f\n",dVy);
-    //printf("dVz is %f\n",dVz);
 
     vec_s1[0] = FC.vec_s1[iptr_f*3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f*3 + 1];

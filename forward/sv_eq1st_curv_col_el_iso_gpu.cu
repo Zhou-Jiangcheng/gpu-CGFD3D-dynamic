@@ -505,7 +505,6 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
       M_FD_VEC_DRP(DzTz, veczt, kdir);
 
       hVx[iptr] = ( DxTx+DyTy+DzTz ) * slwjac;
-
       //
       // for hVy
       //
