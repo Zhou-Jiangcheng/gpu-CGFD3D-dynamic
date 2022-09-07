@@ -8,8 +8,8 @@ parfnm='../../project1/params.json';
 output_dir='../../project1/output';
 
 % which metric profile to plot
-subs=[31,1,1];     % start from index '1'
-subc=[1,-1,-1];     % '-1' to plot all points in this dimension
+subs=[1,1,30];     % start from index '1'
+subc=[-1,-1,1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % variable to plot

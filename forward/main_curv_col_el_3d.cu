@@ -676,6 +676,7 @@ int main(int argc, char** argv)
                             blk->output_fname_part,
                             blk->output_dir,
                             par->fault_i_global_index,
+                            par->io_time_skip,
                             par->check_nan_every_nummber_of_steps,
                             par->output_all,
                             verbose);

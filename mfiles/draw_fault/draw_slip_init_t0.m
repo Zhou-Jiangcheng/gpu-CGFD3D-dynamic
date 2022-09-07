@@ -6,8 +6,8 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json'
-output_dir='../../project/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 
 par = loadjson(parfnm);
 nproi=1;
@@ -42,7 +42,7 @@ t1 = t0(k1:k2, j1:j2);
 % figure control parameters
 flag_print = 0;
 % get time contour
-vec_t = 1:1:7;
+vec_t = 1:1:12;
 
 h0 = figure;
 [C1,h] = contour(x1,z1,t1,vec_t,'k','ShowText','on');

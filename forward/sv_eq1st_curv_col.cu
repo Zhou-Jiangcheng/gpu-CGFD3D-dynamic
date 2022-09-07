@@ -49,6 +49,7 @@ sv_eq1st_curv_col_allstep(
   char *output_fname_part,
   char *output_dir,
   int fault_i_global_indx,
+  int io_time_skip,
   int qc_check_nan_num_of_step,
   const int output_all, // qc all var
   const int verbose)
@@ -563,13 +564,14 @@ sv_eq1st_curv_col_allstep(
 
     //-- line values
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
-
-    // io fault var each dt, use w_buff as buff
-    io_fault_nc_put(&iofault_nc, gdinfo, fault_d, w_buff, it, t_end);
-
-    // write slice, use w_buff as buff
-    io_slice_nc_put(ioslice,&ioslice_nc,gdinfo,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
-
+    if( it%io_time_skip == 0)
+    {
+      int it_skip = (int)(it/io_time_skip);
+      // io fault var each dt, use w_buff as buff
+      io_fault_nc_put(&iofault_nc, gdinfo, fault_d, w_buff, it_skip, t_end);
+      // write slice, use w_buff as buff
+      io_slice_nc_put(ioslice,&ioslice_nc,gdinfo,w_end_d,w_buff,it_skip,t_end,0,wav->ncmp-1);
+    }
     // snapshot
     io_snap_nc_put(iosnap, &iosnap_nc, gdinfo, md, wav, 
                    w_end_d, w_buff, nt_total, it, t_end, 1,1,1);

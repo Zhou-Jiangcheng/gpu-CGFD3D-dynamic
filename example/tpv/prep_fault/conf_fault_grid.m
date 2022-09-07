@@ -21,10 +21,28 @@ for k = 1:nk
   for j = 1:nj
         x(j,k) = 0;
         y(j,k) = (j-1-nj/2)*dh;
+%         y(j,k) = (j-1)*dh;
         z(j,k) = (k-nk)*dh;
     end
 end
-
+if 1
+for j = 1:nj
+    for k = 1:nk
+        r1 = sqrt((y(j,k)+10.5e3).^2 + (z(j,k)+7.5e3).^2);
+        r2 = sqrt((y(j,k)-10.5e3).^2 + (z(j,k)+7.5e3).^2);
+        fxy = 0;
+        if(r1 <3e3)
+            fxy = 200 * (1+cos(pi*r1/3e3));
+        end
+        
+        if(r2 <3e3)
+            fxy = 200 * (1+cos(pi*r2/3e3));
+        end
+        
+        x(j,k)=x(j,k)+fxy;
+    end
+end
+end
 figure
 pcolor(y, z, x);
 shading flat
@@ -33,7 +51,7 @@ axis image
 
 
 disp('calculating metric and base vectors...')
-metric = cal_metric(x,y,z);
+metric = cal_metric(x,y,z,dh);
 [vec_n, vec_m, vec_l] = cal_basevectors(metric);
 jac = metric.jac;
 disp('write output...')

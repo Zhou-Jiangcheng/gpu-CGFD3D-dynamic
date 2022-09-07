@@ -4,21 +4,19 @@ close all;
 clear all;
 % if use this script, some parameters is determined by 
 % this script, not json.
-addmypath;
-par = loadjson('params.json');
-ny = par.NY
-nz = par.NZ
-dh = par.DH
-OUT = par.OUT
-mu_s = par.mu_s; 
-mu_d = par.mu_d; 
-Dc = par.Dc;
-Asp_grid = par.Asp_grid;
-Fault_grid = par.Fault_grid; 
-j1 = Fault_grid(1);
-j2 = Fault_grid(2);
-k1 = Fault_grid(3);
-k2 = Fault_grid(4);
+ny = 960;
+nz = 300;
+dh = 90; %grid physics length
+j1 = 101;
+j2 = 896;
+k1 = 78;
+k2 = 300;
+
+
+mu_s = 0.357; 
+mu_d = 0.275; 
+Dc = 0.4;
+
 % nucleation shape. 1 is square, 2 is circle.
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius

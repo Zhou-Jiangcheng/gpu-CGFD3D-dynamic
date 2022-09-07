@@ -4,8 +4,8 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project2/params.json'
+output_dir='../../project2/output'
 
 par = loadjson(parfnm);
 nproi=1;
@@ -19,7 +19,9 @@ faultfile = par.grid_generation_method.fault_plane.fault_geometry_file;
 jac  = ncread(faultfile, 'jac');
 nt = fault_num_time(output_dir);
 
-[D, t] = gather_fault(output_dir,500,varnm,nproj,nprok);
+[D, t] = gather_fault(output_dir,nt,varnm,nproj,nprok);
+sum(sum(D))
+max(max(D))
 [mu] = gather_fault_media(output_dir,varnm_media,nproj,nprok);
 A = jac'*dh*dh;
 M0 = sum(sum(mu.*D.*A));

@@ -4,14 +4,13 @@ clc;
 clear;
 close all;
 
-addmypath;
-ny = 
-nz = 
-dh = 100; %grid physics length
-j1 = 51;
-j2 = ;
-k1 = 51;
-k2 = ;
+ny = 960;
+nz = 300;
+dh = 90; %grid physics length
+j1 = 101;
+j2 = 896;
+k1 = 78;
+k2 = 300;
 %read faults points and project
 [lonsrc,latsrc,v] = textread('tangshan_fault.txt','%f%f%d');
 [x1src,y1src]=coordtrans(latsrc,lonsrc);
@@ -27,8 +26,8 @@ ysrc = y1src - y1src(min_p);
 %         atan2(ysrc(end)-ysrc(1),xsrc(end)-xsrc(1))
 % to calculate the strike. use which one depend on real strike
 
-m = atan2(ysrc(end)-ysrc(1),xsrc(end)-xsrc(1));
-% m = atan2(ysrc(1)-ysrc(end),xsrc(1)-xsrc(end));
+% m = atan2(ysrc(end)-ysrc(1),xsrc(end)-xsrc(1));
+m = atan2(ysrc(1)-ysrc(end),xsrc(1)-xsrc(end));
 if(m >= 0 && m <= pi/2)
     angle= 90 - m/pi*180;
 elseif(m >= -pi && m < 0 )
@@ -92,12 +91,12 @@ xi = xi_s;
 % % b is fault strike direction index number
 b = length(xi)
 %left strong boundary, 100 grid length
-for i = 1:50
-    x(i) = xi(1)+(xi(2)-xi(1))*(i-51);
-    y(i) = yi(1)+(yi(2)-yi(1))*(i-51);
+for i = 1:100
+    x(i) = xi(1)+(xi(2)-xi(1))*(i-101);
+    y(i) = yi(1)+(yi(2)-yi(1))*(i-101);
 end
 %fault zone
-for i = 51:50+b
+for i = 101:100+b
     x(i) = xi(i-100);
     y(i) = yi(i-100);
 end
@@ -107,7 +106,7 @@ for i = b+101:ny
     y(i) = yi(b)+(yi(b)-yi(b-1))*(i-b-100);
 end
 
-dip = 70;
+dip = 85;
 % fault depth is 0-20km, interval length is 90m
 % nz is 300*90m, include strong boundary
 zi = -dh*(nz-1):dh:0;
@@ -168,11 +167,11 @@ save('z_coords.mat','zf_inv');
 
 
 disp('calculating metric and base vectors...')
-metric = cal_metric(xf,yf,zf, dh);
+metric = cal_metric(xf,yf,zf,dh);
 [vec_n, vec_m, vec_l] = cal_basevectors(metric);
 jac = metric.jac;
 disp('write output...')
-fnm_out = par.Fault_geometry
+fnm_out = "./fault_coord.nc"
 ncid = netcdf.create(fnm_out, 'CLOBBER');
 dimid(1) = netcdf.defDim(ncid,'ny',ny);
 dimid(2) = netcdf.defDim(ncid,'nz',nz);

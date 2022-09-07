@@ -152,6 +152,7 @@ par_read_from_str(const char *str, par_t *par)
   par->time_window_length = -1.0;
   par->time_start = 0.0;
   par->time_check_stability = 1;
+  par->io_time_skip = 1;
 
   if (item = cJSON_GetObjectItem(root, "size_of_time_step")) {
     par->size_of_time_step = item->valuedouble;
@@ -167,6 +168,9 @@ par_read_from_str(const char *str, par_t *par)
   }
   if (item = cJSON_GetObjectItem(root, "time_check_stability")) {
     par->time_check_stability = item->valueint;
+  }
+  if (item = cJSON_GetObjectItem(root, "io_time_skip")) {
+    par->io_time_skip = item->valueint;
   }
 
   if (par->size_of_time_step < 0.0 && par->time_window_length < 0)

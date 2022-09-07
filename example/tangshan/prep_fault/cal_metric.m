@@ -1,4 +1,4 @@
-function metric = cal_metric(x, y, z);
+function metric = cal_metric(x, y, z, dh)
 
 [nj, nk] = size(x);
 ny = nj + 6; % with ghost points number
@@ -40,13 +40,13 @@ y_g = extend_symm(y_g);
 z_g = extend_symm(z_g);
 
 % 6th order center finite difference
-%c1 = -0.02084;
-%c2 =  0.1667;
-%c3 = -0.7709;
-%c4 = 0;
-%c5 = 0.7709;
-%c6 = -0.1667;
-%c7 = 0.02084;
+% c1 = -0.02084;
+% c2 =  0.1667;
+% c3 = -0.7709;
+% c4 = 0;
+% c5 = 0.7709;
+% c6 = -0.1667;
+% c7 = 0.02084;
 c1 = -1/60;
 c2 =  3/20;
 c3 = -3/4;
@@ -55,7 +55,7 @@ c5 = 3/4;
 c6 = -3/20;
 c7 = 1/60;
 
-x_xi(:,:) = 1.0;
+x_xi(:,:) = dh;
 y_xi(:,:) = 0.0;
 z_xi(:,:) = 0.0;
 
@@ -78,12 +78,8 @@ for j = 4:ny-3;
   end
 end
 
-jac = x_xi.*y_et.*z_zt+...
-      x_zt.*y_xi.*z_et+...
-      x_et.*y_zt.*z_xi-...
-      x_xi.*y_zt.*z_et-...
-      x_et.*y_xi.*z_zt-...
-      x_zt.*y_et.*z_xi;
+% fault 2D jac
+jac = y_et.*z_zt - y_zt.*z_et;
 
 
 for k = 1:nk

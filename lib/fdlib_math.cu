@@ -1,4 +1,3 @@
-
 #include "fdlib_math.h"
 
 __host__ __device__

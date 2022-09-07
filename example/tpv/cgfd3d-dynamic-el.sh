@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project1
+PROJDIR=`pwd`/../../project2
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -40,12 +40,14 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : 2,
   "number_of_mpiprocs_z" : 2,
 
-  "dynamic_method" : 1,
+  "dynamic_method" : 2,
+  "fault_grid" : [51,351,51,200],
 
-  "size_of_time_step" : 0.015,
+  "size_of_time_step" : 0.01,
   "number_of_time_steps" : 1000,
   "#time_window_length" : 4,
   "check_stability" : 1,
+  "io_time_skip" : 2,
 
   "boundary_x_left" : {
       "cfspml" : {
@@ -90,9 +92,6 @@ cat << ieof > $PAR_FILE
   "boundary_z_top" : {
       "free" : "timg"
       },
-
-
-  "fault_grid" : [51,351,51,200],
 
   "grid_generation_method" : {
       "fault_plane" : {

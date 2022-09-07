@@ -52,6 +52,7 @@ typedef struct{
   float size_of_time_step ;
   int   time_start_index;
   int   time_end_index;
+  int   io_time_skip;
   float time_start;
   //float time_end  ;
   float time_check_stability;

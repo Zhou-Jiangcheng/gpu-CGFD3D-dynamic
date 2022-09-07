@@ -5,8 +5,8 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project2/params.json'
+output_dir='../../project2/output'
 
 par = loadjson(parfnm);
 nproi=1;
@@ -31,16 +31,17 @@ y1 = y(k1:k2, j1:j2);
 z1 = z(k1:k2, j1:j2);
 
 figure;
-for nlayer = 200 : 25 :200
+for nlayer = 500 : 50 :500
 % disp(it);
-[Vs,t] = gather_fault(output_dir,nlayer,'Vs',nproj,nprok);
+[Vs1,t] = gather_fault(output_dir,nlayer,'Vs1',nproj,nprok);
 [Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);
 
+% V = Vs1(k1:k2, j1:j2);
 % V = Vs2(k1:k2, j1:j2);
-% V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
+V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
 % Vs = sqrt(Vs1.^2+Vs2.^2);
 % surf(x1, y1, z1, V);
-surf(x1, y1, z1, Vs(k1:k2, j1:j2));
+surf(x1, y1, z1, V);
 
 axis equal; 
 shading interp;
@@ -68,7 +69,7 @@ set(gcf,'color','w');
 %title(['tangshan fault ',newline,'Mw = ',num2str(Mw),newline,'Vs t=' num2str(t),'s'],'FontSize',12);
 title(['tangshan fault ',newline,'Vs t=' num2str(t),'s'],'FontSize',12);
 % set(gca,'FontSize',12);
-set(gca,'Clim',[0,0.1]);
+set(gca,'Clim',[0,2.5]);
 
 drawnow;
 pause(0.5);

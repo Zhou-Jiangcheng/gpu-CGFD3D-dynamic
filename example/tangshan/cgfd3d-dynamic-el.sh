@@ -9,14 +9,14 @@ date
 MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../main_curv_col_el_3d
+EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project
+PROJDIR=`pwd`/../../tangshan
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -33,21 +33,25 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 250,
-  "number_of_total_grid_points_y" : 200,
-  "number_of_total_grid_points_z" : 60,
+  "number_of_total_grid_points_x" : 200,
+  "number_of_total_grid_points_y" : 960,
+  "number_of_total_grid_points_z" : 300,
 
-  "number_of_mpiprocs_y" : 1,
-  "number_of_mpiprocs_z" : 1,
+  "number_of_mpiprocs_y" : 4,
+  "number_of_mpiprocs_z" : 2,
 
-  "size_of_time_step" : 0.015,
-  "number_of_time_steps" : 300,
+  "dynamic_method" : 1,
+  "fault_grid" : [101,896,78,300],
+
+  "size_of_time_step" : 0.006,
+  "number_of_time_steps" : 4000,
   "#time_window_length" : 4,
   "check_stability" : 1,
+  "io_time_skip" : 2,
 
   "boundary_x_left" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -55,7 +59,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_x_right" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -63,7 +67,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_front" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -71,7 +75,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_back" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -79,7 +83,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_z_bottom" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 7000.0
@@ -89,19 +93,17 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-  "dynamic_method" : 1,
 
-  "fault_grid" : [51,400,51,400],
 
   "grid_generation_method" : {
       "fault_plane" : {
-        "fault_geometry_file" : "${INPUTDIR}/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
-        "fault_inteval" : 100.0
+        "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
+        "fault_inteval" : 90.0
       },
-      "#3D_grid_with_fault" : {
-        "3D_grid_file" : "${INPUTDIR}/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/init_stress.nc",
+      "#grid_with_fault" : {
+        "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
+        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
         "fault_i_gobal_index" : 100.0
       }
   },
@@ -131,11 +133,11 @@ cat << ieof > $PAR_FILE
         "rho" : "$INPUTDIR/prep_medium/seam_rho.bin"
       },
       "iso_half_space" : {
-        "Vp" : 3000,
-        "Vs" : 2000,
-        "rho": 1500
+        "Vp" : 6000,
+        "Vs" : 3464,
+        "rho": 2670
       },
-      "vti_half_space" : {
+      "#vti_half_space" : {
          "rho" : 1500,
          "c11" : 25200000000,
          "c13" : 10962000000,
@@ -143,7 +145,7 @@ cat << ieof > $PAR_FILE
          "c55" : 5120000000,
          "c66" : 7168000000
        },
-      "aniso_half_space" : {
+      "#aniso_half_space" : {
         "rho" : 1500,
         "c11" : 25200000000,
         "c12" : 0,
@@ -201,17 +203,17 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
-      "x_index" : [ 190 ],
+  "#slice" : {
+      "x_index" : [ 51 ],
       "y_index" : [ 120 ],
-      "z_index" : [ 59 ]
+      "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 59 ],
-      "grid_index_count" : [ 250,200, 1 ],
+      "grid_index_start" : [ 0, 0, 199 ],
+      "grid_index_count" : [ 100,400, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
@@ -233,11 +235,10 @@ echo "+ created $PAR_FILE"
 #-------------------------------------------------------------------------------
 
 #-- get np
-NUMPROCS_X=`grep number_of_mpiprocs_x ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
 NUMPROCS_Y=`grep number_of_mpiprocs_y ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
 NUMPROCS_Z=`grep number_of_mpiprocs_z ${PAR_FILE} | sed 's/:/ /g' | sed 's/,/ /g' | awk '{print $2}'`
-NUMPROCS=$(( NUMPROCS_X*NUMPROCS_Y*NUMPROCS_Z ))
-echo $NUMPROCS_X $NUMPROCS_Y $NUMPROCS_Z $NUMPROCS
+NUMPROCS=$(( NUMPROCS_Y*NUMPROCS_Z ))
+echo $NUMPROCS_Y $NUMPROCS_Z $NUMPROCS
 
 #-- gen run script
 cat << ieof > ${PROJDIR}/cgfd_sim.sh
