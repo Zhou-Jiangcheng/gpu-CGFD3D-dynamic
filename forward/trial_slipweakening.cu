@@ -178,9 +178,9 @@ trial_slipweakening_gpu(
       }
 
       iptr_f = (iy+nj1) + (iz+nk1) * ny; 
-      T3x_ptr = f_T3x + m*siz_slice_yz + iptr_f;
-      T3y_ptr = f_T3y + m*siz_slice_yz + iptr_f;
-      T3z_ptr = f_T3z + m*siz_slice_yz + iptr_f;
+      T3x_ptr = f_T3x + iptr_f + m*siz_slice_yz;
+      T3y_ptr = f_T3y + iptr_f + m*siz_slice_yz;
+      T3z_ptr = f_T3z + iptr_f + m*siz_slice_yz;
       if(F.rup_index_z[iptr_t] == 1)
       {
         M_FD_SHIFT_PTR_MAC22(DzT3x, T3x_ptr, ny, kdir);

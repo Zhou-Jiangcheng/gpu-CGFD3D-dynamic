@@ -31,14 +31,17 @@ y1 = y(k1:k2, j1:j2);
 z1 = z(k1:k2, j1:j2);
 
 figure;
-for nlayer = 500 : 50 :500
+for nlayer = 10 : 10 : 1000
 % disp(it);
-[Vs1,t] = gather_fault(output_dir,nlayer,'Vs1',nproj,nprok);
-[Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);
+[Vs1,t] = gather_fault(output_dir,nlayer,'Ts1',nproj,nprok);
+% [Vs1,t] = gather_fault(output_dir,nlayer,'Vs1',nproj,nprok);
+% [Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);
 
-% V = Vs1(k1:k2, j1:j2);
+V = Vs1(k1:k2, j1:j2);
 % V = Vs2(k1:k2, j1:j2);
-V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
+% V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
+i = ceil(nlayer / 10);
+slip(i) = V(100,200);
 % Vs = sqrt(Vs1.^2+Vs2.^2);
 % surf(x1, y1, z1, V);
 surf(x1, y1, z1, V);
@@ -69,7 +72,7 @@ set(gcf,'color','w');
 %title(['tangshan fault ',newline,'Mw = ',num2str(Mw),newline,'Vs t=' num2str(t),'s'],'FontSize',12);
 title(['tangshan fault ',newline,'Vs t=' num2str(t),'s'],'FontSize',12);
 % set(gca,'FontSize',12);
-set(gca,'Clim',[0,2.5]);
+% set(gca,'Clim',[0,12]);
 
 drawnow;
 pause(0.5);

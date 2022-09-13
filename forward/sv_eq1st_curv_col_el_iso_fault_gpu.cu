@@ -350,9 +350,9 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
       }
 
       iptr_f = (iy+nj1) + (iz+nk1) * ny;
-      T2x_ptr = f_T2x + m*siz_slice_yz + iptr_f;
-      T2y_ptr = f_T2y + m*siz_slice_yz + iptr_f;
-      T2z_ptr = f_T2z + m*siz_slice_yz + iptr_f;
+      T2x_ptr = f_T2x + iptr_f + m*siz_slice_yz;
+      T2y_ptr = f_T2y + iptr_f + m*siz_slice_yz;
+      T2z_ptr = f_T2z + iptr_f + m*siz_slice_yz;
       // fault point use short stencil
       // due to slip change sharp
       if(F.rup_index_y[iptr_t] == 1)
@@ -369,9 +369,9 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
       }
 
       iptr_f = (iy+nj1) + (iz+nk1) * ny;
-      T3x_ptr = f_T3x + m*siz_slice_yz + iptr_f;
-      T3y_ptr = f_T3y + m*siz_slice_yz + iptr_f;
-      T3z_ptr = f_T3z + m*siz_slice_yz + iptr_f;
+      T3x_ptr = f_T3x + iptr_f + m*siz_slice_yz;
+      T3y_ptr = f_T3y + iptr_f + m*siz_slice_yz;
+      T3z_ptr = f_T3z + iptr_f + m*siz_slice_yz;
       if(F.rup_index_z[iptr_t] == 1)
       {
         M_FD_SHIFT_PTR_MAC22(DzT3x, T3x_ptr, ny, kdir);
@@ -438,11 +438,11 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
                        int jdir, int kdir)
 {
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
 
   size_t iptr, iptr_f, iptr_t;
-  int idx;
+  size_t idx;
   float *Vx_ptr;
   float *Vy_ptr;
   float *Vz_ptr;
@@ -1157,11 +1157,11 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
                        int jdir, int kdir)
 {
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
 
   size_t iptr, iptr_f, iptr_t;
-  int idx;
+  size_t idx;
   float *Vx_ptr;
   float *Vy_ptr;
   float *Vz_ptr;

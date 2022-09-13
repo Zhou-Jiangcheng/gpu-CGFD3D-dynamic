@@ -47,7 +47,7 @@ cat << ieof > $PAR_FILE
   "number_of_time_steps" : 1000,
   "#time_window_length" : 4,
   "check_stability" : 1,
-  "io_time_skip" : 2,
+  "io_time_skip" : 1,
 
   "boundary_x_left" : {
       "cfspml" : {

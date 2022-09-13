@@ -4,16 +4,16 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json'
-output_dir='../../project/output'
+parfnm='../../project3/params.json'
+output_dir='../../project3/output'
 
 % which grid profile to plot
-subs=[1,1,1];     % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subs=[1,101,1];     % start from index '1'
+subc=[-1,1,-1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % figure control parameters
-flag_km     = 1;
+flag_km     = 0;
 flag_emlast = 1;
 flag_print  = 0;
 flag_title  = 1;

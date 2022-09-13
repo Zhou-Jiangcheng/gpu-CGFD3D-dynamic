@@ -670,11 +670,11 @@ fault_coef_cal(gdinfo_t *gdinfo,
         vec_s1[2] = FC->z_et[iptr_f];
 
         fdlib_math_cross_product(vec_n, vec_s1, vec_s2);
-        //norm = fdlib_math_norm3(vec_s2);
-        //for (int i=0; i<3; i++)
-        //{
-        //    vec_s2[i] /= norm;
-        //}
+        norm = fdlib_math_norm3(vec_s2);
+        for (int i=0; i<3; i++)
+        {
+            vec_s2[i] /= norm;
+        }
 
         g1_2 = 0.0;
         g2_2 = 0.0;

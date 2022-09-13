@@ -4,12 +4,12 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json';
-output_dir='../../project1/output';
+parfnm='../../project3/params.json';
+output_dir='../../project3/output';
 
 % which metric profile to plot
-subs=[1,1,30];     % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subs=[1,100,1];     % start from index '1'
+subc=[-1,1,-1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % variable to plot
@@ -18,7 +18,7 @@ subt=[1,1,1];
 varnm='jac';
 
 % figure control parameters
-flag_km     = 1;
+flag_km     = 0;
 flag_emlast = 1;
 flag_print  = 0;
 flag_clb    = 1;
@@ -129,5 +129,8 @@ if flag_print
     set(gcf,'paperposition',[0,0,width,height]);
     print(gcf,[varnm '.png'],'-dpng');
 end
-
+v = squeeze(v);
+x = squeeze(x);
+y = squeeze(y);
+z = squeeze(z);
 

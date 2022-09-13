@@ -59,8 +59,8 @@ x_xi(:,:) = dh;
 y_xi(:,:) = 0.0;
 z_xi(:,:) = 0.0;
 
-for j = 4:ny-3;
-  for k = 4:nz-3;
+for j = 4:ny-3
+  for k = 4:nz-3
 
     x_et(j-3,k-3) = c1*x_g(j-3,k) + c2*x_g(j-2,k) + c3*x_g(j-1,k) +...
                     c5*x_g(j+1,k) + c6*x_g(j+2,k) + c7*x_g(j+3,k);

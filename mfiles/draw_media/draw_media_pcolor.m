@@ -16,7 +16,7 @@ subt=[1,1,1];
 
 % variable to plot
 % 'Vp', 'Vs', 'rho', 'lambda', 'mu'
-varnm='rho';
+varnm='Vp';
 
 % figure control parameters
 flag_km     = 1;

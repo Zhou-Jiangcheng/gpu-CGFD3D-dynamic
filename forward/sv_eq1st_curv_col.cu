@@ -250,10 +250,10 @@ sv_eq1st_curv_col_allstep(
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
 
-          //wave2fault_onestage(
-          //              w_cur_d, w_rhs_d, wav_d, 
-          //              f_cur_d, f_rhs_d, fault_wav_d, 
-          //              i0, fault_d, metric_d, gdinfo_d);
+          wave2fault_onestage(
+                        w_cur_d, w_rhs_d, wav_d, 
+                        f_cur_d, f_rhs_d, fault_wav_d,
+                        i0, fault_d, metric_d, gdinfo_d);
 
           trial_slipweakening_onestage(
                         w_cur_d, f_cur_d, f_pre_d, 
@@ -287,10 +287,6 @@ sv_eq1st_curv_col_allstep(
                         fd->pair_fdz_op[ipair][istage],
                         myid, verbose);
 
-          fault2wave_onestage(
-                        w_cur_d, wav_d, 
-                        f_cur_d, fault_wav_d,
-                        i0, fault_d, metric_d, gdinfo_d);
 
           break;
         }
@@ -322,6 +318,11 @@ sv_eq1st_curv_col_allstep(
           grid.z = (nk + block.z - 1) / block.z;
           fault_wav_update <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_a, 
                                               fault_d, f_tmp_d, f_pre_d, f_rhs_d);
+
+          fault2wave_onestage(
+                        w_tmp_d, wav_d, 
+                        f_tmp_d, fault_wav_d,
+                        i0, fault_d, metric_d, gdinfo_d);
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
@@ -405,6 +406,10 @@ sv_eq1st_curv_col_allstep(
           grid.z = (nk + block.z - 1) / block.z;
           fault_wav_update <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_a, 
                                               fault_d, f_tmp_d, f_pre_d, f_rhs_d);
+          fault2wave_onestage(
+                        w_tmp_d, wav_d, 
+                        f_tmp_d, fault_wav_d,
+                        i0, fault_d, metric_d, gdinfo_d);
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
@@ -486,6 +491,10 @@ sv_eq1st_curv_col_allstep(
           grid.z = (nk + block.z - 1) / block.z;
           fault_wav_update_end <<<grid, block>>> (gdinfo_d, fault_wav->ncmp, coef_b, 
                                                   fault_d, f_end_d, f_rhs_d);
+          fault2wave_onestage(
+                        w_end_d, wav_d, 
+                        f_end_d, fault_wav_d,
+                        i0, fault_d, metric_d, gdinfo_d);
         }
         {
           dim3 block(8,8);

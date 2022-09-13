@@ -239,7 +239,6 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
         x3d_ptr = x3d + iptr;
         y3d_ptr = y3d + iptr;
         z3d_ptr = z3d + iptr;
-
         M_FD_SHIFT_PTR_CENTER(x_xi, x3d_ptr, 1);
         M_FD_SHIFT_PTR_CENTER(y_xi, y3d_ptr, 1);
         M_FD_SHIFT_PTR_CENTER(z_xi, z3d_ptr, 1);
@@ -274,6 +273,19 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
         zt_x[iptr] = vecg[0] / jac;
         zt_y[iptr] = vecg[1] / jac;
         zt_z[iptr] = vecg[2] / jac;
+        // debug
+        if(j==100 && k==120)
+        {
+          fprintf(stdout,"xi_x is %f\n",xi_x[iptr]);
+          fprintf(stdout,"xi_y is %f\n",xi_y[iptr]);
+          fprintf(stdout,"xi_z is %f\n",xi_z[iptr]);
+          fprintf(stdout,"et_x is %f\n",et_x[iptr]);
+          fprintf(stdout,"et_y is %f\n",et_y[iptr]);
+          fprintf(stdout,"et_z is %f\n",et_z[iptr]);
+          fprintf(stdout,"zt_x is %f\n",zt_x[iptr]);
+          fprintf(stdout,"zt_y is %f\n",zt_y[iptr]);
+          fprintf(stdout,"zt_z is %f\n",zt_z[iptr]);
+        }
       }
     }
   }
