@@ -2,6 +2,8 @@
 clear;
 close all;
 clear all;
+
+addmypath;
 % if use this script, some parameters is determined by 
 % this script, not json.
 ny = 960;

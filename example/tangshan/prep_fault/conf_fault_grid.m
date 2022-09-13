@@ -4,6 +4,8 @@ clc;
 clear;
 close all;
 
+addmypath;
+
 ny = 960;
 nz = 300;
 dh = 90; %grid physics length

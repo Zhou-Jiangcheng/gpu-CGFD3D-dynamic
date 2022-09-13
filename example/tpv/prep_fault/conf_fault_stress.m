@@ -4,7 +4,8 @@ close all;
 clear all;
 % if use this script, some parameters is determined by 
 % this script, not json.
-% addmypath;
+
+addmypath;
 nj = 400; 
 nk = 200;
 dh = 100;

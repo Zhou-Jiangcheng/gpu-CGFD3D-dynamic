@@ -4,7 +4,7 @@ clc;
 clear;
 close all;
 
-% addmypath;
+addmypath;
 nj =400; % without ghost points 
 nk =200; 
 dh = 100; %grid physics length
