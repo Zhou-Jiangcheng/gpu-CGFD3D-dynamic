@@ -15,6 +15,7 @@
 #include "fdlib_math.h"
 #include "fd_t.h"
 #include "gd_t.h"
+#include "constants.h"
 
 void 
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
@@ -273,19 +274,6 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
         zt_x[iptr] = vecg[0] / jac;
         zt_y[iptr] = vecg[1] / jac;
         zt_z[iptr] = vecg[2] / jac;
-        // debug
-        if(j==100 && k==120)
-        {
-          fprintf(stdout,"xi_x is %f\n",xi_x[iptr]);
-          fprintf(stdout,"xi_y is %f\n",xi_y[iptr]);
-          fprintf(stdout,"xi_z is %f\n",xi_z[iptr]);
-          fprintf(stdout,"et_x is %f\n",et_x[iptr]);
-          fprintf(stdout,"et_y is %f\n",et_y[iptr]);
-          fprintf(stdout,"et_z is %f\n",et_z[iptr]);
-          fprintf(stdout,"zt_x is %f\n",zt_x[iptr]);
-          fprintf(stdout,"zt_y is %f\n",zt_y[iptr]);
-          fprintf(stdout,"zt_z is %f\n",zt_z[iptr]);
-        }
       }
     }
   }
@@ -518,6 +506,7 @@ gd_curv_gen_fault(gd_t *gdcurv,
   int nk1 = gdinfo->nk1;
   int nk2 = gdinfo->nk2;
   int gni1 = gdinfo->gni1;
+  int npoint_x = gdinfo->npoint_x;
 
   size_t siz_line  = gdinfo->siz_line;
   size_t siz_slice = gdinfo->siz_slice;
@@ -530,18 +519,61 @@ gd_curv_gen_fault(gd_t *gdcurv,
   float *fault_x = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_y = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_z = (float *) malloc(sizeof(float)*nj*nk);
+  float *xline   = (float *) malloc(sizeof(float)*nx);
 
   nc_read_fault_geometry(fault_x, fault_y, fault_z, in_grid_fault_nc, gdinfo);
+
+  int i0 = npoint_x/2 + 3; 
+  xline[i0] = 0.0;
+  int width1 = 10;
+  int width2 = 55;
+  float compr;
+  int dist;
+  for(int i = i0-1; i>=ni1; i--)
+  {
+    dist = abs(i-i0); 
+    if(dist < width1)
+    {
+      compr = 0;
+    }
+    if(dist>=width1 && dist < width2)
+    {
+      compr = 1.0 - cos(PI * (i - (i0 - width1))/(float)(width2-width1));
+    }
+    if(dist >= width2)
+    {
+      compr = 2.0;
+    }
+    compr = 0.5 + 0.25 * compr;
+    xline[i] = xline[i+1] - dh *compr;
+  }
+  for(int i = i0+1; i<=ni2; i++)
+  {
+    dist = abs(i-i0); 
+    if(dist < width1)
+    {
+      compr = 0;
+    }
+    if(dist>=width1 && dist < width2)
+    {
+      compr = 1.0 - cos(PI * (i - (i0 + width1))/(float)(width2-width1));
+    }
+    if(dist >= width2)
+    {
+      compr = 2.0;
+    }
+    compr = 0.5 + 0.25 * compr;
+    xline[i] = xline[i-1] + dh *compr;
+  }
 
   for (int k = nk1; k <= nk2; k++){
     for (int j = nj1; j <= nj2; j++){
       for (int i = ni1; i <= ni2; i++){
 
-        int gi = gni1 + i - 3; 
-        float x0 = -num_of_x_points/2*dh;
-        //float x0 = 0;
+        //int gi = gni1 + i - 3; 
+        //float x = fault_x[j-3 + (k-3) * nj] + gi * dh + x0;
 
-        float x = fault_x[j-3 + (k-3) * nj] + gi * dh + x0;
+        float x = fault_x[j-3 + (k-3) * nj] + xline[i];
         float y = fault_y[j-3 + (k-3) * nj];
         float z = fault_z[j-3 + (k-3) * nj];
 
@@ -639,6 +671,7 @@ gd_curv_gen_fault(gd_t *gdcurv,
   free(fault_x);
   free(fault_y);
   free(fault_z);
+  free(xline);
 
   return;
 }
