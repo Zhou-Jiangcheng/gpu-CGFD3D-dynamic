@@ -1,0 +1,568 @@
+rank is 7
+device count is 8
+rank is 5
+device count is 8
+rank is 1
+device count is 8
+rank is 3
+device count is 8
+rank is 2
+device count is 8
+rank is 4
+device count is 8
+rank is 0
+device count is 8
+rank is 6
+device count is 8
+verbose=100
+comm=8069184, size=8
+par file =  /data3/lihl/code/gpu-CGFD3D-dynamic/example/tangshan/../../tangshan2/params.json
+-------------------------------------------------------
+-------------------------------------------------------
+--> MPI information:
+-------------------------------------------------------
+ number_of_mpiprocs_x = 1         
+ number_of_mpiprocs_y = 4         
+ number_of_mpiprocs_z = 2         
+-------------------------------------------------------
+--> Time Integration information:
+-------------------------------------------------------
+ size_of_time_step = 6.0000e-03
+ number_of_time_steps = 4000      
+-------------------------------------------------------
+--> boundary layer information.
+-------------------------------------------------------
+ boundary_condition  =     cfspml    cfspml    cfspml    cfspml    cfspml      free
+ cfspml:
+   idim=0,iside=0: nlay = 20, vel=7000.000000, alpha_max=3.140000, beta_max=2.000000
+   idim=0,iside=1: nlay = 20, vel=7000.000000, alpha_max=3.140000, beta_max=2.000000
+   idim=1,iside=0: nlay = 20, vel=7000.000000, alpha_max=3.140000, beta_max=2.000000
+   idim=1,iside=1: nlay = 20, vel=7000.000000, alpha_max=3.140000, beta_max=2.000000
+   idim=2,iside=0: nlay = 20, vel=7000.000000, alpha_max=3.140000, beta_max=2.000000
+   idim=2,iside=1: nlay = 0, vel=0.000000, alpha_max=0.000000, beta_max=0.000000
+
+-------------------------------------------------------
+--> GRID information:
+-------------------------------------------------------
+ grid_export_dir = /data3/lihl/code/gpu-CGFD3D-dynamic/example/tangshan/../../tangshan2/output
+ number_of_total_grid_points_x = 200       
+ number_of_total_grid_points_y = 941       
+ number_of_total_grid_points_z = 300       
+ disg_num_level = 0         
+ metric_method_itype = 1
+-------------------------------------------------------
+--> media info.
+-------------------------------------------------------
+ media_type = elastic_iso
+ media_export_dir = /data3/lihl/code/gpu-CGFD3D-dynamic/example/tangshan/../../tangshan2/output
+
+ --> uniform media 
+--> no visco
+
+-------------------------------------------------------
+--> output information.
+-------------------------------------------------------
+--> output_dir = /data3/lihl/code/gpu-CGFD3D-dynamic/example/tangshan/../../tangshan2/output
+--> station list file:
+ in_station_file = /data3/lihl/code/gpu-CGFD3D-dynamic/example/tangshan/prep_station/station.list
+--> recivers lines:
+number_of_receiver_line=0
+--> slice:
+number_of_slice_x=0: 
+number_of_slice_y=0: 
+number_of_slice_z=0: 
+--> snapshot information.
+number_of_snapshot=0
+--> qc parameters:
+check_nan_every_nummber_of_steps=0
+output_all=0
+create blk ...
+set scheme ...
+set mpi topo ...
+allocate grid vars ...
+gerate grid using fault plane...
+gnk1 is 0, gnj1 is 0
+nk is 140, nj is 226
+gnk1 is 0, gnj1 is 716
+nk is 140, nj is 225
+gnk1 is 140, gnj1 is 716
+nk is 160, nj is 225
+gnk1 is 0, gnj1 is 471
+nk is 140, nj is 245
+exchange coords ...
+gnk1 is 0, gnj1 is 226
+nk is 140, nj is 245
+gnk1 is 140, gnj1 is 0
+nk is 160, nj is 226
+gnk1 is 140, gnj1 is 471
+nk is 160, nj is 245
+gnk1 is 140, gnj1 is 226
+nk is 160, nj is 245
+calculated min/max of grid/tile/cell
+export coord to file ...
+ --> done
+ --> done
+calculate metrics ...
+ --> done
+ --> done
+ --> done
+ --> done
+ --> done
+ --> done
+exchange metrics ...
+ --> done
+export metric to file ...
+gdcurv info at topoid=0,3,1
+gdcurv info at topoid=0,3,0
+gdcurv info at topoid=0,2,1
+ --> done
+gdcurv info at topoid=0,0,0
+allocate media vars ...
+gdcurv info at topoid=0,2,0
+gdcurv info at topoid=0,1,0
+generate simple medium in code ...
+gdcurv info at topoid=0,0,1
+gdcurv info at topoid=0,1,1
+media Time of time :0.000000 s 
+export discrete medium to file ...
+   estimate time step ...
+-> topoid=[0,2,0], dtmax=0.007225, Vp=6000.000000, L=33.348232, i=100, j=19, k=83
+-> topoid=[0,3,0], dtmax=0.007568, Vp=6000.000000, L=34.927494, i=103, j=64, k=138
+-> topoid=[0,3,1], dtmax=0.007567, Vp=6000.000000, L=34.926018, i=106, j=65, k=117
+-> topoid=[0,1,0], dtmax=0.007234, Vp=6000.000000, L=33.385872, i=99, j=247, k=11
+-> topoid=[0,0,0], dtmax=0.007486, Vp=6000.000000, L=34.550014, i=110, j=222, k=6
+-> topoid=[0,0,1], dtmax=0.007486, Vp=6000.000000, L=34.550594, i=110, j=221, k=143
+-> topoid=[0,1,1], dtmax=0.007234, Vp=6000.000000, L=33.385902, i=94, j=247, k=3
+-> topoid=[0,2,1], dtmax=0.007226, Vp=6000.000000, L=33.349701, i=101, j=19, k=30
+max allowed dt at each proc: id=0, dtmax=0.00748584
+max allowed dt at each proc: id=1, dtmax=0.00748596
+max allowed dt at each proc: id=2, dtmax=0.00723361
+max allowed dt at each proc: id=3, dtmax=0.00723361
+max allowed dt at each proc: id=4, dtmax=0.00722545
+max allowed dt at each proc: id=5, dtmax=0.00722577
+max allowed dt at each proc: id=6, dtmax=0.00756762
+max allowed dt at each proc: id=7, dtmax=0.0075673
+Global maximum allowed time step is 0.00722545 at thread 4
+allocate solver vars ...
+setup output info ...
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+recv has physical coords, maybe computational big, use GPU
+recv_by_coords is 2
+setup absorbingg boundary ...
+cal free surface matrix ...
+init mesg ...
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 2, topoid[0,1,0]
+ neighid_x[-2,-2]
+ neighid_y[0,4]
+ neighid_z[-2,3]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 6, topoid[0,3,0]
+ ny    = 251       
+ nz    = 146       
+ ni    = 200       
+ nj    = 245       
+ nk    = 140       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 247       
+ nk1   = 3         
+ nk2   = 142       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 226       
+ nj2_to_glob_phys0   = 470       
+ neighid_x[-2,-2]
+ neighid_y[4,-2]
+ neighid_z[-2,7]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 231       
+ nz    = 146       
+ nk1_to_glob_phys0   = 0         
+ nk2_to_glob_phys0   = 139       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+ ni    = 200       
+ nj    = 225       
+ nk    = 140       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 227       
+ nk1   = 3         
+ nk2   = 142       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 716       
+ nj2_to_glob_phys0   = 940       
+ nk1_to_glob_phys0   = 0         
+ nk2_to_glob_phys0   = 139       
+-------------------------------------------------------
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 4, topoid[0,2,0]
+ neighid_x[-2,-2]
+ neighid_y[2,6]
+ neighid_z[-2,5]
+-------------------------------------------------------
+--> grid info:
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 0, topoid[0,0,0]
+ neighid_x[-2,-2]
+ neighid_y[-2,2]
+ neighid_z[-2,1]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 232       
+ nz    = 146       
+ ni    = 200       
+ nj    = 226       
+ nk    = 140       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 228       
+ nk1   = 3         
+ nk2   = 142       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 0         
+ nj2_to_glob_phys0   = 225       
+ nk1_to_glob_phys0   = 0         
+ nk2_to_glob_phys0   = 139       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 251       
+ nz    = 146       
+ ni    = 200       
+ nj    = 245       
+ nk    = 140       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 247       
+ nk1   = 3         
+ nk2   = 142       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 471       
+ nj2_to_glob_phys0   = 715       
+ nk1_to_glob_phys0   = 0         
+ nk2_to_glob_phys0   = 139       
+-------------------------------------------------------
+--> slice output information:
+--> slice output information:
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 5, topoid[0,2,1]
+ neighid_x[-2,-2]
+ neighid_y[3,7]
+ neighid_z[4,-2]
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 1, topoid[0,0,1]
+ neighid_x[-2,-2]
+ neighid_y[-2,3]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 251       
+ nz    = 166       
+ ni    = 200       
+ nj    = 245       
+ nk    = 160       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 247       
+ nk1   = 3         
+ nk2   = 162       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 471       
+ nj2_to_glob_phys0   = 715       
+ nk1_to_glob_phys0   = 140       
+ nk2_to_glob_phys0   = 299       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+ neighid_z[0,-2]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 232       
+ nz    = 166       
+ ni    = 200       
+ nj    = 226       
+ nk    = 160       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 228       
+ nk1   = 3         
+ nk2   = 162       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 0         
+ nj2_to_glob_phys0   = 225       
+ nk1_to_glob_phys0   = 140       
+ nk2_to_glob_phys0   = 299       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 7, topoid[0,3,1]
+ neighid_x[-2,-2]
+ neighid_y[5,-2]
+ neighid_z[6,-2]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+
+-------------------------------------------------------
+print mympi info:
+-------------------------------------------------------
+
+ myid = 3, topoid[0,1,1]
+ neighid_x[-2,-2]
+ neighid_y[1,5]
+ neighid_z[2,-2]
+-------------------------------------------------------
+--> grid info:
+-------------------------------------------------------
+ nx    = 206       
+ ny    = 251       
+ nz    = 166       
+ ni    = 200       
+ nj    = 245       
+ nk    = 160       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 247       
+ nk1   = 3         
+ nk2   = 162       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 226       
+ nj2_to_glob_phys0   = 470       
+ nk1_to_glob_phys0   = 140       
+ nk2_to_glob_phys0   = 299       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+ ny    = 231       
+ nz    = 166       
+ ni    = 200       
+ nj    = 225       
+ nk    = 160       
+ ni1   = 3         
+ ni2   = 202       
+ nj1   = 3         
+ nj2   = 227       
+ nk1   = 3         
+ nk2   = 162       
+ ni1_to_glob_phys0   = 0         
+ ni2_to_glob_phys0   = 199       
+ nj1_to_glob_phys0   = 716       
+ nj2_to_glob_phys0   = 940       
+ nk1_to_glob_phys0   = 140       
+ nk2_to_glob_phys0   = 299       
+-------------------------------------------------------
+--> slice output information:
+-------------------------------------------------------
+--> num_of_slice_x = 0
+--> num_of_slice_y = 0
+--> num_of_slice_z = 0
+--> num_of_snap = 0
+#   i0 j0 k0 ni nj nk di dj dk it0 dit vel stress strain gi1 gj1 gk1
+start solver ...
+prepare fault slice nc output ...
+prepare slice nc output ...
+prepare snap nc output ...
+start time loop ...
+-> it=0, t=0.000000
+ --> ipair=0
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=1, t=0.006000
+ --> ipair=1
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=2, t=0.012000
+ --> ipair=2
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=3, t=0.018000
+ --> ipair=3
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=4, t=0.024000
+ --> ipair=4
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=5, t=0.030000
+ --> ipair=5
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=6, t=0.036000
+ --> ipair=6
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=7, t=0.042000
+ --> ipair=7
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=8, t=0.048000
+ --> ipair=0
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=9, t=0.054000
+ --> ipair=1
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=10, t=0.060000
+ --> ipair=2
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=11, t=0.066000
+ --> ipair=3
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=12, t=0.072000
+ --> ipair=4
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=13, t=0.078000
+ --> ipair=5
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=14, t=0.084000
+ --> ipair=6
+ --> istage=0
+ --> istage=1
+ --> istage=2
+ --> istage=3
+-> it=15, t=0.090000
+ --> ipair=7
+ --> istage=0

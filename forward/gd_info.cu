@@ -113,7 +113,7 @@ gd_info_set(gdinfo_t *const gdinfo,
   // if has free_surface, abs_num_of_layers[2][1] = 0
   nz_et += abs_num_of_layers[2][0] + abs_num_of_layers[2][1];
   int nz_avg  = nz_et / mympi->nprocz;
-  int nz_left = ny_et % mympi->nprocz;
+  int nz_left = nz_et % mympi->nprocz;
   if (nz_avg < 2 * fdz_nghosts) {
     fprintf(stdout,"should not be less than 2 * fdz_nghosts");
     exit(1);
@@ -129,7 +129,7 @@ gd_info_set(gdinfo_t *const gdinfo,
   if (mympi->neighid[5] == MPI_PROC_NULL) {
     nk -= abs_num_of_layers[2][1];
   }
-  // not equal divided points given to first ny_left procs
+  // not equal divided points given to first nz_left procs
   if (mympi->topoid[2] < nz_left) {
     nk++;
   }

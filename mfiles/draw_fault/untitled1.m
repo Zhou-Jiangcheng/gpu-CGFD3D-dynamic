@@ -1,4 +1,4 @@
 figure(1)
-plot(slip(1:100),'rO','linewidth',0.5);
+plot(slip(4:500),'r','linewidth',0.5);
 hold on;
-plot(slip1(1:100),'b*','linewidth',0.5);
+plot(slip4(1:496),'b','linewidth',0.5);

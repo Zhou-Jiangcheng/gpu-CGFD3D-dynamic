@@ -6,17 +6,24 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+
+#-- r740
+MPIDIR=/data/openmpi-4.1.2
+#MPIDIR=/share/apps/gnu-4.8.5/mpich-3.3
+#MPIDIR=$MPI_ROOT
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
+#EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
+EXEC_WAVE=/data/home/zhangw/BBG_SUSTech/src/gpu-CGFD3D-dynamic/main_curv_col_el_3d
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project1
+#PROJDIR=`pwd`/../../tangshan
+PROJDIR=/data/home/zhangw/BBG_SUSTech/src/gpu-CGFD3D-dynamic/example/tangshanzw/run2
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -33,21 +40,21 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 100,
-  "number_of_total_grid_points_y" : 400,
-  "number_of_total_grid_points_z" : 200,
+  "number_of_total_grid_points_x" : 200,
+  "number_of_total_grid_points_y" : 1016,
+  "number_of_total_grid_points_z" : 323,
 
-  "number_of_mpiprocs_y" : 2,
-  "number_of_mpiprocs_z" : 2,
+  "number_of_mpiprocs_y" : 1,
+  "number_of_mpiprocs_z" : 1,
 
-  "dynamic_method" : 1,
-  "fault_grid" : [51,350,51,200],
+  "dynamic_method" : 2,
+  "fault_grid" : [101,916,101,323],
 
-  "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 1000,
+  "size_of_time_step" : 0.006,
+  "number_of_time_steps" : 4000,
   "#time_window_length" : 4,
   "check_stability" : 1,
-  "io_time_skip" : 1,
+  "io_time_skip" : 2,
 
   "boundary_x_left" : {
       "cfspml" : {
@@ -93,11 +100,13 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
+
+
   "grid_generation_method" : {
       "fault_plane" : {
         "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 100.0
+        "fault_inteval" : 90.0
       },
       "#grid_with_fault" : {
         "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
@@ -131,9 +140,9 @@ cat << ieof > $PAR_FILE
         "rho" : "$INPUTDIR/prep_medium/seam_rho.bin"
       },
       "iso_half_space" : {
-        "Vp" : 3000,
-        "Vs" : 2000,
-        "rho": 1500
+        "Vp" : 6000,
+        "Vs" : 3464,
+        "rho": 2670
       },
       "#vti_half_space" : {
          "rho" : 1500,
@@ -246,7 +255,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2>&1 |tee log
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

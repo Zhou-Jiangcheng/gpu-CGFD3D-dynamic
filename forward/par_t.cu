@@ -1023,6 +1023,7 @@ par_print(par_t *par)
   fprintf(stdout, "-------------------------------------------------------\n");
   fprintf(stdout, " number_of_mpiprocs_x = %-10d\n", par->number_of_mpiprocs_x);
   fprintf(stdout, " number_of_mpiprocs_y = %-10d\n", par->number_of_mpiprocs_y);
+  fprintf(stdout, " number_of_mpiprocs_z = %-10d\n", par->number_of_mpiprocs_z);
 
   fprintf(stdout, "-------------------------------------------------------\n");
   fprintf(stdout, "--> Time Integration information:\n");

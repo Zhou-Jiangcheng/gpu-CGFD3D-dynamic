@@ -199,7 +199,7 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     F.slip[iptr_t]  += Vs  * dt; 
     F.slip1[iptr_t] += Vs1 * dt; 
     F.slip2[iptr_t] += Vs2 * dt; 
-    
+
     FW.hT1x[iptr_f] = (FW.T1x[iptr_f+3*siz_slice_yz] - FW.mT1x[iptr_f])/dt;
     FW.hT1y[iptr_f] = (FW.T1y[iptr_f+3*siz_slice_yz] - FW.mT1y[iptr_f])/dt;
     FW.hT1z[iptr_f] = (FW.T1z[iptr_f+3*siz_slice_yz] - FW.mT1z[iptr_f])/dt;

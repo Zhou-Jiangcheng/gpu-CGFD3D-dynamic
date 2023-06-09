@@ -684,9 +684,6 @@ nc_read_fault_geometry(
   int nj = gdinfo->nj;
   int nk = gdinfo->nk;
 
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
-
   // thisid dimension 0, 1, 2, thisid[2] vary first
   int ierr;
   int ncid;

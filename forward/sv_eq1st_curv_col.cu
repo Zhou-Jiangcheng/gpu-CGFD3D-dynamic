@@ -573,7 +573,7 @@ sv_eq1st_curv_col_allstep(
 
     //-- line values
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
-    if( it%io_time_skip == 0)
+    if( (it+1)%io_time_skip == 0)
     {
       int it_skip = (int)(it/io_time_skip);
       // io fault var each dt, use w_buff as buff

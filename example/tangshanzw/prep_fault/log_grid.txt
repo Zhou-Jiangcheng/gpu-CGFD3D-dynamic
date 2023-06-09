@@ -1,0 +1,8 @@
+ny = 991
+nz = 310
+npt_stk = 791
+npt_dip = 210
+ref_lat0 = 39.863
+ref_lon0 = 118.458
+ref_utmx0 = 624690
+ref_utmy0 = 4.41313e+06

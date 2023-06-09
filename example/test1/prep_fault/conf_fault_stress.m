@@ -20,7 +20,7 @@ k2 = 200;
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 150;
+srcj = 200;
 srck = 150;   
 
 % 1st method
@@ -133,15 +133,15 @@ end
 taus = sqrt(Ts1.^2 + Ts2.^2);
 % miu0 = -taus./(Tn);
 miu0 = -taus./(mu_s*Tn);
- figure(1); 
- surf(x1, y1, z1, Ts1(j1:j2,k1:k2)/1.0e6); axis equal; shading interp; view([60, 30]); 
- title('Ts1 Strike stress');colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
- figure(2);
- surf(x1, y1, z1, Ts2(j1:j2,k1:k2)/1.0e6); axis equal; shading interp; view([60, 30]);
- title('Ts2 Dip stress');colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
- figure(3);
- surf(x1, y1, z1, Tn(j1:j2,k1:k2)/1.0e6 ); axis equal; shading interp; view([60, 30]); 
- title('Tn Normal stress' );colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
+% figure(1); 
+% surf(x1, y1, z1, Ts1(j1:j2,k1:k2)/1.0e6); axis equal; shading interp; view([60, 30]); 
+% title('Ts1 Strike stress');colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
+% figure(2);
+% surf(x1, y1, z1, Ts2(j1:j2,k1:k2)/1.0e6); axis equal; shading interp; view([60, 30]);
+% title('Ts2 Dip stress');colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
+% figure(3);
+% surf(x1, y1, z1, Tn(j1:j2,k1:k2)/1.0e6 ); axis equal; shading interp; view([60, 30]); 
+% title('Tn Normal stress' );colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
 figure(4);
 surf(x1, y1, z1, miu0(j1:j2, k1:k2)); axis equal; shading interp; view([60, 30]); 
 title(['tangshan fault',char(10),'left initial rupture',char(10),'Ts/(u*Tn)']);
