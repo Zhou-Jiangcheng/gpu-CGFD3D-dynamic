@@ -12,16 +12,8 @@
 #-------------------------------------------------------------------------------
 # compiler
 #-------------------------------------------------------------------------------
-CUDAHOME   := /data3/lihl/software/cuda-11.5
-MPIHOME    := /data3/lihl/software/openmpi-gnu-4.1.2
-NETCDF := /data3/lihl/software/disable-netcdf-4.4.1
-#CUDAHOME   := /opt/apps/cuda-11.5
-#MPIHOME    := /opt/apps/openmpi/4.1.2-cuda-aware
-#NETCDF := /opt/apps/gcc-4.8.5/disable-netcdf-4.4.1
 CXX    :=  $(MPIHOME)/bin/mpicxx
 GC     :=  $(CUDAHOME)/bin/nvcc 
-
-
 
 #- debug
 #CFLAGS_CUDA   := -g $(CFLAGS_CUDA)
@@ -29,13 +21,13 @@ GC     :=  $(CUDAHOME)/bin/nvcc
 #- O3
 CPPFLAGS := -O3 -std=c++11 $(CPPFLAGS)
 
-CFLAGS_CUDA   := -O3 -arch=sm_80 -std=c++11 -w -rdc=true
+CFLAGS_CUDA   := -O3 -arch=$(SMCODE) -std=c++11 -w -rdc=true
 CFLAGS_CUDA += -I$(CUDAHOME)/include -I$(MPIHOME)/include
 CFLAGS_CUDA += -I$(NETCDF)/include -I./lib/ -I./forward/ -I./media/ 
 
 #- dynamic
 LDFLAGS := -L$(NETCDF)/lib -lnetcdf -L$(CUDAHOME)/lib64 -lcudart -L$(MPIHOME)/lib -lmpi
-LDFLAGS += -lm -arch=sm_80
+LDFLAGS += -lm -arch=$(SMCODE)
 
 #- pg
 #CFLAGS_CUDA   := -Wall -pg $(CFLAGS_CUDA)
