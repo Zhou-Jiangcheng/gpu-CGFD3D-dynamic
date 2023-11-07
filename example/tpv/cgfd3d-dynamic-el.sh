@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project1
+PROJDIR=`pwd`/../../project
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -40,7 +40,7 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : 2,
   "number_of_mpiprocs_z" : 2,
 
-  "dynamic_method" : 1,
+  "dynamic_method" : 2,
   "fault_grid" : [51,350,51,200],
 
   "size_of_time_step" : 0.01,
@@ -118,7 +118,7 @@ cat << ieof > $PAR_FILE
       "type" : "elastic_iso",
       "#input_way" : "infile_layer",
       "#input_way" : "binfile",
-      "input_way" : "half_space",
+      "input_way" : "code",
       "#binfile" : {
         "size"    : [1101, 1447, 1252],
         "spacing" : [-10, 10, 10],
@@ -130,44 +130,8 @@ cat << ieof > $PAR_FILE
         "Vs" : "$INPUTDIR/prep_medium/seam_Vs.bin",
         "rho" : "$INPUTDIR/prep_medium/seam_rho.bin"
       },
-      "iso_half_space" : {
-        "Vp" : 3000,
-        "Vs" : 2000,
-        "rho": 1500
-      },
-      "#vti_half_space" : {
-         "rho" : 1500,
-         "c11" : 25200000000,
-         "c13" : 10962000000,
-         "c33" : 18000000000,
-         "c55" : 5120000000,
-         "c66" : 7168000000
-       },
-      "#aniso_half_space" : {
-        "rho" : 1500,
-        "c11" : 25200000000,
-        "c12" : 0,
-        "c13" : 10962000000,
-        "c14" : 0,
-        "c15" : 0,
-        "c16" : 0,
-        "c22" : 0,
-        "c23" : 0,
-        "c24" : 0,
-        "c25" : 0,
-        "c26" : 0,
-        "c33" : 18000000000,
-        "c34" : 0,
-        "c35" : 0,
-        "c36" : 0,
-        "c44" : 0,
-        "c45" : 0,
-        "c46" : 0,
-        "c55" : 5120000000,
-        "c56" : 0,
-        "c66" : 7168000000
-      },
       "#import" : "$MEDIA_DIR",
+      "code" : "",
       "#infile_layer" : "$INPUTDIR/prep_medium/basin_el_iso.md3lay",
       "#infile_grid" : "$INPUTDIR/prep_medium/topolay_el_iso.md3grd",
       "#equivalent_medium_method" : "loc",
@@ -246,7 +210,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2>&1 |tee log
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

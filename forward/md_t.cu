@@ -327,7 +327,7 @@ md_export(gdinfo_t  *gdinfo,
 }
 
 int
-md_gen_uniform_el_iso(md_t *md, par_t *par)
+md_gen_uniform_el_iso(md_t *md)
 {
   int ierr = 0;
 
@@ -341,9 +341,9 @@ md_gen_uniform_el_iso(md_t *md, par_t *par)
   float  *mu3d = md->mu;
   float *rho3d = md->rho;
 
-  float Vp  = par->Vp;
-  float Vs  = par->Vs;
-  float rho = par->rho;
+  float Vp  = 3000;
+  float Vs  = 2000;
+  float rho = 1500;
 
   for (size_t k=0; k<nz; k++)
   {
@@ -395,7 +395,7 @@ md_gen_uniform_Qs(md_t *md, float Qs_freq)
 }
 
 int
-md_gen_uniform_el_vti(md_t *md, par_t *par)
+md_gen_uniform_el_vti(md_t *md)
 {
   int ierr = 0;
 
@@ -404,12 +404,12 @@ md_gen_uniform_el_vti(md_t *md, par_t *par)
   int nz = md->nz;
   size_t siz_line  = md->siz_line;
   size_t siz_slice = md->siz_slice;
-  float rho = par->rho; 
-  float c11 = par->c11;
-  float c13 = par->c13;
-  float c33 = par->c33;
-  float c55 = par->c55;
-  float c66 = par->c66;
+  float rho = 1500; 
+  float c11 = 25200000000;
+  float c13 = 10962000000;
+  float c33 = 18000000000;
+  float c55 = 5120000000;
+  float c66 = 7168000000;
   for (size_t k=0; k<nz; k++)
   {
     for (size_t j=0; j<ny; j++)
@@ -433,7 +433,7 @@ md_gen_uniform_el_vti(md_t *md, par_t *par)
 }
 
 int
-md_gen_uniform_el_aniso(md_t *md, par_t *par)
+md_gen_uniform_el_aniso(md_t *md)
 {
   int ierr = 0;
 
@@ -443,28 +443,28 @@ md_gen_uniform_el_aniso(md_t *md, par_t *par)
   size_t siz_line  = md->siz_line;
   size_t siz_slice = md->siz_slice;
 
-  float rho = par->rho; 
-  float c11 = par->c11;
-  float c12 = par->c12;
-  float c13 = par->c13;
-  float c14 = par->c14;
-  float c15 = par->c15;
-  float c16 = par->c16;
-  float c22 = par->c22;
-  float c23 = par->c23;
-  float c24 = par->c24;
-  float c25 = par->c25;
-  float c26 = par->c26;
-  float c33 = par->c33;
-  float c34 = par->c34;
-  float c35 = par->c35;
-  float c36 = par->c36;
-  float c44 = par->c44;
-  float c45 = par->c45;
-  float c46 = par->c46;
-  float c55 = par->c55;
-  float c56 = par->c56;
-  float c66 = par->c66;
+  float rho = 1500; 
+  float c11 = 25200000000;
+  float c12 = 0;
+  float c13 = 10962000000;
+  float c14 = 0;
+  float c15 = 0;
+  float c16 = 0;
+  float c22 = 0;
+  float c23 = 0;
+  float c24 = 0;
+  float c25 = 0;
+  float c26 = 0;
+  float c33 = 18000000000;
+  float c34 = 0;
+  float c35 = 0;
+  float c36 = 0;
+  float c44 = 0;
+  float c45 = 0;
+  float c46 = 0;
+  float c55 = 5120000000;
+  float c56 = 0;
+  float c66 = 7168000000;
 
   for (size_t k=0; k<nz; k++)
   {

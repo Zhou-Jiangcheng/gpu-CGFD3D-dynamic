@@ -81,16 +81,16 @@ md_export(gdinfo_t  *gdinfo,
                  char *output_dir);
 
 int
-md_gen_uniform_el_iso(md_t *md, par_t *par);
+md_gen_uniform_el_iso(md_t *md);
 
 int
 md_gen_uniform_Qs(md_t *md, float Qs_freq);
 
 int
-md_gen_uniform_el_vti(md_t *md, par_t *par);
+md_gen_uniform_el_vti(md_t *md);
 
 int
-md_gen_uniform_el_aniso(md_t *md, par_t *par);
+md_gen_uniform_el_aniso(md_t *md);
 
 int
 md_rho_to_slow(float *rho, size_t siz_volume);

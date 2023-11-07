@@ -240,20 +240,20 @@ int main(int argc, char** argv)
   // read or discrete velocity model
   switch (par->media_input_itype)
   {
-    case PAR_MEDIA_UNIFORM : {
+    case PAR_MEDIA_CODE : {
 
         if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
-          md_gen_uniform_el_iso(md, par);
+          md_gen_uniform_el_iso(md);
         }
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
-          md_gen_uniform_el_vti(md, par);
+          md_gen_uniform_el_vti(md);
         }
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
-          md_gen_uniform_el_aniso(md, par);
+          md_gen_uniform_el_aniso(md);
         }
 
         if (md->visco_type == CONST_VISCO_GRAVES_QS) {

@@ -19,7 +19,7 @@
 #define PAR_METRIC_IMPORT    2
 
 #define PAR_MEDIA_IMPORT 1
-#define PAR_MEDIA_UNIFORM   2
+#define PAR_MEDIA_CODE   2
 #define PAR_MEDIA_3LAY   3
 #define PAR_MEDIA_3GRD   4
 #define PAR_MEDIA_3BIN   5
