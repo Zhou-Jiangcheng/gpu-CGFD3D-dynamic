@@ -56,29 +56,6 @@ par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
 }
 
 /*
- * for non-MPI, read from file
- */
-void
-par_read_from_file(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
-{
-  //
-  // read whole file inot str
-  //
-  FILE *fp = fopen(par_fname,"r");
-
-  fseek(fp, 0, SEEK_END);
-  long len = ftell(fp);
-
-  fseek(fp, 0, SEEK_SET);
-  char *str = (char*)malloc(len+1);
-  fread(str, 1, len, fp);
-  fclose(fp);
-
-  // read from str
-  par_read_from_str(str, par);
-}
-
-/*
  * funcs to get par from alread read in str
  */
 int 

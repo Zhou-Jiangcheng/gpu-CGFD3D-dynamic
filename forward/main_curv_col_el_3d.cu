@@ -15,7 +15,7 @@
 #include "blk_t.h"
 
 #include "media_discrete_model.h"
-#include "sv_eq1st_curv_col.h"
+#include "drv_rk_curv_col.h"
 #include "cuda_common.h"
 
 int main(int argc, char** argv)
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   // get commond-line argument
   // argc checking
   if (argc < 4) {
-    fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <opt: verbose>\n");
+    fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <verbose> <gpu_id_start>\n");
     MPI_Finalize();
     exit(1);
   }
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
   mympi_t         *mympi         = blk->mympi ;
   gdinfo_t        *gdinfo        = blk->gdinfo;
   gd_t            *gdcurv        = blk->gd;
-  gdcurv_metric_t *gdcurv_metric = blk->gdcurv_metric;
+  gd_metric_t     *gd_metric     = blk->gd_metric;
   md_t            *md            = blk->md;
   wav_t           *wav           = blk->wav;
   bdryfree_t      *bdryfree      = blk->bdryfree;
@@ -152,8 +152,8 @@ int main(int argc, char** argv)
   // malloc var in gdcurv
   gd_curv_init(gdinfo, gdcurv);
 
-  // malloc var in gdcurv_metric
-  gd_curv_metric_init(gdinfo, gdcurv_metric);
+  // malloc var in gd_metric
+  gd_curv_metric_init(gdinfo, gd_metric);
 
   // generate grid coord
   switch (par->grid_generation_itype)
@@ -196,17 +196,17 @@ int main(int argc, char** argv)
         if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
         gd_curv_metric_cal(gdinfo,
                            gdcurv,
-                           gdcurv_metric);
+                           gd_metric);
 
         if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-        gd_curv_exchange(gdinfo,gdcurv_metric->v4d,gdcurv_metric->ncmp,mympi->neighid,mympi->topocomm);
+        gd_curv_exchange(gdinfo,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
         break;
     }
     case PAR_METRIC_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->metric_import_dir);
+        gd_curv_metric_import(gd_metric, blk->output_fname_part, par->metric_import_dir);
 
         break;
     }
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
   if (par->is_export_metric==1)
   {
     if (myid==0) fprintf(stdout,"export metric to file ...\n"); 
-    gd_curv_metric_export(gdinfo,gdcurv_metric,
+    gd_curv_metric_export(gdinfo,gd_metric,
                           blk->output_fname_part,
                           blk->grid_export_dir);
   } else {
@@ -544,7 +544,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   fault_coef_init(fault_coef, gdinfo); 
-  fault_coef_cal(gdinfo, gdcurv_metric, md, par->fault_i_global_index, fault_coef);
+  fault_coef_cal(gdinfo, gd_metric, md, par->fault_i_global_index, fault_coef);
   fault_init(fault, gdinfo);
   fault_set(fault, fault_coef, gdinfo, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
   fault_wav_init(gdinfo, fault_wav, fd->num_rk_stages);
@@ -671,18 +671,18 @@ int main(int argc, char** argv)
   
   time_t t_start = time(NULL);
 
-  sv_eq1st_curv_col_allstep(fd,gdinfo,gdcurv_metric,md,
-                            bdryfree,bdrypml, wav, mympi,
-                            fault_coef,fault,fault_wav,
-                            iorecv,ioline,iofault,ioslice,iosnap,
-                            par->imethod, dt,nt_total,t0,
-                            blk->output_fname_part,
-                            blk->output_dir,
-                            par->fault_i_global_index,
-                            par->io_time_skip,
-                            par->check_nan_every_nummber_of_steps,
-                            par->output_all,
-                            verbose);
+  drv_rk_curv_col_allstep(fd,gdinfo,gd_metric,md,
+                          bdryfree,bdrypml, wav, mympi,
+                          fault_coef,fault,fault_wav,
+                          iorecv,ioline,iofault,ioslice,iosnap,
+                          par->imethod, dt,nt_total,t0,
+                          blk->output_fname_part,
+                          blk->output_dir,
+                          par->fault_i_global_index,
+                          par->io_time_skip,
+                          par->check_nan_every_nummber_of_steps,
+                          par->output_all,
+                          verbose);
 
   time_t t_end = time(NULL);
   

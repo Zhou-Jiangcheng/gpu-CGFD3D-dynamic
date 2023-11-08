@@ -94,8 +94,8 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
 }
 
 void 
-gd_curv_metric_init(gdinfo_t        *gdinfo,
-                    gdcurv_metric_t *metric)
+gd_curv_metric_init(gdinfo_t    *gdinfo,
+                    gd_metric_t *metric)
 {
   const int num_grid_vars = 10;
   /*
@@ -187,9 +187,9 @@ gd_curv_metric_init(gdinfo_t        *gdinfo,
 // need to change to use fdlib_math.c
 //
 void
-gd_curv_metric_cal(gdinfo_t        *gdinfo,
+gd_curv_metric_cal(gdinfo_t    *gdinfo,
                    gd_t        *gdcurv,
-                   gdcurv_metric_t *metric)
+                   gd_metric_t *metric)
 {
   int ni1 = gdinfo->ni1;
   int ni2 = gdinfo->ni2;
@@ -813,8 +813,8 @@ gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir)
 
 
 void
-gd_curv_metric_export(gdinfo_t        *gdinfo,
-                      gdcurv_metric_t *metric,
+gd_curv_metric_export(gdinfo_t    *gdinfo,
+                      gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir)
 {
@@ -882,7 +882,7 @@ gd_curv_metric_export(gdinfo_t        *gdinfo,
 }
 
 void
-gd_curv_metric_import(gdcurv_metric_t *metric, char *fname_coords, char *import_dir)
+gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir)
 {
   // construct file name
   char in_file[CONST_MAX_STRLEN];

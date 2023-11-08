@@ -104,7 +104,7 @@ typedef struct {
 
   size_t *cmp_pos;
   char  **cmp_name;
-} gdcurv_metric_t;
+} gd_metric_t;
 
 
 /*************************************************
@@ -115,12 +115,12 @@ void
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv);
 
 void 
-gd_curv_metric_init(gdinfo_t        *gdinfo,
-                    gdcurv_metric_t *metric);
+gd_curv_metric_init(gdinfo_t    *gdinfo,
+                    gd_metric_t *metric);
 void
-gd_curv_metric_cal(gdinfo_t        *gdinfo,
+gd_curv_metric_cal(gdinfo_t    *gdinfo,
                    gd_t        *gdcurv,
-                   gdcurv_metric_t *metric);
+                   gd_metric_t *metric);
 
 void
 gd_curv_exchange(gdinfo_t *gdinfo,
@@ -144,7 +144,7 @@ nc_read_fault_geometry(
         char *in_grid_fault_nc, gdinfo_t *gdinfo);
 
 void
-gd_curv_metric_import(gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
+gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir);
 
 void
 gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir);
@@ -158,8 +158,8 @@ gd_curv_coord_export(
 
 
 void
-gd_curv_metric_export(gdinfo_t        *gdinfo,
-                      gdcurv_metric_t *metric,
+gd_curv_metric_export(gdinfo_t    *gdinfo,
+                      gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 

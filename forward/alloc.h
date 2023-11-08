@@ -28,7 +28,7 @@ int
 init_fd_device(fd_t *fd, fd_device_t *fd_device_d);
 
 int
-init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d);
+init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d);
 
 int 
 init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_d);
@@ -64,7 +64,7 @@ int
 dealloc_md_device(md_t md_d);
 
 int
-dealloc_metric_device(gdcurv_metric_t metric_d);
+dealloc_metric_device(gd_metric_t metric_d);
 
 int 
 dealloc_fd_device(fd_device_t fd_device_d);

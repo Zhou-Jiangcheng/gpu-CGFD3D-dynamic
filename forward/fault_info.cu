@@ -82,7 +82,7 @@ fault_coef_init(fault_coef_t *FC,
 
 int 
 fault_coef_cal(gdinfo_t *gdinfo, 
-               gdcurv_metric_t *metric, 
+               gd_metric_t *metric, 
                md_t *md,
                int fault_i_global_index,
                fault_coef_t *FC)

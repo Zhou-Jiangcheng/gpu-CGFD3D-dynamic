@@ -11,9 +11,9 @@
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
 #include "blk_t.h"
-#include "sv_eq1st_curv_col.h"
-#include "sv_eq1st_curv_col_el_iso_gpu.h"
-#include "sv_eq1st_curv_col_el_iso_fault_gpu.h"
+#include "drv_rk_curv_col.h"
+#include "sv_curv_col_el_iso_gpu.h"
+#include "sv_curv_col_el_iso_fault_gpu.h"
 #include "trial_slipweakening.h"
 #include "transform.h"
 #include "fault_wav_t.h"
@@ -26,23 +26,23 @@
  ******************************************************************************/
 
 void
-sv_eq1st_curv_col_allstep(
-  fd_t            *fd,
-  gdinfo_t        *gdinfo,
-  gdcurv_metric_t *metric,
-  md_t      *md,
-  bdryfree_t *bdryfree,
-  bdrypml_t  *bdrypml,
-  wav_t  *wav,
-  mympi_t    *mympi,
+drv_rk_curv_col_allstep(
+  fd_t         *fd,
+  gdinfo_t     *gdinfo,
+  gd_metric_t  *metric,
+  md_t         *md,
+  bdryfree_t   *bdryfree,
+  bdrypml_t    *bdrypml,
+  wav_t        *wav,
+  mympi_t      *mympi,
   fault_coef_t *fault_coef,
-  fault_t *fault,
-  fault_wav_t *fault_wav,
-  iorecv_t   *iorecv,
-  ioline_t   *ioline,
-  iofault_t  *iofault,
-  ioslice_t  *ioslice,
-  iosnap_t   *iosnap,
+  fault_t      *fault,
+  fault_wav_t  *fault_wav,
+  iorecv_t     *iorecv,
+  ioline_t     *ioline,
+  iofault_t    *iofault,
+  ioslice_t    *ioslice,
+  iosnap_t     *iosnap,
   int imethod,
   // time
   float dt, int nt_total, float t0,
@@ -72,16 +72,16 @@ sv_eq1st_curv_col_allstep(
   MPI_Comm comm = mympi->comm;
   int *neighid_d = init_neighid_device(mympi->neighid);
   // local allocated array
-  gdinfo_t   gdinfo_d;
-  md_t   md_d;
-  wav_t  wav_d;
-  fd_device_t fd_device_d;
-  bdryfree_t bdryfree_d;
-  bdrypml_t  bdrypml_d;
-  gdcurv_metric_t metric_d;
+  gdinfo_t     gdinfo_d;
+  md_t         md_d;
+  wav_t        wav_d;
+  fd_device_t  fd_device_d;
+  bdryfree_t   bdryfree_d;
+  bdrypml_t    bdrypml_d;
+  gd_metric_t  metric_d;
   fault_coef_t fault_coef_d;
-  fault_t fault_d;
-  fault_wav_t fault_wav_d;
+  fault_t      fault_d;
+  fault_wav_t  fault_wav_d;
 
   // init device struct, and copy data from host to device
   init_gdinfo_device(gdinfo, &gdinfo_d);
@@ -147,7 +147,6 @@ sv_eq1st_curv_col_allstep(
   // only y/z mpi
   int num_of_r_reqs = 8;
   int num_of_s_reqs = 8;
-  
 
   // set pml for rk
   for (int idim=0; idim<CONST_NDIM; idim++) {
@@ -183,7 +182,7 @@ sv_eq1st_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else
@@ -269,7 +268,7 @@ sv_eq1st_curv_col_allstep(
                         f_cur_d, fault_wav_d,
                         i0, fault_d, metric_d, gdinfo_d);
 
-          sv_eq1st_curv_col_el_iso_onestage(
+          sv_curv_col_el_iso_onestage(
                         w_cur_d, w_rhs_d, wav_d, gdinfo_d, fd_device_d, 
                         metric_d, md_d, bdryfree_d, bdrypml_d, 
                         fd->pair_fdx_op[ipair][istage],
@@ -277,7 +276,7 @@ sv_eq1st_curv_col_allstep(
                         fd->pair_fdz_op[ipair][istage],
                         myid, verbose);
 
-          sv_eq1st_curv_col_el_iso_fault_onestage(
+          sv_curv_col_el_iso_fault_onestage(
                         w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
                         i0, isfree, imethod, wav_d, 
                         fault_wav_d, fault_d, fault_coef_d,
@@ -286,8 +285,6 @@ sv_eq1st_curv_col_allstep(
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
                         myid, verbose);
-
-
           break;
         }
       //  synchronize onestage device func.
@@ -324,10 +321,7 @@ sv_eq1st_curv_col_allstep(
                         f_tmp_d, fault_wav_d,
                         i0, fault_d, metric_d, gdinfo_d);
         }
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
-        //}
+
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
         blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
@@ -411,10 +405,6 @@ sv_eq1st_curv_col_allstep(
                         f_tmp_d, fault_wav_d,
                         i0, fault_d, metric_d, gdinfo_d);
         }
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
-        //}
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
@@ -505,11 +495,6 @@ sv_eq1st_curv_col_allstep(
           float coef = coef_b / dt;
           fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
         }
-
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_end, wav->ncmp, dt, gdinfo, md);
-        //}
         
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
@@ -626,35 +611,5 @@ sv_eq1st_curv_col_allstep(
   io_slice_nc_close(&ioslice_nc);
   io_snap_nc_close(&iosnap_nc);
   return;
-}
-
-int
-sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md)
-{
-  int ierr = 0;
-
-  float coef = - PI * md->visco_Qs_freq * dt;
-
-  for (int icmp=0; icmp<ncmp; icmp++)
-  {
-    float *var = w + icmp * gdinfo->siz_volume;
-
-    for (int k = gdinfo->nk1; k <= gdinfo->nk2; k++)
-    {
-      for (int j = gdinfo->nj1; j <= gdinfo->nj2; j++)
-      {
-        for (int i = gdinfo->ni1; i <= gdinfo->ni2; i++)
-        {
-          size_t iptr = i + j * gdinfo->siz_line + k * gdinfo->siz_slice;
-
-          float Qatt = expf( coef / md->Qs[iptr] );
-
-          var[iptr] *= Qatt;
-        }
-      }
-    }
-  }
-
-  return ierr;
 }
 

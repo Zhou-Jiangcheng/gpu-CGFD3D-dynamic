@@ -345,6 +345,10 @@ md_gen_uniform_el_iso(md_t *md)
   float Vs  = 2000;
   float rho = 1500;
 
+  //float Vp  = 6000;
+  //float Vs  = 3464;
+  //float rho = 2670;
+
   for (size_t k=0; k<nz; k++)
   {
     for (size_t j=0; j<ny; j++)

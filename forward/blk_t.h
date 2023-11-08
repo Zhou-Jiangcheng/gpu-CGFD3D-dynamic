@@ -39,7 +39,7 @@ typedef struct
   gd_t *gd;
 
   // grid metrics: jac, xi_x, etc
-  gdcurv_metric_t *gdcurv_metric;
+  gd_metric_t *gd_metric;
 
   // media: rho, lambda, mu etc
   md_t *md;

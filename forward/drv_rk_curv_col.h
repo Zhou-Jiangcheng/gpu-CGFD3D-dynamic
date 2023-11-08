@@ -1,5 +1,5 @@
-#ifndef SV_EQ1ST_CURV_COL_H
-#define SV_EQ1ST_CURV_COL_H
+#ifndef DRV_RK_CURV_COL_H
+#define DRV_RK_CURV_COL_H
 
 #include "fd_t.h"
 #include "gd_info.h"
@@ -18,10 +18,10 @@
  *************************************************/
 
 void
-sv_eq1st_curv_col_allstep(
-  fd_t            *fd,
-  gdinfo_t        *gdinfo,
-  gdcurv_metric_t *metric,
+drv_rk_curv_col_allstep(
+  fd_t        *fd,
+  gdinfo_t    *gdinfo,
+  gd_metric_t *metric,
   md_t      *md,
   bdryfree_t *bdryfree,
   bdrypml_t  *bdrypml,
@@ -45,8 +45,5 @@ sv_eq1st_curv_col_allstep(
   int qc_check_nan_num_of_step,
   const int output_all, // qc all var
   const int verbose);
-
-int
-sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md);
 
 #endif

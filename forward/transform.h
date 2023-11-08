@@ -10,7 +10,7 @@
 int 
 wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d, 
                     float *f_cur_d, float *f_rhs_d, fault_wav_t FW, 
-                    int i0, fault_t F, gdcurv_metric_t metric_d, gdinfo_t gdinfo_d);
+                    int i0, fault_t F, gd_metric_t metric_d, gdinfo_t gdinfo_d);
 
 __global__ void 
 wave2fault_gpu(float * Vx,  float * Vy,  float * Vz,
@@ -35,7 +35,7 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vz,
 int
 fault2wave_onestage(float *w_cur_d, wav_t wav_d, 
                     float *f_cur_d, fault_wav_t FW, 
-                    int i0, fault_t F, gdcurv_metric_t metric_d, gdinfo_t gdinfo_d);
+                    int i0, fault_t F, gd_metric_t metric_d, gdinfo_t gdinfo_d);
 
 __global__ void 
 fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,

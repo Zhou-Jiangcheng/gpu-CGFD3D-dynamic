@@ -140,11 +140,11 @@ int init_fd_device(fd_t *fd, fd_device_t *fd_device_d)
   return 0;
 }
 
-int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
+int init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d)
 {
   size_t siz_volume = metric->siz_volume;
 
-  memcpy(metric_d,metric,sizeof(gdcurv_metric_t));
+  memcpy(metric_d,metric,sizeof(gd_metric_t));
   metric_d->jac     = (float *) cuda_malloc(sizeof(float)*siz_volume);
   metric_d->xi_x    = (float *) cuda_malloc(sizeof(float)*siz_volume);
   metric_d->xi_y    = (float *) cuda_malloc(sizeof(float)*siz_volume);
@@ -576,7 +576,7 @@ int dealloc_fd_device(fd_device_t fd_device_d)
 
   return 0;
 }
-int dealloc_metric_device(gdcurv_metric_t metric_d)
+int dealloc_metric_device(gd_metric_t metric_d)
 {
   CUDACHECK(cudaFree(metric_d.jac   )); 
   CUDACHECK(cudaFree(metric_d.xi_x  )); 

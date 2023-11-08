@@ -5,30 +5,30 @@
 #include <mpi.h>
 
 #include "fdlib_math.h"
-#include "sv_eq1st_curv_col_el_iso_fault_gpu.h"
+#include "sv_curv_col_el_iso_fault_gpu.h"
 #include "cuda_common.h"
 
 int 
-sv_eq1st_curv_col_el_iso_fault_onestage(
-                         float *w_cur_d,
-                         float *w_rhs_d, 
-                         float *f_cur_d,
-                         float *f_rhs_d, 
-                         int i0,
-                         int isfree,
-                         int imethod,
-                         wav_t  wav_d,
-                         fault_wav_t FW,
-                         fault_t F,
-                         fault_coef_t FC,
-                         gdinfo_t  gdinfo_d,
-                         gdcurv_metric_t metric_d,
-                         md_t md_d,
-                         bdryfree_t bdryfree_d,
-                         fd_op_t *fdx_op,
-                         fd_op_t *fdy_op,
-                         fd_op_t *fdz_op,
-                         const int myid, const int verbose)
+sv_curv_col_el_iso_fault_onestage(
+                     float *w_cur_d,
+                     float *w_rhs_d, 
+                     float *f_cur_d,
+                     float *f_rhs_d, 
+                     int i0,
+                     int isfree,
+                     int imethod,
+                     wav_t  wav_d,
+                     fault_wav_t FW,
+                     fault_t F,
+                     fault_coef_t FC,
+                     gdinfo_t  gdinfo_d,
+                     gd_metric_t metric_d,
+                     md_t md_d,
+                     bdryfree_t bdryfree_d,
+                     fd_op_t *fdx_op,
+                     fd_op_t *fdy_op,
+                     fd_op_t *fdz_op,
+                     const int myid, const int verbose)
 {
   // local pointer get each vars
   float *Vx  = w_cur_d + wav_d.Vx_pos;
@@ -114,22 +114,22 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu <<<grid, block>>>(
-                                                Txx, Tyy, Tzz,
-                                                Tyz, Txz, Txy, 
-                                                hVx, hVy, hVz, 
-                                                f_T2x, f_T2y, f_T2z,
-                                                f_T3x, f_T3y, f_T3z,
-                                                f_hVx, f_hVy, f_hVz, 
-                                                f_T1x, f_T1y, f_T1z,
-                                                xi_x, xi_y, xi_z,
-                                                et_x, et_y, et_z, 
-                                                zt_x, zt_y, zt_z,
-                                                jac3d, slw3d, 
-                                                F, FC, i0, isfree,
-                                                nj1, nj, nk1, nk, ny, 
-                                                siz_line, siz_slice, siz_slice_yz,
-                                                idir, jdir, kdir);
+    sv_curv_col_el_iso_rhs_fault_velo_gpu <<<grid, block>>>(
+                                           Txx, Tyy, Tzz,
+                                           Tyz, Txz, Txy, 
+                                           hVx, hVy, hVz, 
+                                           f_T2x, f_T2y, f_T2z,
+                                           f_T3x, f_T3y, f_T3z,
+                                           f_hVx, f_hVy, f_hVz, 
+                                           f_T1x, f_T1y, f_T1z,
+                                           xi_x, xi_y, xi_z,
+                                           et_x, et_y, et_z, 
+                                           zt_x, zt_y, zt_z,
+                                           jac3d, slw3d, 
+                                           F, FC, i0, isfree,
+                                           nj1, nj, nk1, nk, ny, 
+                                           siz_line, siz_slice, siz_slice_yz,
+                                           idir, jdir, kdir);
     CUDACHECK( cudaDeviceSynchronize() );
   }
 
@@ -140,43 +140,43 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
     grid.y = (nk+block.y-1)/block.y;
     if(idir == 1) 
     {
-      sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu <<<grid, block>>>(
-                                                       Vx, Vy, Vz, 
-                                                       hTxx, hTyy, hTzz, 
-                                                       hTyz, hTxz, hTxy,
-                                                       f_Vx, f_Vy, f_Vz,
-                                                       f_hT2x, f_hT2y, f_hT2z,
-                                                       f_hT3x, f_hT3y, f_hT3z, 
-                                                       f_hT1x, f_hT1y, f_hT1z,
-                                                       xi_x, xi_y, xi_z, 
-                                                       et_x, et_y, et_z, 
-                                                       zt_x, zt_y, zt_z,
-                                                       lam3d, mu3d, slw3d, 
-                                                       matVx2Vz, matVy2Vz,
-                                                       i0, isfree, imethod, F, FC,
-                                                       nj1, nj, nk1, nk, ny, 
-                                                       siz_line, siz_slice, siz_slice_yz,
-                                                       jdir, kdir);
+      sv_curv_col_el_iso_rhs_fault_stress_F_gpu <<<grid, block>>>(
+                                                Vx, Vy, Vz, 
+                                                hTxx, hTyy, hTzz, 
+                                                hTyz, hTxz, hTxy,
+                                                f_Vx, f_Vy, f_Vz,
+                                                f_hT2x, f_hT2y, f_hT2z,
+                                                f_hT3x, f_hT3y, f_hT3z, 
+                                                f_hT1x, f_hT1y, f_hT1z,
+                                                xi_x, xi_y, xi_z, 
+                                                et_x, et_y, et_z, 
+                                                zt_x, zt_y, zt_z,
+                                                lam3d, mu3d, slw3d, 
+                                                matVx2Vz, matVy2Vz,
+                                                i0, isfree, imethod, F, FC,
+                                                nj1, nj, nk1, nk, ny, 
+                                                siz_line, siz_slice, siz_slice_yz,
+                                                jdir, kdir);
     }
     if(idir == 0) 
     {
-      sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu <<<grid, block>>>(
-                                                       Vx, Vy, Vz, 
-                                                       hTxx, hTyy, hTzz,
-                                                       hTyz, hTxz, hTxy,
-                                                       f_Vx, f_Vy, f_Vz,
-                                                       f_hT2x, f_hT2y, f_hT2z,
-                                                       f_hT3x, f_hT3y, f_hT3z,
-                                                       f_hT1x, f_hT1y, f_hT1z,
-                                                       xi_x, xi_y, xi_z,
-                                                       et_x, et_y, et_z,
-                                                       zt_x, zt_y, zt_z,
-                                                       lam3d, mu3d, slw3d,
-                                                       matVx2Vz, matVy2Vz, 
-                                                       i0, isfree, imethod, F, FC,
-                                                       nj1, nj, nk1, nk, ny, 
-                                                       siz_line, siz_slice, siz_slice_yz,
-                                                       jdir, kdir);
+      sv_curv_col_el_iso_rhs_fault_stress_B_gpu <<<grid, block>>>(
+                                                Vx, Vy, Vz, 
+                                                hTxx, hTyy, hTzz,
+                                                hTyz, hTxz, hTxy,
+                                                f_Vx, f_Vy, f_Vz,
+                                                f_hT2x, f_hT2y, f_hT2z,
+                                                f_hT3x, f_hT3y, f_hT3z,
+                                                f_hT1x, f_hT1y, f_hT1z,
+                                                xi_x, xi_y, xi_z,
+                                                et_x, et_y, et_z,
+                                                zt_x, zt_y, zt_z,
+                                                lam3d, mu3d, slw3d,
+                                                matVx2Vz, matVy2Vz, 
+                                                i0, isfree, imethod, F, FC,
+                                                nj1, nj, nk1, nk, ny, 
+                                                siz_line, siz_slice, siz_slice_yz,
+                                                jdir, kdir);
     }
     CUDACHECK( cudaDeviceSynchronize() );
   }
@@ -185,7 +185,7 @@ sv_eq1st_curv_col_el_iso_fault_onestage(
 }
 
 __global__
-void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
+void sv_curv_col_el_iso_rhs_fault_velo_gpu(
                        float * Txx, float * Tyy, float * Tzz,
                        float * Tyz, float * Txz, float * Txy,
                        float * hVx, float * hVy, float * hVz,
@@ -420,7 +420,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_velo_gpu(
 }
 
 __global__
-void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
+void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        float * Vx, float * Vy, float * Vz,
                        float * hTxx, float * hTyy, float * hTzz,
                        float * hTyz, float * hTxz, float * hTxy,
@@ -1139,7 +1139,7 @@ void sv_eq1st_curv_col_el_iso_rhs_fault_stress_F_gpu(
 }
 
 __global__
-void sv_eq1st_curv_col_el_iso_rhs_fault_stress_B_gpu(
+void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        float * Vx, float * Vy, float * Vz,
                        float * hTxx, float * hTyy, float * hTzz,
                        float * hTyz, float * hTxz, float * hTxy,

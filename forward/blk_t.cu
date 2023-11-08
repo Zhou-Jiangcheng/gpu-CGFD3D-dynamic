@@ -19,23 +19,23 @@ blk_init(blk_t *blk,
   int ierr = 0;
 
   // alloc struct vars
-  blk->fd            = (fd_t *)malloc(sizeof(fd_t));
-  blk->mympi         = (mympi_t *)malloc(sizeof(mympi_t));
-  blk->gdinfo        = (gdinfo_t *)malloc(sizeof(gdinfo_t));
-  blk->gd            = (gd_t        *)malloc(sizeof(gd_t     ));
-  blk->gdcurv_metric = (gdcurv_metric_t *)malloc(sizeof(gdcurv_metric_t));
-  blk->md            = (md_t      *)malloc(sizeof(md_t     ));
-  blk->wav           = (wav_t      *)malloc(sizeof(wav_t     ));
-  blk->bdryfree      = (bdryfree_t *)malloc(sizeof(bdryfree_t ));
-  blk->bdrypml       = (bdrypml_t  *)malloc(sizeof(bdrypml_t ));
-  blk->iorecv        = (iorecv_t   *)malloc(sizeof(iorecv_t ));
-  blk->ioline        = (ioline_t   *)malloc(sizeof(ioline_t ));
-  blk->iofault       = (iofault_t  *)malloc(sizeof(iofault_t ));
-  blk->ioslice       = (ioslice_t  *)malloc(sizeof(ioslice_t ));
-  blk->iosnap        = (iosnap_t   *)malloc(sizeof(iosnap_t ));
-  blk->fault         = (fault_t    *)malloc(sizeof(fault_t ));
-  blk->fault_coef    = (fault_coef_t  *)malloc(sizeof(fault_coef_t ));
-  blk->fault_wav     = (fault_wav_t   *)malloc(sizeof(fault_wav_t ));
+  blk->fd         = (fd_t         *) malloc(sizeof(fd_t));
+  blk->mympi      = (mympi_t      *) malloc(sizeof(mympi_t));
+  blk->gdinfo     = (gdinfo_t     *) malloc(sizeof(gdinfo_t));
+  blk->gd         = (gd_t         *) malloc(sizeof(gd_t));
+  blk->gd_metric  = (gd_metric_t  *) malloc(sizeof(gd_metric_t));
+  blk->md         = (md_t         *) malloc(sizeof(md_t));
+  blk->wav        = (wav_t        *) malloc(sizeof(wav_t));
+  blk->bdryfree   = (bdryfree_t   *) malloc(sizeof(bdryfree_t));
+  blk->bdrypml    = (bdrypml_t    *) malloc(sizeof(bdrypml_t));
+  blk->iorecv     = (iorecv_t     *) malloc(sizeof(iorecv_t));
+  blk->ioline     = (ioline_t     *) malloc(sizeof(ioline_t));
+  blk->iofault    = (iofault_t    *) malloc(sizeof(iofault_t));
+  blk->ioslice    = (ioslice_t    *) malloc(sizeof(ioslice_t));
+  blk->iosnap     = (iosnap_t     *) malloc(sizeof(iosnap_t));
+  blk->fault      = (fault_t      *) malloc(sizeof(fault_t));
+  blk->fault_coef = (fault_coef_t *) malloc(sizeof(fault_coef_t));
+  blk->fault_wav  = (fault_wav_t  *) malloc(sizeof(fault_wav_t));
 
   sprintf(blk->name, "%s", "single");
 

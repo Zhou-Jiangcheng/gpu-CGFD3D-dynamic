@@ -10,7 +10,7 @@
 
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
-#include "sv_eq1st_curv_col_el_iso_gpu.h"
+#include "sv_curv_col_el_iso_gpu.h"
 #include "cuda_common.h"
 
 //#define SV_EQ1ST_CURV_COLGRD_ISO_DEBUG
@@ -20,13 +20,13 @@
  ******************************************************************************/
 
 void
-sv_eq1st_curv_col_el_iso_onestage(
+sv_curv_col_el_iso_onestage(
   float *w_cur_d,
   float *rhs_d, 
   wav_t  wav_d,
   gdinfo_t  gdinfo_d,
   fd_device_t fd_device_d,
-  gdcurv_metric_t metric_d,
+  gd_metric_t metric_d,
   md_t md_d,
   bdryfree_t bdryfree_d,
   bdrypml_t  bdrypml_d,
@@ -152,7 +152,7 @@ sv_eq1st_curv_col_el_iso_onestage(
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
     grid.z = (nk+block.z-1)/block.z;
-    sv_eq1st_curv_col_el_iso_rhs_inner_gpu <<<grid, block>>> (
+    sv_curv_col_el_iso_rhs_inner_gpu <<<grid, block>>> (
                         Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                         hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
@@ -175,7 +175,7 @@ sv_eq1st_curv_col_el_iso_onestage(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
                           Txx,Tyy,Tzz,Txz,Tyz,Txy,hVx,hVy,hVz,
                           xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                           jac3d, slw3d,
@@ -193,7 +193,7 @@ sv_eq1st_curv_col_el_iso_onestage(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_rhs_vlow_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_iso_rhs_vlow_z2_gpu  <<<grid, block>>> (
                         Vx,Vy,Vz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                         lam3d, mu3d, slw3d,
@@ -208,7 +208,7 @@ sv_eq1st_curv_col_el_iso_onestage(
   // cfs-pml, loop face inside
   if (bdrypml_d.is_enable == 1)
   {
-    sv_eq1st_curv_col_el_iso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
+    sv_curv_col_el_iso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                                         hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                                         lam3d, mu3d, slw3d,
@@ -229,7 +229,7 @@ sv_eq1st_curv_col_el_iso_onestage(
  ******************************************************************************/
 
 __global__ void
-sv_eq1st_curv_col_el_iso_rhs_inner_gpu(
+sv_curv_col_el_iso_rhs_inner_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -398,7 +398,7 @@ sv_eq1st_curv_col_el_iso_rhs_inner_gpu(
  */
 
 __global__ void
-sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
+sv_curv_col_el_iso_rhs_timg_z2_gpu(
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
     float * hVx , float * hVy , float * hVz ,
@@ -606,7 +606,7 @@ sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu(
  */
 
 __global__ void
-sv_eq1st_curv_col_el_iso_rhs_vlow_z2_gpu(
+sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float * hTxx, float * hTyy, float * hTzz,
     float * hTxz, float * hTyz, float * hTxy,
@@ -757,7 +757,7 @@ sv_eq1st_curv_col_el_iso_rhs_vlow_z2_gpu(
  */
 
 void
-sv_eq1st_curv_col_el_iso_rhs_cfspml(
+sv_curv_col_el_iso_rhs_cfspml(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -802,7 +802,7 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml(
         grid.y = (abs_nj+block.y-1)/block.y;
         grid.z = (abs_nk+block.z-1)/block.z;
 
-        sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu <<<grid, block>>> (
+        sv_curv_col_el_iso_rhs_cfspml_gpu <<<grid, block>>> (
                                 idim, iside,
                                 Vx , Vy , Vz , Txx,  Tyy,  Tzz,
                                 Txz,  Tyz,  Txy, hVx , hVy , hVz,
@@ -822,7 +822,7 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml(
 }
 
 __global__ void
-sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
+sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
                                         float *  Vx , float *  Vy , float *  Vz ,
                                         float *  Txx, float *  Tyy, float *  Tzz,
                                         float *  Txz, float *  Tyz, float *  Txy,
@@ -1294,11 +1294,11 @@ sv_eq1st_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
  ******************************************************************************/
 
 __global__ void
-sv_eq1st_curv_col_el_iso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
-                                     gdcurv_metric_t metric_d,
-                                     md_t       md_d,
-                                     bdryfree_t      bdryfree_d,
-                                     const int verbose)
+sv_curv_col_el_iso_dvh2dvz_gpu(gdinfo_t    gdinfo_d,
+                               gd_metric_t metric_d,
+                               md_t       md_d,
+                               bdryfree_t      bdryfree_d,
+                               const int verbose)
 {
   int ni1 = gdinfo_d.ni1;
   int ni2 = gdinfo_d.ni2;

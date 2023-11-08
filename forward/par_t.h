@@ -223,9 +223,6 @@ typedef struct{
 void
 par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose);
 
-void
-par_read_from_file(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose);
-
 int 
 par_read_from_str(const char *str, par_t *par);
 
