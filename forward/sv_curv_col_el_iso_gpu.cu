@@ -19,7 +19,7 @@
  * perform one stage calculation of rhs
  ******************************************************************************/
 
-void
+int
 sv_curv_col_el_iso_onestage(
   float *w_cur_d,
   float *rhs_d, 
@@ -221,7 +221,7 @@ sv_curv_col_el_iso_onestage(
   }
   
   // end func
-  return;
+  return 0;
 }
 
 /*******************************************************************************
@@ -756,7 +756,7 @@ sv_curv_col_el_iso_rhs_vlow_z2_gpu(
  * cfspml, reference to each pml var inside function
  */
 
-void
+int
 sv_curv_col_el_iso_rhs_cfspml(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
@@ -819,6 +819,8 @@ sv_curv_col_el_iso_rhs_cfspml(
       }
     } // iside
   } // idim
+
+  return 0;
 }
 
 __global__ void

@@ -13,7 +13,7 @@
 /*
  * for MPI, master read, broadcast to all procs
  */
-void
+int
 par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
 {
   char *str;
@@ -53,6 +53,8 @@ par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
   par_read_from_str(str, par);
 
   free(str);
+
+  return 0;
 }
 
 /*
@@ -294,8 +296,8 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
-      par->fault_i_global_index = par->number_of_total_grid_points_x/2;
-      par->grid_generation_itype = PAR_GRID_FAULT_PLANE;
+      par->fault_i_global_index = (int) par->number_of_total_grid_points_x/2;
+      par->grid_generation_itype = PAR_FAULT_PLANE;
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
       }
@@ -308,7 +310,7 @@ par_read_from_str(const char *str, par_t *par)
     }
     // 3D grid import
     if (subitem = cJSON_GetObjectItem(item, "grid_with_fault")) {
-      par->grid_generation_itype = PAR_GRID_3D_GRID;
+      par->grid_generation_itype = PAR_GRID_WITH_FAULT;
       if (thirditem = cJSON_GetObjectItem(subitem, "grid_file")) {
          sprintf(par->grid_coord_nc, "%s", thirditem->valuestring);
       }
@@ -849,7 +851,7 @@ par_read_from_str(const char *str, par_t *par)
 /*
  * funcs to read cfspml para from json str
  */
-void 
+int 
 par_read_json_cfspml(cJSON *item,
       int *nlay, float *amax, float *bmax, float *vel)
 {
@@ -871,6 +873,8 @@ par_read_json_cfspml(cJSON *item,
   {
     *vel = subitem->valuedouble;
   }
+
+  return 0;
 }
 
 int

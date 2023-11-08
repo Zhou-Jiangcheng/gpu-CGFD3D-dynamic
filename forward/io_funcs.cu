@@ -536,7 +536,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
   return ierr;
 }
 
-void
+int
 io_snapshot_locate(gdinfo_t *gdinfo,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,
@@ -673,6 +673,8 @@ io_snapshot_locate(gdinfo_t *gdinfo,
   } // loop all snap
 
   iosnap->num_of_snap = isnap;
+
+  return 0;
 }
 
 /*

@@ -111,18 +111,18 @@ typedef struct {
  * function prototype
  *************************************************/
 
-void 
+int 
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv);
 
-void 
+int 
 gd_curv_metric_init(gdinfo_t    *gdinfo,
                     gd_metric_t *metric);
-void
+int
 gd_curv_metric_cal(gdinfo_t    *gdinfo,
                    gd_t        *gdcurv,
                    gd_metric_t *metric);
 
-void
+int
 gd_curv_exchange(gdinfo_t *gdinfo,
                  float *g3d,
                  int ncmp,
@@ -130,7 +130,7 @@ gd_curv_exchange(gdinfo_t *gdinfo,
                  MPI_Comm topocomm);
 
 
-void
+int
 gd_curv_gen_fault(
   gd_t *gdcurv,
   gdinfo_t *gdinfo,
@@ -138,18 +138,18 @@ gd_curv_gen_fault(
   float dh,
   char *in_grid_fault_nc);
 
-void
+int
 nc_read_fault_geometry(
         float *fault_x, float *fault_y, float *fault_z, 
         char *in_grid_fault_nc, gdinfo_t *gdinfo);
 
-void
+int
 gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir);
 
-void
+int
 gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir);
 
-void
+int
 gd_curv_coord_export(
   gdinfo_t *gdinfo,
   gd_t *gdcurv,
@@ -157,14 +157,14 @@ gd_curv_coord_export(
   char *output_dir);
 
 
-void
+int
 gd_curv_metric_export(gdinfo_t    *gdinfo,
                       gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 
 
-void
+int
 gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
 
 int

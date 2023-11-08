@@ -70,7 +70,7 @@ blk_set_output(blk_t *blk,
  * mpi message for macdrp scheme with rk
  *********************************************************************/
 
-void
+int
 blk_macdrp_mesg_init(mympi_t *mympi,
                      fd_t *fd,
                      int ni,
@@ -270,7 +270,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
     }
   }
 
-  return;
+  return 0;
 }
 
 int 

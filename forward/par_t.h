@@ -12,8 +12,8 @@
 #define PAR_MAX_STRLEN 1000
 #define PAR_TYPE_STRLEN 50
 
-#define PAR_GRID_FAULT_PLANE  1
-#define PAR_GRID_3D_GRID  2
+#define PAR_FAULT_PLANE  1
+#define PAR_GRID_WITH_FAULT  2
 
 #define PAR_METRIC_CALCULATE 1
 #define PAR_METRIC_IMPORT    2
@@ -220,13 +220,13 @@ typedef struct{
   int output_all;
 } par_t;
 
-void
+int
 par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose);
 
 int 
 par_read_from_str(const char *str, par_t *par);
 
-void 
+int 
 par_read_json_cfspml(cJSON *item,
       int *nlay, float *amax, float *bmax, float *vel);
 

@@ -22,6 +22,8 @@ GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
 
+rm -rf ${PROJDIR}
+
 #-- create dir
 mkdir -p $PROJDIR
 mkdir -p $OUTPUT_DIR

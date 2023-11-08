@@ -207,7 +207,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
                 char *output_fname_part,
                 char *output_dir);
 
-void
+int
 io_snapshot_locate(gdinfo_t *gdinfo,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,

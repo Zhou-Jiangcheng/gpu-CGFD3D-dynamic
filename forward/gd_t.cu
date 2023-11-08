@@ -17,7 +17,7 @@
 #include "gd_t.h"
 #include "constants.h"
 
-void 
+int 
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
 {
   /*
@@ -90,10 +90,11 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
       fprintf(stderr,"Error: failed to alloc coord AABB vars\n");
       fflush(stderr);
   }
-  return;
+
+  return 0;
 }
 
-void 
+int 
 gd_curv_metric_init(gdinfo_t    *gdinfo,
                     gd_metric_t *metric)
 {
@@ -181,12 +182,14 @@ gd_curv_metric_init(gdinfo_t    *gdinfo,
   // set pointer
   metric->cmp_pos  = cmp_pos;
   metric->cmp_name = cmp_name;
+
+  return 0;
 }
 
 //
 // need to change to use fdlib_math.c
 //
-void
+int
 gd_curv_metric_cal(gdinfo_t    *gdinfo,
                    gd_t        *gdcurv,
                    gd_metric_t *metric)
@@ -389,12 +392,14 @@ gd_curv_metric_cal(gdinfo_t    *gdinfo,
       }
     }
   }
+
+  return 0;
 }
 
 //
 // exchange metics/coords
 //
-void
+int
 gd_curv_exchange(gdinfo_t *gdinfo,
                  float *g3d,
                  int ncmp,
@@ -482,9 +487,11 @@ gd_curv_exchange(gdinfo_t *gdinfo,
                  &g3d[r_iptr],1,DTypeZL,neighid[4],320,
                  topocomm,&status);
   }
+
+  return 0;
 }
 
-void
+int
 gd_curv_gen_fault(gd_t *gdcurv,
                   gdinfo_t *gdinfo,
                   int  num_of_x_points,
@@ -673,10 +680,10 @@ gd_curv_gen_fault(gd_t *gdcurv,
   free(fault_z);
   free(xline);
 
-  return;
+  return 0;
 }
 
-void
+int
 nc_read_fault_geometry(
       float *fault_x, float *fault_y, float *fault_z,
       char *in_grid_fault_nc, gdinfo_t *gdinfo)
@@ -704,13 +711,13 @@ nc_read_fault_geometry(
 
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return;
+  return 0;
 }
 
 //
 // input/output
 //
-void
+int
 gd_curv_coord_export(
   gdinfo_t *gdinfo,
   gd_t *gdcurv,
@@ -779,10 +786,10 @@ gd_curv_coord_export(
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return;
+  return 0;
 }
 
-void
+int
 gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir)
 {
   // construct file name
@@ -808,11 +815,11 @@ gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir)
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return;
+  return 0;
 }
 
 
-void
+int
 gd_curv_metric_export(gdinfo_t    *gdinfo,
                       gd_metric_t *metric,
                       char *fname_coords,
@@ -879,9 +886,11 @@ gd_curv_metric_export(gdinfo_t    *gdinfo,
   
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
+
+  return 0;
 }
 
-void
+int
 gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir)
 {
   // construct file name
@@ -907,15 +916,13 @@ gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir)
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return;
+  return 0;
 }
 
 /*
  * set min/max of grid for loc
  */
-
-
-void
+int
 gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
 {
 
@@ -1084,7 +1091,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
     }
   } // k_tile
 
-  return;
+  return 0;
 }
 
 /*

@@ -25,7 +25,7 @@
  *  simple MPI exchange without computing-communication overlapping
  ******************************************************************************/
 
-void
+int
 drv_rk_curv_col_allstep(
   fd_t         *fd,
   gdinfo_t     *gdinfo,
@@ -610,6 +610,7 @@ drv_rk_curv_col_allstep(
   io_fault_nc_close(&iofault_nc);
   io_slice_nc_close(&ioslice_nc);
   io_snap_nc_close(&iosnap_nc);
-  return;
+
+  return 0;
 }
 

@@ -15,7 +15,7 @@
  * function prototype
  *************************************************/
 
-void
+int
 sv_curv_col_el_iso_onestage(
   float  *w_cur_d,
   float  *rhs_d, 
@@ -83,7 +83,7 @@ sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     int idir, int jdir, int kdir,
     const int myid, const int verbose);
 
-void
+int
 sv_curv_col_el_iso_rhs_cfspml(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,

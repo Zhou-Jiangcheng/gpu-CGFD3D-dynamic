@@ -110,7 +110,7 @@ blk_set_output(blk_t *blk,
                char *media_export_dir,
                const int verbose);
 
-void
+int
 blk_macdrp_mesg_init(mympi_t *mympi,
                 fd_t *fd,
                 int ni,

@@ -90,7 +90,7 @@ bdry_pml_cal_a(float x, float L, float amax);
 float
 bdry_pml_cal_b(float x, float L, float bmax);
 
-void
+int
 bdry_pml_set(gdinfo_t *gdinfo,
              gd_t *gd,
              wav_t *wav,
@@ -103,7 +103,7 @@ bdry_pml_set(gdinfo_t *gdinfo,
              float in_velocity[][2], //
              int verbose);
 
-void
+int
 bdry_pml_set_stg(gdinfo_t *gdinfo,
                  gd_t *gd,
                  wav_t *wav,
@@ -117,7 +117,7 @@ bdry_pml_set_stg(gdinfo_t *gdinfo,
                  int verbose);
 
 // alloc auxvar
-void
+int
 bdry_pml_auxvar_init(int nx, int ny, int nz, 
                      wav_t *wav,
                      bdrypml_auxvar_t *auxvar,

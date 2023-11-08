@@ -49,7 +49,7 @@ mympi_set(mympi_t *mympi,
   return ierr;
 }
 
-void
+int
 mympi_print(mympi_t *mympi)
 {    
   fprintf(stdout, "\n-------------------------------------------------------\n");
@@ -61,5 +61,5 @@ mympi_print(mympi_t *mympi)
   fprintf(stdout, " neighid_y[%d,%d]\n", mympi->neighid[2], mympi->neighid[3]);
   fprintf(stdout, " neighid_z[%d,%d]\n", mympi->neighid[4], mympi->neighid[5]);
   
-  return;
+  return 0;
 }

@@ -59,7 +59,7 @@ bdry_pml_cal_b(float x, float L, float bmax)
   return (x<0) ? 1.0f : (float) (1.0 + (bmax-1.0) * pow(x/L, CONSPB));
 }
 
-void
+int
 bdry_pml_set(gdinfo_t *gdinfo,
              gd_t *gd,
              wav_t *wav,
@@ -233,9 +233,10 @@ bdry_pml_set(gdinfo_t *gdinfo,
     } // iside
   } // idim
 
+  return 0;
 }
 
-void
+int
 bdry_pml_set_stg(gdinfo_t *gdinfo,
                  gd_t *gd,
                  wav_t *wav,
@@ -438,10 +439,11 @@ bdry_pml_set_stg(gdinfo_t *gdinfo,
     } // iside
   } // idim
 
+  return 0;
 }
 
 // alloc auxvar
-void
+int
 bdry_pml_auxvar_init(int nx, int ny, int nz, 
                      wav_t *wav,
                      bdrypml_auxvar_t *auxvar,
@@ -477,6 +479,8 @@ bdry_pml_auxvar_init(int nx, int ny, int nz,
   } else { // nx,ny,nz has 0
     auxvar->var = NULL;
   }
+
+  return 0;
 }
 
 /*

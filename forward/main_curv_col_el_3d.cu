@@ -158,7 +158,7 @@ int main(int argc, char** argv)
   // generate grid coord
   switch (par->grid_generation_itype)
   {
-    case PAR_GRID_FAULT_PLANE : {
+    case PAR_FAULT_PLANE : {
 
         if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
         gd_curv_gen_fault(gdcurv, gdinfo, par->number_of_total_grid_points_x, par->dh, par->fault_coord_nc);

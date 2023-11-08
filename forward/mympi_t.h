@@ -66,7 +66,7 @@ mympi_set(mympi_t *mympi,
           MPI_Comm comm, 
           const int myid, const int verbose);
 
-void
+int
 mympi_print(mympi_t *mympi);
 
 #endif

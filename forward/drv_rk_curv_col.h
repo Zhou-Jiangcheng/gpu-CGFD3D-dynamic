@@ -17,7 +17,7 @@
  * function prototype
  *************************************************/
 
-void
+int
 drv_rk_curv_col_allstep(
   fd_t        *fd,
   gdinfo_t    *gdinfo,
