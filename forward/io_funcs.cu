@@ -27,8 +27,7 @@
  * read in station list file and locate station
  */
 int
-io_recv_read_locate(gdinfo_t  *gdinfo,
-                    gd_t      *gd,
+io_recv_read_locate(gdcurv_t      *gdcurv,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
@@ -110,13 +109,8 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     //computational is big, use GPU
     fprintf(stdout,"recv has physical coords, maybe computational big, use GPU\n");
     fprintf(stdout,"recv_by_coords is %d\n",recv_by_coords);
-    gd_t gd_d;
-    if (gd->type == GD_TYPE_CURV) {
-      init_gdcurv_device(gd,&gd_d);
-    }
-    //init_gdinfo_deviece
-    gdinfo_t gdinfo_d;
-    init_gdinfo_device(gdinfo,&gdinfo_d);
+    gdcurv_t gdcurv_d;
+    init_gdcurv_device(gdcurv,&gdcurv_d);
 
     all_index_tmp  = (int *)   malloc(sizeof(int) * CONST_NDIM * num_recv);
     all_inc_tmp    = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
@@ -133,12 +127,12 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     dim3 block(256);
     dim3 grid;
     grid.x = (num_recv+block.x-1) / block.x;
-    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gdinfo_d, gd_d, 
+    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gdcurv_d, 
                          flag_indx_d, flag_depth_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     grid.x = (num_recv+block.x-1) / block.x;
     recv_coords_to_glob_indx<<<grid, block>>> (all_coords_d, all_index_d, 
-                              all_inc_d, num_recv, gdinfo_d, gd_d, flag_indx_d, comm, myid);
+                              all_inc_d, num_recv, gdcurv_d, flag_indx_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     CUDACHECK(cudaMemcpy(all_coords,all_coords_d,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
     CUDACHECK(cudaMemcpy(all_index_tmp,all_index_d,sizeof(int)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
@@ -150,10 +144,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     MPI_Allreduce(all_index_tmp, all_index, num_recv*CONST_NDIM, MPI_INT, MPI_MAX, comm);
     MPI_Allreduce(all_inc_tmp, all_inc, num_recv*CONST_NDIM, MPI_FLOAT, MPI_SUM, comm);
     //free temp pointer
-    if (gd->type == GD_TYPE_CURV)
-    {
-      dealloc_gdcurv_device(gd_d);
-    }
+    dealloc_gdcurv_device(gdcurv_d);
     CUDACHECK(cudaFree(flag_indx_d));
     CUDACHECK(cudaFree(flag_depth_d));
     CUDACHECK(cudaFree(all_coords_d));
@@ -189,7 +180,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     {
       // if sz is relative to surface, convert to normal index
       if (flag_depth[ir] == 1) {
-        all_coords[3*ir+2] = gdinfo->gnk2 - all_coords[3*ir+2];
+        all_coords[3*ir+2] = gdcurv->gnk2 - all_coords[3*ir+2];
       }
 
       // do not take nearest value, but use smaller value
@@ -211,19 +202,19 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     float rx = all_coords[3*ir+0];
     float ry = all_coords[3*ir+1];
     float rz = all_coords[3*ir+2];
-    if (gd_info_gindx_is_inner(ix,iy,iz,gdinfo) == 1)
+    if (gd_info_gindx_is_inner(ix,iy,iz,gdcurv) == 1)
     {
       // convert to local index w ghost
-      int i_local = gd_info_ind_glphy2lcext_i(ix,gdinfo);
-      int j_local = gd_info_ind_glphy2lcext_j(iy,gdinfo);
-      int k_local = gd_info_ind_glphy2lcext_k(iz,gdinfo);
+      int i_local = gd_info_ind_glphy2lcext_i(ix,gdcurv);
+      int j_local = gd_info_ind_glphy2lcext_j(iy,gdcurv);
+      int k_local = gd_info_ind_glphy2lcext_k(iz,gdcurv);
 
       // get coord
       if (flag_indx[ir] == 1)
       {
-        rx = gd_coord_get_x(gd,i_local,j_local,k_local);
-        ry = gd_coord_get_y(gd,i_local,j_local,k_local);
-        rz = gd_coord_get_z(gd,i_local,j_local,k_local);
+        rx = gd_coord_get_x(gdcurv,i_local,j_local,k_local);
+        ry = gd_coord_get_y(gdcurv,i_local,j_local,k_local);
+        rz = gd_coord_get_z(gdcurv,i_local,j_local,k_local);
       }
 
       int ptr_this = nr_this * CONST_NDIM;
@@ -243,14 +234,14 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
       this_recv->dj = ry_inc;
       this_recv->dk = rz_inc;
 
-      this_recv->indx1d[0] = i_local   + j_local     * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[1] = i_local+1 + j_local     * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[2] = i_local   + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
-      this_recv->indx1d[4] = i_local   + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[5] = i_local+1 + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[6] = i_local   + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
-      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
+      this_recv->indx1d[0] = i_local   + j_local     * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
+      this_recv->indx1d[1] = i_local+1 + j_local     * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
+      this_recv->indx1d[2] = i_local   + (j_local+1) * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
+      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
+      this_recv->indx1d[4] = i_local   + j_local     * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
+      this_recv->indx1d[5] = i_local+1 + j_local     * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
+      this_recv->indx1d[6] = i_local   + (j_local+1) * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
+      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
 
       //fprintf(stdout,"== ir_this=%d,name=%s,i=%d,j=%d,k=%d\n",
       //      nr_this,sta_name[nr_this],i_local,j_local,k_local); fflush(stdout);
@@ -281,8 +272,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
 }
 
 int
-io_line_locate(gdinfo_t *gdinfo,
-               gd_t *gd,
+io_line_locate(gdcurv_t *gdcurv,
                ioline_t *ioline,
                int    num_of_vars,
                int    nt_total,
@@ -316,7 +306,7 @@ io_line_locate(gdinfo_t *gdinfo,
       int gk = receiver_line_index_start[n*CONST_NDIM+2] 
                  + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gdcurv) == 1)
       {
         nr += 1;
       }
@@ -374,20 +364,20 @@ io_line_locate(gdinfo_t *gdinfo,
       int gj = receiver_line_index_start[n*CONST_NDIM+1] + ipt * receiver_line_index_incre[n*CONST_NDIM+1];
       int gk = receiver_line_index_start[n*CONST_NDIM+2] + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gdcurv) == 1)
       {
-        int i = gd_info_ind_glphy2lcext_i(gi,gdinfo);
-        int j = gd_info_ind_glphy2lcext_j(gj,gdinfo);
-        int k = gd_info_ind_glphy2lcext_k(gk,gdinfo);
+        int i = gd_info_ind_glphy2lcext_i(gi,gdcurv);
+        int j = gd_info_ind_glphy2lcext_j(gj,gdcurv);
+        int k = gd_info_ind_glphy2lcext_k(gk,gdcurv);
 
-        int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+        int iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
 
         ioline->recv_seq [m][ir] = ipt;
         ioline->recv_iptr[m][ir] = iptr;
 
-        ioline->recv_x[m][ir] = gd_coord_get_x(gd,i,j,k);
-        ioline->recv_y[m][ir] = gd_coord_get_y(gd,i,j,k);
-        ioline->recv_z[m][ir] = gd_coord_get_z(gd,i,j,k);
+        ioline->recv_x[m][ir] = gd_coord_get_x(gdcurv,i,j,k);
+        ioline->recv_y[m][ir] = gd_coord_get_y(gdcurv,i,j,k);
+        ioline->recv_z[m][ir] = gd_coord_get_z(gdcurv,i,j,k);
 
         ir += 1;
       }
@@ -398,7 +388,7 @@ io_line_locate(gdinfo_t *gdinfo,
 }
 
 int
-io_fault_locate(gdinfo_t *gdinfo, 
+io_fault_locate(gdcurv_t *gdcurv, 
                 iofault_t *iofault,
                 int fault_i_global_indx,
                 char *output_fname_part,
@@ -412,15 +402,15 @@ io_fault_locate(gdinfo_t *gdinfo,
                                                             "fault_fname");
   iofault->num_of_fault = 0;
 
-  if(gd_info_gindx_is_inner_i(fault_i_global_indx, gdinfo)==1)
+  if(gd_info_gindx_is_inner_i(fault_i_global_indx, gdcurv)==1)
   {
-    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_i_global_indx, gdinfo);
+    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_i_global_indx, gdcurv);
     sprintf(iofault->fault_fname[0],"%s/fault_i%d_%s.nc",
               output_dir,fault_i_global_indx,output_fname_part);
 
     iofault->num_of_fault += 1;
 
-    size_t slice_siz = gdinfo->nj * gdinfo->nk;
+    size_t slice_siz = gdcurv->nj * gdcurv->nk;
     iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
                            slice_siz : iofault->siz_max_wrk;
   }
@@ -429,7 +419,7 @@ io_fault_locate(gdinfo_t *gdinfo,
 }
 
 int
-io_slice_locate(gdinfo_t  *gdinfo,
+io_slice_locate(gdcurv_t  *gdcurv,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
                 int  number_of_slice_y,
@@ -472,17 +462,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_x; n++)
   {
     int gi = slice_x_index[n];
-    if (gd_info_gindx_is_inner_i(gi, gdinfo)==1)
+    if (gd_info_gindx_is_inner_i(gi, gdcurv)==1)
     {
       int islc = ioslice->num_of_slice_x;
 
-      ioslice->slice_x_indx[islc]  = gd_info_ind_glphy2lcext_i(gi, gdinfo);
+      ioslice->slice_x_indx[islc]  = gd_info_ind_glphy2lcext_i(gi, gdcurv);
       sprintf(ioslice->slice_x_fname[islc],"%s/slicex_i%d_%s.nc",
                 output_dir,gi,output_fname_part);
 
       ioslice->num_of_slice_x += 1;
 
-      size_t slice_siz = gdinfo->nj * gdinfo->nk;
+      size_t slice_siz = gdcurv->nj * gdcurv->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -492,17 +482,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_y; n++)
   {
     int gj = slice_y_index[n];
-    if (gd_info_gindx_is_inner_j(gj, gdinfo)==1)
+    if (gd_info_gindx_is_inner_j(gj, gdcurv)==1)
     {
       int islc = ioslice->num_of_slice_y;
 
-      ioslice->slice_y_indx[islc]  = gd_info_ind_glphy2lcext_j(gj, gdinfo);
+      ioslice->slice_y_indx[islc]  = gd_info_ind_glphy2lcext_j(gj, gdcurv);
       sprintf(ioslice->slice_y_fname[islc],"%s/slicey_j%d_%s.nc",
                 output_dir,gj,output_fname_part);
 
       ioslice->num_of_slice_y += 1;
 
-      size_t slice_siz = gdinfo->ni * gdinfo->nk;
+      size_t slice_siz = gdcurv->ni * gdcurv->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -512,17 +502,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_z; n++)
   {
     int gk = slice_z_index[n];
-    if (gd_info_gindx_is_inner_k(gk, gdinfo)==1)
+    if (gd_info_gindx_is_inner_k(gk, gdcurv)==1)
     {
       int islc = ioslice->num_of_slice_z;
 
-      ioslice->slice_z_indx[islc]  = gd_info_ind_glphy2lcext_k(gk, gdinfo);
+      ioslice->slice_z_indx[islc]  = gd_info_ind_glphy2lcext_k(gk, gdcurv);
       sprintf(ioslice->slice_z_fname[islc],"%s/slicez_k%d_%s.nc",
                 output_dir,gk,output_fname_part);
 
       ioslice->num_of_slice_z += 1;
 
-      size_t slice_siz = gdinfo->ni * gdinfo->nj;
+      size_t slice_siz = gdcurv->ni * gdcurv->nj;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -532,7 +522,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
 }
 
 int
-io_snapshot_locate(gdinfo_t *gdinfo,
+io_snapshot_locate(gdcurv_t *gdcurv,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,
                     char **snapshot_name,
@@ -587,7 +577,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n3=0; n3<snapshot_index_count[iptr0+2]; n3++)
     {
       int gk = snapshot_index_start[iptr0+2] + n3 * snapshot_index_incre[iptr0+2];
-      if (gd_info_gindx_is_inner_k(gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_k(gk,gdcurv) == 1)
       {
         if (gk1 == -1) {
           gk1 = gk;
@@ -595,7 +585,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngk++;
       }
-      if (gk > gdinfo->gnk2) break; // no need to larger k
+      if (gk > gdcurv->gnk2) break; // no need to larger k
     }
 
     // scan output j-index in this proc
@@ -603,7 +593,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n2=0; n2<snapshot_index_count[iptr0+1]; n2++)
     {
       int gj = snapshot_index_start[iptr0+1] + n2 * snapshot_index_incre[iptr0+1];
-      if (gd_info_gindx_is_inner_j(gj,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_j(gj,gdcurv) == 1)
       {
         if (gj1 == -1) {
           gj1 = gj;
@@ -611,7 +601,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngj++;
       }
-      if (gj > gdinfo->gnj2) break;
+      if (gj > gdcurv->gnj2) break;
     }
 
     // scan output i-index in this proc
@@ -619,7 +609,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n1=0; n1<snapshot_index_count[iptr0+0]; n1++)
     {
       int gi = snapshot_index_start[iptr0+0] + n1 * snapshot_index_incre[iptr0+0];
-      if (gd_info_gindx_is_inner_i(gi,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_i(gi,gdcurv) == 1)
       {
         if (gi1 == -1) {
           gi1 = gi;
@@ -627,15 +617,15 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngi++;
       }
-      if (gi > gdinfo->gni2) break;
+      if (gi > gdcurv->gni2) break;
     }
 
     // if in this proc
     if (ngi>0 && ngj>0 && ngk>0)
     {
-      iosnap->i1[isnap]  = gd_info_ind_glphy2lcext_i(gi1, gdinfo);
-      iosnap->j1[isnap]  = gd_info_ind_glphy2lcext_j(gj1, gdinfo);
-      iosnap->k1[isnap]  = gd_info_ind_glphy2lcext_k(gk1, gdinfo);
+      iosnap->i1[isnap]  = gd_info_ind_glphy2lcext_i(gi1, gdcurv);
+      iosnap->j1[isnap]  = gd_info_ind_glphy2lcext_j(gj1, gdcurv);
+      iosnap->k1[isnap]  = gd_info_ind_glphy2lcext_k(gk1, gdcurv);
       iosnap->ni[isnap]  = ngi;
       iosnap->nj[isnap]  = ngj;
       iosnap->nk[isnap]  = ngk;
@@ -944,7 +934,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 
 int
 io_fault_nc_put(iofault_nc_t *iofault_nc,
-                gdinfo_t     *gdinfo,
+                gdcurv_t     *gdcurv,
                 fault_t  F,
                 float *buff,
                 int   it,
@@ -952,8 +942,8 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 {
   int ierr = 0;
 
-  int   nj  = gdinfo->nj;
-  int   nk  = gdinfo->nk;
+  int   nj  = gdcurv->nj;
+  int   nk  = gdcurv->nk;
 
   size_t startp[] = { it, 0, 0 };
   size_t countp[] = { 1, nk, nj};
@@ -996,14 +986,14 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 
 int
 io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
-                      gdinfo_t     *gdinfo,
+                      gdcurv_t     *gdcurv,
                       fault_t  F,
                       float *buff)
 {
   int ierr = 0;
 
-  int   nj  = gdinfo->nj ;
-  int   nk  = gdinfo->nk ;
+  int nj  = gdcurv->nj ;
+  int nk  = gdcurv->nk ;
 
   size_t size = sizeof(float) * nj * nk; 
 
@@ -1019,7 +1009,7 @@ io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
 int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
-                gdinfo_t     *gdinfo,
+                gdcurv_t     *gdcurv,
                 float *w_end_d,
                 float *buff,
                 int   it,
@@ -1029,18 +1019,18 @@ io_slice_nc_put(ioslice_t    *ioslice,
 {
   int ierr = 0;
 
-  int   ni1 = gdinfo->ni1;
-  int   ni2 = gdinfo->ni2;
-  int   nj1 = gdinfo->nj1;
-  int   nj2 = gdinfo->nj2;
-  int   nk1 = gdinfo->nk1;
-  int   nk2 = gdinfo->nk2;
-  int   ni  = gdinfo->ni ;
-  int   nj  = gdinfo->nj ;
-  int   nk  = gdinfo->nk ;
-  size_t   siz_iy = gdinfo->siz_iy;
-  size_t   siz_iz= gdinfo->siz_iz;
-  size_t   siz_icmp = gdinfo->siz_icmp;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int ni  = gdcurv->ni ;
+  int nj  = gdcurv->nj ;
+  int nk  = gdcurv->nk ;
+  size_t siz_iy = gdcurv->siz_iy;
+  size_t siz_iz = gdcurv->siz_iz;
+  size_t siz_icmp = gdcurv->siz_icmp;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
 
@@ -1146,7 +1136,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
 int
 io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
+               gdcurv_t    *gdcurv,
                md_t    *md,
                wav_t   *wav,
                float *w_end_d,
@@ -1161,9 +1151,9 @@ io_snap_nc_put(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_iy  = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
-  size_t siz_icmp = gdinfo->siz_icmp;
+  size_t siz_iy = gdcurv->siz_iy;
+  size_t siz_iz = gdcurv->siz_iz;
+  size_t siz_icmp = gdcurv->siz_icmp;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1569,7 +1559,7 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
 }
 
 __global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+recv_depth_to_axis(float *all_coords_d, int num_recv, gdcurv_t gdcurv_d, 
                    int *flag_indx, int *flag_depth, MPI_Comm comm, int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
@@ -1579,17 +1569,14 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd
     float sy = all_coords_d[3*ix+1];
     if(flag_indx[ix] == 0 && flag_depth[ix] == 1)
     {
-      if(gd_d.type == GD_TYPE_CURV)
-      {
-        gd_curv_depth_to_axis(&gdinfo_d,&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
-      }
+      gd_curv_depth_to_axis(&gdcurv_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
     }
   }
 }
 
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+                         float *all_inc_d, int num_recv, gdcurv_t gdcurv_d, 
                          int *flag_indx, MPI_Comm comm, int myid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1604,11 +1591,8 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
     float sz = all_coords_d[3*ix+2];
     if(flag_indx[ix] == 0)
     {
-      if (gd_d.type == GD_TYPE_CURV)
-      {
-        gd_curv_coord_to_glob_indx_gpu(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
-      }
-      
+
+      gd_curv_coord_to_glob_indx_gpu(&gdcurv_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
       // keep index to avoid duplicat run
       all_index_d[3*ix+0] = ri_glob;
       all_index_d[3*ix+1] = rj_glob;
@@ -1940,17 +1924,17 @@ iorecv_print(iorecv_t *iorecv)
 }
 
 int
-PG_slice_output(float *PG, gdinfo_t *gdinfo, char *output_dir, char *frame_coords, int *topoid)
+PG_slice_output(float *PG, gdcurv_t *gdcurv, char *output_dir, char *frame_coords, int *topoid)
 {
   // output one time z slice
   // used for PGV PGA and PGD
   // cmp is PGV PGA PGD, component x, y, z
-  int nx = gdinfo->nx; 
-  int ny = gdinfo->ny;
-  int ni = gdinfo->ni; 
-  int nj = gdinfo->nj;
-  int gni1 = gdinfo->gni1; 
-  int gnj1 = gdinfo->gnj1; 
+  int nx = gdcurv->nx; 
+  int ny = gdcurv->ny;
+  int ni = gdcurv->ni; 
+  int nj = gdcurv->nj;
+  int gni1 = gdcurv->gni1; 
+  int gnj1 = gdcurv->gnj1; 
   char PG_cmp[CONST_NDIM_5][CONST_MAX_STRLEN] = {"PGV","PGVh","PGVx","PGVy","PGVz",
                                                  "PGA","PGAh","PGAx","PGAy","PGAz",
                                                  "PGD","PGDh","PGDx","PGDy","PGDz"}; 

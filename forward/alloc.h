@@ -2,7 +2,6 @@
 #define ALLOC_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "fault_info.h"
 #include "fault_wav_t.h"
 #include "gd_t.h"
@@ -12,14 +11,8 @@
 #include "bdry_free.h"
 #include "bdry_pml.h"
 
-int
-init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d);
-
 int 
-init_gdcart_device(gd_t *gdcart, gd_t *gdcart_d);
-
-int 
-init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d);
+init_gdcurv_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d);
 
 int
 init_md_device(md_t *md, md_t *md_d);
@@ -31,34 +24,34 @@ int
 init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d);
 
 int 
-init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_d);
+init_fault_coef_device(gdcurv_t *gdcurv, fault_coef_t *FC, fault_coef_t *FC_d);
 
 int 
-init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d);
+init_fault_device(gdcurv_t *gdcurv, fault_t *F, fault_t *F_d);
 
 int 
 init_fault_wav_device(fault_wav_t *FW, fault_wav_t *FW_d);
 
 int 
-init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
+init_bdryfree_device(gdcurv_t *gdcurv, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
 
 int
-init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d);
+init_bdrypml_device(gdcurv_t *gdcurv, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d);
 
 int 
 init_wave_device(wav_t *wav, wav_t *wav_d);
 
 float *
-init_PGVAD_device(gdinfo_t *gdinfo);
+init_PGVAD_device(gdcurv_t *gdcurv);
 
 float *
-init_Dis_accu_device(gdinfo_t *gdinfo);
+init_Dis_accu_device(gdcurv_t *gdcurv);
 
 int *
 init_neighid_device(int *neighid);
 
 int 
-dealloc_gdcurv_device(gd_t gdcurv_d);
+dealloc_gdcurv_device(gdcurv_t gdcurv_d);
 
 int 
 dealloc_md_device(md_t md_d);

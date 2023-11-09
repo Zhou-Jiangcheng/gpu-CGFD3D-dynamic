@@ -12,20 +12,20 @@
 #include "wav_t.h"
 
 int 
-wav_init(gdinfo_t *gdinfo,
-               wav_t *V,
-               int number_of_levels)
+wav_init(gdcurv_t *gdcurv,
+         wav_t *V,
+         int number_of_levels)
 {
   int ierr = 0;
 
-  V->nx   = gdinfo->nx;
-  V->ny   = gdinfo->ny;
-  V->nz   = gdinfo->nz;
+  V->nx   = gdcurv->nx;
+  V->ny   = gdcurv->ny;
+  V->nz   = gdcurv->nz;
   V->ncmp = 9;
   V->nlevel = number_of_levels;
 
   V->siz_iy   = V->nx;
-  V->siz_iz  = V->nx * V->ny;
+  V->siz_iz   = V->nx * V->ny;
   V->siz_icmp = V->nx * V->ny * V->nz;
   V->siz_ilevel = V->siz_icmp * V->ncmp;
 
@@ -135,20 +135,20 @@ wav_check_value(float *w, wav_t *wav)
 }
 
 __global__ void
-PG_calcu_gpu(float *w_end, float *w_pre, gdinfo_t gdinfo_d, float *PG, float *Dis_accu, float dt)
+PG_calcu_gpu(float *w_end, float *w_pre, gdcurv_t gdcurv_d, float *PG, float *Dis_accu, float dt)
 {
   //Dis_accu is displacement accumulation.
-  int ni = gdinfo_d.ni;
-  int nj = gdinfo_d.nj;
-  int ni1 = gdinfo_d.ni1;
-  int nj1 = gdinfo_d.nj1;
-  int nk1 = gdinfo_d.nk1;
-  int ni2 = gdinfo_d.ni2;
-  int nj2 = gdinfo_d.nj2;
-  int nk2 = gdinfo_d.nk2;
-  size_t siz_iy  = gdinfo_d.siz_iy;
-  size_t siz_iz = gdinfo_d.siz_iz;
-  size_t siz_icmp  = gdinfo_d.siz_icmp;
+  int ni = gdcurv_d.ni;
+  int nj = gdcurv_d.nj;
+  int ni1 = gdcurv_d.ni1;
+  int nj1 = gdcurv_d.nj1;
+  int nk1 = gdcurv_d.nk1;
+  int ni2 = gdcurv_d.ni2;
+  int nj2 = gdcurv_d.nj2;
+  int nk2 = gdcurv_d.nk2;
+  size_t siz_iy  = gdcurv_d.siz_iy;
+  size_t siz_iz  = gdcurv_d.siz_iz;
+  size_t siz_icmp  = gdcurv_d.siz_icmp;
   // 0-2 Vx1,Vy1,Vz1  it+1 moment V
   // 0-2 Vx0,Vy0,Vz0  it moment V
   float *Vx1 = w_end + 0*siz_icmp;

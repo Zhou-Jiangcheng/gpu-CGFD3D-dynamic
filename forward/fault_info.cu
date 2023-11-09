@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "gd_info.h"
+#include "gd_t.h"
 #include "fault_info.h"
 #include "fdlib_math.h"
 
 int
 fault_coef_init(fault_coef_t *FC,
-                gdinfo_t *gdinfo)
+                gdcurv_t *gdcurv)
 {
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
 
   FC->rho_f = (float *) malloc(sizeof(float)*ny*nz*2);
   FC->mu_f  = (float *) malloc(sizeof(float)*ny*nz*2);
@@ -81,20 +81,20 @@ fault_coef_init(fault_coef_t *FC,
 
 
 int 
-fault_coef_cal(gdinfo_t *gdinfo, 
+fault_coef_cal(gdcurv_t *gdcurv, 
                gd_metric_t *metric, 
                md_t *md,
                int fault_i_global_index,
                fault_coef_t *FC)
 {
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
-  size_t siz_iy = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
-  size_t siz_iz_yz = gdinfo->siz_iz_yz;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
+  size_t siz_iy = gdcurv->siz_iy;
+  size_t siz_iz = gdcurv->siz_iz;
+  size_t siz_iz_yz = gdcurv->siz_iz_yz;
   // x direction only has 1 mpi. 
-  int npoint_z = gdinfo->npoint_z;
-  int gnk1 = gdinfo->gnk1;
+  int npoint_z = gdcurv->npoint_z;
+  int gnk1 = gdcurv->gnk1;
   int i0 = fault_i_global_index + 3; //fault plane x index with ghost
   size_t iptr, iptr_f;
   float rho, mu, lam, lam2mu, jac;
@@ -831,10 +831,10 @@ fault_coef_cal(gdinfo_t *gdinfo,
 
 int
 fault_init(fault_t *F,
-           gdinfo_t *gdinfo)
+           gdcurv_t *gdcurv)
 {
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
 
   // for input
   F->T0x  = (float *) malloc(sizeof(float)*nj*nk);  // stress_init_x
@@ -881,27 +881,27 @@ fault_init(fault_t *F,
 int
 fault_set(fault_t *F,
           fault_coef_t *FC,
-          gdinfo_t *gdinfo,
+          gdcurv_t *gdcurv,
           int bdry_has_free,
           int *fault_grid,
           char *init_stress_nc)
 {
-  int nj1 = gdinfo->nj1;
-  int nk1 = gdinfo->nk1;
-  int nj2 = gdinfo->nj2;
-  int nk2 = gdinfo->nk2;
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
-  int ny = gdinfo->ny;
-  int gnj1 = gdinfo->gnj1;
-  int gnk1 = gdinfo->gnk1;
-  int npoint_y = gdinfo->npoint_y;
-  int npoint_z = gdinfo->npoint_z;
+  int nj1 = gdcurv->nj1;
+  int nk1 = gdcurv->nk1;
+  int nj2 = gdcurv->nj2;
+  int nk2 = gdcurv->nk2;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
+  int ny = gdcurv->ny;
+  int gnj1 = gdcurv->gnj1;
+  int gnk1 = gdcurv->gnk1;
+  int npoint_y = gdcurv->npoint_y;
+  int npoint_z = gdcurv->npoint_z;
   int gj, gk;
   size_t iptr_t, iptr_f; 
   float vec_n[3], vec_s1[3], vec_s2[3];
 
-  nc_read_init_stress(F, gdinfo,init_stress_nc);
+  nc_read_init_stress(F, gdcurv,init_stress_nc);
 
   for (int k=0; k<nk; k++)
   {
@@ -986,13 +986,13 @@ fault_set(fault_t *F,
 
 int 
 nc_read_init_stress(fault_t *F, 
-                    gdinfo_t *gdinfo,
+                    gdcurv_t *gdcurv,
                     char *init_stress_nc)
 {
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
-  int gnj1 = gdinfo->gnj1;
-  int gnk1 = gdinfo->gnk1;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
+  int gnj1 = gdcurv->gnj1;
+  int gnk1 = gdcurv->gnk1;
   int ierr;
   int ncid;
   int varid;

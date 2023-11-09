@@ -24,7 +24,7 @@ sv_curv_col_el_iso_onestage(
   float *w_cur_d,
   float *rhs_d, 
   wav_t  wav_d,
-  gdinfo_t  gdinfo_d,
+  gdcurv_t  gdcurv_d,
   fd_device_t fd_device_d,
   gd_metric_t metric_d,
   md_t md_d,
@@ -72,21 +72,21 @@ sv_curv_col_el_iso_onestage(
   float *slw3d = md_d.rho;
 
   // grid size
-  int ni1 = gdinfo_d.ni1;
-  int ni2 = gdinfo_d.ni2;
-  int nj1 = gdinfo_d.nj1;
-  int nj2 = gdinfo_d.nj2;
-  int nk1 = gdinfo_d.nk1;
-  int nk2 = gdinfo_d.nk2;
+  int ni1 = gdcurv_d.ni1;
+  int ni2 = gdcurv_d.ni2;
+  int nj1 = gdcurv_d.nj1;
+  int nj2 = gdcurv_d.nj2;
+  int nk1 = gdcurv_d.nk1;
+  int nk2 = gdcurv_d.nk2;
 
-  int ni  = gdinfo_d.ni;
-  int nj  = gdinfo_d.nj;
-  int nk  = gdinfo_d.nk;
-  int nx  = gdinfo_d.nx;
-  int ny  = gdinfo_d.ny;
-  int nz  = gdinfo_d.nz;
-  size_t siz_iy   = gdinfo_d.siz_iy;
-  size_t siz_iz  = gdinfo_d.siz_iz;
+  int ni  = gdcurv_d.ni;
+  int nj  = gdcurv_d.nj;
+  int nk  = gdcurv_d.nk;
+  int nx  = gdcurv_d.nx;
+  int ny  = gdcurv_d.ny;
+  int nz  = gdcurv_d.nz;
+  size_t siz_iy  = gdcurv_d.siz_iy;
+  size_t siz_iz  = gdcurv_d.siz_iz;
 
   float *matVx2Vz = bdryfree_d.matVx2Vz2;
   float *matVy2Vz = bdryfree_d.matVy2Vz2;
@@ -1296,24 +1296,24 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
  ******************************************************************************/
 
 __global__ void
-sv_curv_col_el_iso_dvh2dvz_gpu(gdinfo_t    gdinfo_d,
+sv_curv_col_el_iso_dvh2dvz_gpu(gdcurv_t    gdcurv_d,
                                gd_metric_t metric_d,
                                md_t       md_d,
                                bdryfree_t      bdryfree_d,
                                const int verbose)
 {
-  int ni1 = gdinfo_d.ni1;
-  int ni2 = gdinfo_d.ni2;
-  int nj1 = gdinfo_d.nj1;
-  int nj2 = gdinfo_d.nj2;
-  int nk1 = gdinfo_d.nk1;
-  int nk2 = gdinfo_d.nk2;
-  int nx  = gdinfo_d.nx;
-  int ny  = gdinfo_d.ny;
-  int nz  = gdinfo_d.nz;
-  size_t siz_iy   = gdinfo_d.siz_iy;
-  size_t siz_iz  = gdinfo_d.siz_iz;
-  size_t siz_icmp = gdinfo_d.siz_icmp;
+  int ni1 = gdcurv_d.ni1;
+  int ni2 = gdcurv_d.ni2;
+  int nj1 = gdcurv_d.nj1;
+  int nj2 = gdcurv_d.nj2;
+  int nk1 = gdcurv_d.nk1;
+  int nk2 = gdcurv_d.nk2;
+  int nx  = gdcurv_d.nx;
+  int ny  = gdcurv_d.ny;
+  int nz  = gdcurv_d.nz;
+  size_t siz_iy  = gdcurv_d.siz_iy;
+  size_t siz_iz  = gdcurv_d.siz_iz;
+  size_t siz_icmp = gdcurv_d.siz_icmp;
 
   // point to each var
   float * xi_x = metric_d.xi_x;

@@ -18,22 +18,12 @@
 #include "constants.h"
 
 int 
-gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
+gd_curv_init(gdcurv_t *gdcurv)
 {
   /*
    * 0-2: x3d, y3d, z3d
    */
-
-  gdcurv->type = GD_TYPE_CURV;
-
-  gdcurv->nx   = gdinfo->nx;
-  gdcurv->ny   = gdinfo->ny;
-  gdcurv->nz   = gdinfo->nz;
   gdcurv->ncmp = CONST_NDIM;
-
-  gdcurv->siz_iy   = gdcurv->nx;
-  gdcurv->siz_iz  = gdcurv->nx * gdcurv->ny;
-  gdcurv->siz_icmp = gdcurv->nx * gdcurv->ny * gdcurv->nz;
   
   // vars
   gdcurv->v4d = (float *) fdlib_mem_calloc_1d_float(
@@ -95,7 +85,7 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
 }
 
 int 
-gd_curv_metric_init(gdinfo_t    *gdinfo,
+gd_curv_metric_init(gdcurv_t        *gdcurv,
                     gd_metric_t *metric)
 {
   const int num_grid_vars = 10;
@@ -106,12 +96,12 @@ gd_curv_metric_init(gdinfo_t    *gdinfo,
    * 7-9: zeta_x, zeta_y, zeta_z
    */
 
-  metric->nx   = gdinfo->nx;
-  metric->ny   = gdinfo->ny;
-  metric->nz   = gdinfo->nz;
+  metric->nx   = gdcurv->nx;
+  metric->ny   = gdcurv->ny;
+  metric->nz   = gdcurv->nz;
   metric->ncmp = num_grid_vars;
 
-  metric->siz_iy   = metric->nx;
+  metric->siz_iy  = metric->nx;
   metric->siz_iz  = metric->nx * metric->ny;
   metric->siz_icmp = metric->nx * metric->ny * metric->nz;
   
@@ -190,22 +180,21 @@ gd_curv_metric_init(gdinfo_t    *gdinfo,
 // need to change to use fdlib_math.c
 //
 int
-gd_curv_metric_cal(gdinfo_t    *gdinfo,
-                   gd_t        *gdcurv,
+gd_curv_metric_cal(gdcurv_t    *gdcurv,
                    gd_metric_t *metric)
 {
-  int ni1 = gdinfo->ni1;
-  int ni2 = gdinfo->ni2;
-  int nj1 = gdinfo->nj1;
-  int nj2 = gdinfo->nj2;
-  int nk1 = gdinfo->nk1;
-  int nk2 = gdinfo->nk2;
-  int nx  = gdinfo->nx;
-  int ny  = gdinfo->ny;
-  int nz  = gdinfo->nz;
-  size_t siz_iy   = gdinfo->siz_iy;
-  size_t siz_iz  = gdinfo->siz_iz;
-  size_t siz_icmp = gdinfo->siz_icmp;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int nx  = gdcurv->nx;
+  int ny  = gdcurv->ny;
+  int nz  = gdcurv->nz;
+  size_t siz_iy   = gdcurv->siz_iy;
+  size_t siz_iz   = gdcurv->siz_iz;
+  size_t siz_icmp = gdcurv->siz_icmp;
 
   // point to each var
   float *x3d  = gdcurv->x3d;
@@ -400,25 +389,25 @@ gd_curv_metric_cal(gdinfo_t    *gdinfo,
 // exchange metics/coords
 //
 int
-gd_curv_exchange(gdinfo_t *gdinfo,
+gd_curv_exchange(gdcurv_t *gdcurv,
                  float *g3d,
                  int ncmp,
                  int *neighid,
                  MPI_Comm topocomm)
 {
-  int nx  = gdinfo->nx;
-  int ny  = gdinfo->ny;
-  int nz  = gdinfo->nz;
-  int ni1 = gdinfo->ni1;
-  int ni2 = gdinfo->ni2;
-  int nj1 = gdinfo->nj1;
-  int nj2 = gdinfo->nj2;
-  int nk1 = gdinfo->nk1;
-  int nk2 = gdinfo->nk2;
+  int nx  = gdcurv->nx;
+  int ny  = gdcurv->ny;
+  int nz  = gdcurv->nz;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
 
-  size_t siz_iy   = gdinfo->siz_iy;
-  size_t siz_iz  = gdinfo->siz_iz;
-  size_t siz_icmp = gdinfo->siz_icmp;
+  size_t siz_iy   = gdcurv->siz_iy;
+  size_t siz_iz   = gdcurv->siz_iz;
+  size_t siz_icmp = gdcurv->siz_icmp;
 
   // extend to ghosts, using mpi exchange
   // NOTE in different myid, nx(or ny) may not equal
@@ -492,31 +481,30 @@ gd_curv_exchange(gdinfo_t *gdinfo,
 }
 
 int
-gd_curv_gen_fault(gd_t *gdcurv,
-                  gdinfo_t *gdinfo,
+gd_curv_gen_fault(gdcurv_t *gdcurv,
                   int  num_of_x_points,
                   float dh,
                   char *in_grid_fault_nc)
 {
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
 
-  int ni = gdinfo->ni;
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
+  int ni = gdcurv->ni;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
 
-  int ni1 = gdinfo->ni1;
-  int ni2 = gdinfo->ni2;
-  int nj1 = gdinfo->nj1;
-  int nj2 = gdinfo->nj2;
-  int nk1 = gdinfo->nk1;
-  int nk2 = gdinfo->nk2;
-  int gni1 = gdinfo->gni1;
-  int npoint_x = gdinfo->npoint_x;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int gni1 = gdcurv->gni1;
+  int npoint_x = gdcurv->npoint_x;
 
-  size_t siz_iy  = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
+  size_t siz_iy  = gdcurv->siz_iy;
+  size_t siz_iz  = gdcurv->siz_iz;
   size_t iptr, iptr_b, iptr_c;
 
   float *x3d = gdcurv->x3d;
@@ -528,7 +516,7 @@ gd_curv_gen_fault(gd_t *gdcurv,
   float *fault_z = (float *) malloc(sizeof(float)*nj*nk);
   float *xline   = (float *) malloc(sizeof(float)*nx);
 
-  nc_read_fault_geometry(fault_x, fault_y, fault_z, in_grid_fault_nc, gdinfo);
+  nc_read_fault_geometry(fault_x, fault_y, fault_z, in_grid_fault_nc, gdcurv);
 
   int i0 = npoint_x/2 + 3; 
   xline[i0] = 0.0;
@@ -684,18 +672,17 @@ gd_curv_gen_fault(gd_t *gdcurv,
 }
 
 int
-nc_read_fault_geometry(
-      float *fault_x, float *fault_y, float *fault_z,
-      char *in_grid_fault_nc, gdinfo_t *gdinfo)
+nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z,
+                       char *in_grid_fault_nc, gdcurv_t *gdcurv)
 {
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
 
   // thisid dimension 0, 1, 2, thisid[2] vary first
   int ierr;
   int ncid;
   int xid, yid, zid;
-  size_t start[] = {gdinfo->gnk1, gdinfo->gnj1};
+  size_t start[] = {gdcurv->gnk1, gdcurv->gnj1};
   size_t count[] = {nk, nj};
   
   ierr = nc_open(in_grid_fault_nc, NC_NOWRITE, &ncid); handle_nc_err(ierr);
@@ -718,27 +705,25 @@ nc_read_fault_geometry(
 // input/output
 //
 int
-gd_curv_coord_export(
-  gdinfo_t *gdinfo,
-  gd_t *gdcurv,
-  char *fname_coords,
-  char *output_dir)
+gd_curv_coord_export(gdcurv_t *gdcurv,
+                     char *fname_coords,
+                     char *output_dir)
 {
   size_t *c3d_pos   = gdcurv->cmp_pos;
   char  **c3d_name  = gdcurv->cmp_name;
   int number_of_vars = gdcurv->ncmp;
-  int  nx = gdcurv->nx;
-  int  ny = gdcurv->ny;
-  int  nz = gdcurv->nz;
-  int  ni1 = gdinfo->ni1;
-  int  nj1 = gdinfo->nj1;
-  int  nk1 = gdinfo->nk1;
-  int  ni  = gdinfo->ni;
-  int  nj  = gdinfo->nj;
-  int  nk  = gdinfo->nk;
-  int  gni1 = gdinfo->ni1_to_glob_phys0;
-  int  gnj1 = gdinfo->nj1_to_glob_phys0;
-  int  gnk1 = gdinfo->nk1_to_glob_phys0;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
+  int ni1 = gdcurv->ni1;
+  int nj1 = gdcurv->nj1;
+  int nk1 = gdcurv->nk1;
+  int ni  = gdcurv->ni;
+  int nj  = gdcurv->nj;
+  int nk  = gdcurv->nk;
+  int gni1 = gdcurv->ni1_to_glob_phys0;
+  int gnj1 = gdcurv->nj1_to_glob_phys0;
+  int gnk1 = gdcurv->nk1_to_glob_phys0;
 
   // construct file name
   char ou_file[CONST_MAX_STRLEN];
@@ -792,7 +777,7 @@ gd_curv_coord_export(
 }
 
 int
-gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir)
+gd_curv_coord_import(gdcurv_t *gdcurv, char *fname_coords, char *import_dir)
 {
   // construct file name
   char in_file[CONST_MAX_STRLEN];
@@ -821,7 +806,7 @@ gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir)
 
 
 int
-gd_curv_metric_export(gdinfo_t    *gdinfo,
+gd_curv_metric_export(gdcurv_t        *gdcurv,
                       gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir)
@@ -832,15 +817,15 @@ gd_curv_metric_export(gdinfo_t    *gdinfo,
   int  nx = metric->nx;
   int  ny = metric->ny;
   int  nz = metric->nz;
-  int  ni1 = gdinfo->ni1;
-  int  nj1 = gdinfo->nj1;
-  int  nk1 = gdinfo->nk1;
-  int  ni  = gdinfo->ni;
-  int  nj  = gdinfo->nj;
-  int  nk  = gdinfo->nk;
-  int  gni1 = gdinfo->ni1_to_glob_phys0;
-  int  gnj1 = gdinfo->nj1_to_glob_phys0;
-  int  gnk1 = gdinfo->nk1_to_glob_phys0;
+  int  ni1 = gdcurv->ni1;
+  int  nj1 = gdcurv->nj1;
+  int  nk1 = gdcurv->nk1;
+  int  ni  = gdcurv->ni;
+  int  nj  = gdcurv->nj;
+  int  nk  = gdcurv->nk;
+  int  gni1 = gdcurv->ni1_to_glob_phys0;
+  int  gnj1 = gdcurv->nj1_to_glob_phys0;
+  int  gnk1 = gdcurv->nk1_to_glob_phys0;
 
   // construct file name
   char ou_file[CONST_MAX_STRLEN];
@@ -926,9 +911,8 @@ gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir)
  * set min/max of grid for loc
  */
 int
-gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
+gd_curv_set_minmax(gdcurv_t *gdcurv)
 {
-
   // all points including ghosts
   float xmin = gdcurv->x3d[0], xmax = gdcurv->x3d[0];
   float ymin = gdcurv->y3d[0], ymax = gdcurv->y3d[0];
@@ -955,10 +939,10 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
   ymax = gdcurv->ymin;
   zmin = gdcurv->zmax;
   zmax = gdcurv->zmin;
-  for (int k = gdinfo->nk1; k <= gdinfo->nk2; k++) {
-    for (int j = gdinfo->nj1; j <= gdinfo->nj2; j++) {
-      for (int i = gdinfo->ni1; i <= gdinfo->ni2; i++) {
-         size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
+  for (int k = gdcurv->nk1; k <= gdcurv->nk2; k++) {
+    for (int j = gdcurv->nj1; j <= gdcurv->nj2; j++) {
+      for (int i = gdcurv->ni1; i <= gdcurv->ni2; i++) {
+         size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
          xmin = xmin < gdcurv->x3d[iptr] ? xmin : gdcurv->x3d[iptr];
          xmax = xmax > gdcurv->x3d[iptr] ? xmax : gdcurv->x3d[iptr];
          ymin = ymin < gdcurv->y3d[iptr] ? ymin : gdcurv->y3d[iptr];
@@ -979,7 +963,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
   for (int k = 0; k < gdcurv->nz-1; k++) {
     for (int j = 0; j < gdcurv->ny-1; j++) {
       for (int i = 0; i < gdcurv->nx-1; i++) {
-         size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
+         size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
          xmin = gdcurv->x3d[iptr];
          ymin = gdcurv->y3d[iptr];
          zmin = gdcurv->z3d[iptr];
@@ -989,7 +973,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
          for (int n3=0; n3<2; n3++) {
          for (int n2=0; n2<2; n2++) {
          for (int n1=0; n1<2; n1++) {
-           size_t iptr_pt = iptr + n3 * gdinfo->siz_iz + n2 * gdinfo->siz_iy + n1;
+           size_t iptr_pt = iptr + n3 * gdcurv->siz_iz + n2 * gdcurv->siz_iy + n1;
            xmin = xmin < gdcurv->x3d[iptr_pt] ? xmin : gdcurv->x3d[iptr_pt];
            xmax = xmax > gdcurv->x3d[iptr_pt] ? xmax : gdcurv->x3d[iptr_pt];
            ymin = ymin < gdcurv->y3d[iptr_pt] ? ymin : gdcurv->y3d[iptr_pt];
@@ -1012,16 +996,16 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
   // set tile range 
 
   // partition into average plus left at last
-  int nx_avg  = gdinfo->ni / GD_TILE_NX; // only for physcial points
-  int nx_left = gdinfo->ni % GD_TILE_NX;
-  int ny_avg  = gdinfo->nj / GD_TILE_NY;
-  int ny_left = gdinfo->nj % GD_TILE_NY;
-  int nz_avg  = gdinfo->nk / GD_TILE_NZ;
-  int nz_left = gdinfo->nk % GD_TILE_NZ;
+  int nx_avg  = gdcurv->ni / GD_TILE_NX; // only for physcial points
+  int nx_left = gdcurv->ni % GD_TILE_NX;
+  int ny_avg  = gdcurv->nj / GD_TILE_NY;
+  int ny_left = gdcurv->nj % GD_TILE_NY;
+  int nz_avg  = gdcurv->nk / GD_TILE_NZ;
+  int nz_left = gdcurv->nk % GD_TILE_NZ;
   for (int k_tile = 0; k_tile < GD_TILE_NZ; k_tile++)
   {
     if (k_tile == 0) {
-      gdcurv->tile_kstart[k_tile] = gdinfo->nk1;
+      gdcurv->tile_kstart[k_tile] = gdcurv->nk1;
     } else {
       gdcurv->tile_kstart[k_tile] = gdcurv->tile_kend[k_tile-1] + 1;
     }
@@ -1034,7 +1018,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
     for (int j_tile = 0; j_tile < GD_TILE_NY; j_tile++)
     {
       if (j_tile == 0) {
-        gdcurv->tile_jstart[j_tile] = gdinfo->nj1;
+        gdcurv->tile_jstart[j_tile] = gdcurv->nj1;
       } else {
         gdcurv->tile_jstart[j_tile] = gdcurv->tile_jend[j_tile-1] + 1;
       }
@@ -1047,7 +1031,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
         if (i_tile == 0) {
-          gdcurv->tile_istart[i_tile] = gdinfo->ni1;
+          gdcurv->tile_istart[i_tile] = gdcurv->ni1;
         } else {
           gdcurv->tile_istart[i_tile] = gdcurv->tile_iend[i_tile-1] + 1;
         }
@@ -1067,10 +1051,10 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
         // for cells in each tile
         for (int k = gdcurv->tile_kstart[k_tile]; k <= gdcurv->tile_kend[k_tile]; k++)
         {
-          size_t iptr_k = k * gdinfo->siz_iz;
+          size_t iptr_k = k * gdcurv->siz_iz;
           for (int j = gdcurv->tile_jstart[j_tile]; j <= gdcurv->tile_jend[j_tile]; j++)
           {
-            size_t iptr_j = iptr_k + j * gdinfo->siz_iy;
+            size_t iptr_j = iptr_k + j * gdcurv->siz_iy;
             for (int i = gdcurv->tile_istart[i_tile]; i <= gdcurv->tile_iend[i_tile]; i++)
             {
               size_t iptr = i + iptr_j;
@@ -1102,8 +1086,7 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
  */
 
 int
-gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcurv,
+gd_curv_coord_to_glob_indx(gdcurv_t *gdcurv,
                            float sx,
                            float sy,
                            float sz,
@@ -1126,16 +1109,16 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
   int sk = 0;
 
   // if located in this thread
-  is_here = gd_curv_coord_to_local_indx(gdinfo,gdcurv,sx,sy,sz,
+  is_here = gd_curv_coord_to_local_indx(gdcurv,sx,sy,sz,
                                     &si, &sj, &sk, &sx_inc, &sy_inc, &sz_inc);
 
   // if in this thread
   if ( is_here == 1)
   {
     // conver to global index
-    si_glob = gd_info_ind_lcext2glphy_i(si, gdinfo);
-    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdinfo);
-    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdinfo);
+    si_glob = gd_info_ind_lcext2glphy_i(si, gdcurv);
+    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdcurv);
+    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdcurv);
   }
 
   // reduce global index and shift values
@@ -1168,8 +1151,7 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
 }
 
 __device__ int
-gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
-                               gd_t *gdcurv,
+gd_curv_coord_to_glob_indx_gpu(gdcurv_t *gdcurv,
                                float sx,
                                float sy,
                                float sz,
@@ -1191,16 +1173,16 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
   int sj = 0;
   int sk = 0;
   // if located in this thread
-  is_here = gd_curv_coord_to_local_indx(gdinfo,gdcurv,sx,sy,sz,
+  is_here = gd_curv_coord_to_local_indx(gdcurv,sx,sy,sz,
                                     &si, &sj, &sk, &sx_inc, &sy_inc, &sz_inc);
 
   // if in this thread
   if ( is_here == 1)
   {
     // conver to global index
-    si_glob = gd_info_ind_lcext2glphy_i(si, gdinfo);
-    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdinfo);
-    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdinfo);
+    si_glob = gd_info_ind_lcext2glphy_i(si, gdcurv);
+    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdcurv);
+    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdcurv);
   }
 
   *ou_si = si_glob;
@@ -1221,37 +1203,36 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
  */
 
 __host__ __device__ int
-gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
-                        gd_t *gd,
-                        float sx, float sy, float sz,
-                        int *si, int *sj, int *sk,
-                        float *sx_inc, float *sy_inc, float *sz_inc)
+gd_curv_coord_to_local_indx(gdcurv_t *gdcurv,
+                            float sx, float sy, float sz,
+                            int *si, int *sj, int *sk,
+                            float *sx_inc, float *sy_inc, float *sz_inc)
 {
   int is_here = 0; // default outside
 
   // not here if outside coord range
-  if ( sx < gd->xmin || sx > gd->xmax ||
-       sy < gd->ymin || sy > gd->ymax ||
-       sz < gd->zmin || sz > gd->zmax)
+  if ( sx < gdcurv->xmin || sx > gdcurv->xmax ||
+       sy < gdcurv->ymin || sy > gdcurv->ymax ||
+       sz < gdcurv->zmin || sz > gdcurv->zmax)
   {
     return is_here;
   }
 
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
-  int ni1 = gdinfo->ni1;
-  int ni2 = gdinfo->ni2;
-  int nj1 = gdinfo->nj1;
-  int nj2 = gdinfo->nj2;
-  int nk1 = gdinfo->nk1;
-  int nk2 = gdinfo->nk2;
-  size_t siz_iy  = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  size_t siz_iy = gdcurv->siz_iy;
+  size_t siz_iz = gdcurv->siz_iz;
   
-  float *x3d = gd->x3d;
-  float *y3d = gd->y3d;
-  float *z3d = gd->z3d;
+  float *x3d = gdcurv->x3d;
+  float *y3d = gdcurv->y3d;
+  float *z3d = gdcurv->z3d;
   
   // init closest point
   float min_dist = sqrtf(  (sx - x3d[0]) * (sx - x3d[0])
@@ -1375,8 +1356,7 @@ gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
  */
 __host__ __device__
 int
-gd_curv_depth_to_axis(gdinfo_t *gdinfo,
-                      gd_t *gd,
+gd_curv_depth_to_axis(gdcurv_t *gdcurv,
                       float sx,
                       float sy,
                       float *sz,
@@ -1386,8 +1366,8 @@ gd_curv_depth_to_axis(gdinfo_t *gdinfo,
   int ierr = 0;
 
   // not here if outside coord range
-  if ( sx < gd->xmin || sx > gd->xmax ||
-       sy < gd->ymin || sy > gd->ymax )
+  if ( sx < gdcurv->xmin || sx > gdcurv->xmax ||
+       sy < gdcurv->ymin || sy > gdcurv->ymax )
   {
     return ierr;
   }
@@ -1405,31 +1385,31 @@ gd_curv_depth_to_axis(gdinfo_t *gdinfo,
     {
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
-        if (  sx < gd->tile_xmin[k_tile][j_tile][i_tile] ||
-              sx > gd->tile_xmax[k_tile][j_tile][i_tile] ||
-              sy < gd->tile_ymin[k_tile][j_tile][i_tile] ||
-              sy > gd->tile_ymax[k_tile][j_tile][i_tile])
+        if (  sx < gdcurv->tile_xmin[k_tile][j_tile][i_tile] ||
+              sx > gdcurv->tile_xmax[k_tile][j_tile][i_tile] ||
+              sy < gdcurv->tile_ymin[k_tile][j_tile][i_tile] ||
+              sy > gdcurv->tile_ymax[k_tile][j_tile][i_tile])
         {
           // loop next tile
           continue;
         }
 
         // otherwise may in this tile
-        int k = gd->tile_kend[k_tile];
+        int k = gdcurv->tile_kend[k_tile];
         {
-          iptr_k = k * gdinfo->siz_iz;
-          for (int j = gd->tile_jstart[j_tile]; j <= gd->tile_jend[j_tile]; j++)
+          iptr_k = k * gdcurv->siz_iz;
+          for (int j = gdcurv->tile_jstart[j_tile]; j <= gdcurv->tile_jend[j_tile]; j++)
           {
-            iptr_j = iptr_k + j * gdinfo->siz_iy;
-            for (int i = gd->tile_istart[i_tile]; i <= gd->tile_iend[i_tile]; i++)
+            iptr_j = iptr_k + j * gdcurv->siz_iy;
+            for (int i = gdcurv->tile_istart[i_tile]; i <= gdcurv->tile_iend[i_tile]; i++)
             {
               iptr = i + iptr_j;
 
               // use AABB algorith
-              if (  sx < gd->cell_xmin[iptr] ||
-                    sx > gd->cell_xmax[iptr] ||
-                    sy < gd->cell_ymin[iptr] ||
-                    sy > gd->cell_ymax[iptr] )
+              if (  sx < gdcurv->cell_xmin[iptr] ||
+                    sx > gdcurv->cell_xmax[iptr] ||
+                    sy < gdcurv->cell_ymin[iptr] ||
+                    sy > gdcurv->cell_ymax[iptr] )
               {
                 // loop next cell
                 continue;
@@ -1441,10 +1421,10 @@ gd_curv_depth_to_axis(gdinfo_t *gdinfo,
               for (int n2=0; n2<2; n2++) {
                 for (int n1=0; n1<2; n1++) {
                   int iptr_cube = n1 + n2 * 2;
-                  size_t iptr_pt = (i+n1) + (j+n2) * gdinfo->siz_iy + k * gdinfo->siz_iz;
-                  points_x[iptr_cube] = gd->x3d[iptr_pt];
-                  points_y[iptr_cube] = gd->y3d[iptr_pt];
-                  points_z[iptr_cube] = gd->z3d[iptr_pt];
+                  size_t iptr_pt = (i+n1) + (j+n2) * gdcurv->siz_iy + k * gdcurv->siz_iz;
+                  points_x[iptr_cube] = gdcurv->x3d[iptr_pt];
+                  points_y[iptr_cube] = gdcurv->y3d[iptr_pt];
+                  points_z[iptr_cube] = gdcurv->z3d[iptr_pt];
                 }
               }
 
@@ -1700,43 +1680,34 @@ gd_curv_coord2index_rdinterp(float sx, float sy, float sz,
 }
 
 float
-gd_coord_get_x(gd_t *gd, int i, int j, int k)
+gd_coord_get_x(gdcurv_t *gdcurv, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->x3d[iptr];
-  }
+  size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
+  var = gdcurv->x3d[iptr];
 
   return var;
 }
 
 float
-gd_coord_get_y(gd_t *gd, int i, int j, int k)
+gd_coord_get_y(gdcurv_t *gdcurv, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->y3d[iptr];
-  }
+  size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
+  var = gdcurv->y3d[iptr];
 
   return var;
 }
 
 float
-gd_coord_get_z(gd_t *gd, int i, int j, int k)
+gd_coord_get_z(gdcurv_t *gdcurv, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->z3d[iptr];
-  }
+  size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
+  var = gdcurv->z3d[iptr];
 
   return var;
 }
@@ -1827,38 +1798,387 @@ int face_normal(float (*hexa2d)[3], float *normal_unit)
   return 0;
 }
 
+//
+// set grid size
+//
+
 int
-gd_print(gd_t *gd)
+gd_info_set(gdcurv_t *const gdcurv,
+            const mympi_t *const mympi,
+            const int number_of_total_grid_points_x,
+            const int number_of_total_grid_points_y,
+            const int number_of_total_grid_points_z,
+                  int abs_num_of_layers[][2],
+            const int fdx_nghosts,
+            int const fdy_nghosts,
+            const int fdz_nghosts,
+            const int verbose)
 {
+  int ierr = 0;
+
+  // determine ni
+  int nx_et = number_of_total_grid_points_x;
+
+  // double cfspml load
+  nx_et += abs_num_of_layers[0][0] + abs_num_of_layers[0][1];
+
+  // partition into average plus left at last
+  int nx_avg  = nx_et / mympi->nprocx;
+  int nx_left = nx_et % mympi->nprocx;
+
+  if (nx_avg < 2 * fdx_nghosts) {
+    fprintf(stdout,"should not be less than 2 * fdx_nghosts");
+    exit(1);
+  }
+
+  if (nx_avg<abs_num_of_layers[0][0] || nx_avg<abs_num_of_layers[0][1]) {
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
+  }
+
+  // default set to average value
+  int ni = nx_avg;
+  // subtract nlay for pml node
+  if (mympi->neighid[0] == MPI_PROC_NULL) {
+    ni -= abs_num_of_layers[0][0];
+  }
+  if (mympi->neighid[1] == MPI_PROC_NULL) {
+    ni -= abs_num_of_layers[0][1];
+  }
+  // first nx_left node add one more point
+  if (mympi->topoid[0] < nx_left) {
+    ni++;
+  }
+  // global index
+  if (mympi->topoid[0]==0) {
+    gdcurv->gni1 = 0;
+  } else {
+    gdcurv->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers[0][0];
+  }
+  if (nx_left != 0) {
+    gdcurv->gni1 += (mympi->topoid[0] < nx_left)? mympi->topoid[0] : nx_left;
+  }
+
+  // determine nj
+  int ny_et = number_of_total_grid_points_y;
+  // double cfspml load
+  ny_et += abs_num_of_layers[1][0] + abs_num_of_layers[1][1];
+  int ny_avg  = ny_et / mympi->nprocy;
+  int ny_left = ny_et % mympi->nprocy;
+
+  if (ny_avg < 2 * fdy_nghosts) {
+    fprintf(stdout,"should not be less than 2 * fdy_nghosts");
+    exit(1);
+  }
+  if (ny_avg<abs_num_of_layers[1][0] || ny_avg<abs_num_of_layers[1][1]) {
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
+  }
+  int nj = ny_avg;
+  if (mympi->neighid[2] == MPI_PROC_NULL) {
+    nj -= abs_num_of_layers[1][0];
+  }
+  if (mympi->neighid[3] == MPI_PROC_NULL) {
+    nj -= abs_num_of_layers[1][1];
+  }
+  // not equal divided points given to first ny_left procs
+  if (mympi->topoid[1] < ny_left) {
+    nj++;
+  }
+  // global index
+  if (mympi->topoid[1]==0) {
+    gdcurv->gnj1 = 0;
+  } else {
+    gdcurv->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers[1][0];
+  }
+  if (ny_left != 0) {
+    gdcurv->gnj1 += (mympi->topoid[1] < ny_left)? mympi->topoid[1] : ny_left;
+  }
+
+  // determine nk
+  int nz_et = number_of_total_grid_points_z;
+  // double cfspml load
+  // if has free_surface, abs_num_of_layers[2][1] = 0
+  nz_et += abs_num_of_layers[2][0] + abs_num_of_layers[2][1];
+  int nz_avg  = nz_et / mympi->nprocz;
+  int nz_left = nz_et % mympi->nprocz;
+  if (nz_avg < 2 * fdz_nghosts) {
+    fprintf(stdout,"should not be less than 2 * fdz_nghosts");
+    exit(1);
+  }
+  if (nz_avg<abs_num_of_layers[2][0] || nz_avg<abs_num_of_layers[2][1]) {
+    fprintf(stdout,"should not be less than abs_num_of_layers");
+    exit(1);
+  }
+  int nk = nz_avg;
+  if (mympi->neighid[4] == MPI_PROC_NULL) {
+    nk -= abs_num_of_layers[2][0];
+  }
+  if (mympi->neighid[5] == MPI_PROC_NULL) {
+    nk -= abs_num_of_layers[2][1];
+  }
+  // not equal divided points given to first nz_left procs
+  if (mympi->topoid[2] < nz_left) {
+    nk++;
+  }
+  // global index
+  if (mympi->topoid[2]==0) {
+    gdcurv->gnk1 = 0;
+  } else {
+    gdcurv->gnk1 = mympi->topoid[2] * nz_avg - abs_num_of_layers[2][0];
+  }
+  if (nz_left != 0) {
+    gdcurv->gnk1 += (mympi->topoid[2] < nz_left)? mympi->topoid[2] : nz_left;
+  }
+  
+  // add ghost points
+  int nx = ni + 2 * fdx_nghosts;
+  int ny = nj + 2 * fdy_nghosts;
+  int nz = nk + 2 * fdz_nghosts;
+
+  gdcurv->ni = ni;
+  gdcurv->nj = nj;
+  gdcurv->nk = nk;
+
+  gdcurv->nx = nx;
+  gdcurv->ny = ny;
+  gdcurv->nz = nz;
+
+  gdcurv->ni1 = fdx_nghosts;
+  gdcurv->ni2 = gdcurv->ni1 + ni - 1;
+
+  gdcurv->nj1 = fdy_nghosts;
+  gdcurv->nj2 = gdcurv->nj1 + nj - 1;
+
+  gdcurv->nk1 = fdz_nghosts;
+  gdcurv->nk2 = gdcurv->nk1 + nk - 1;
+
+  // global index end
+  gdcurv->gni2 = gdcurv->gni1 + gdcurv->ni - 1;
+  gdcurv->gnj2 = gdcurv->gnj1 + gdcurv->nj - 1;
+  gdcurv->gnk2 = gdcurv->gnk1 + gdcurv->nk - 1;
+
+  gdcurv->ni1_to_glob_phys0 = gdcurv->gni1;
+  gdcurv->ni2_to_glob_phys0 = gdcurv->gni2;
+  gdcurv->nj1_to_glob_phys0 = gdcurv->gnj1;
+  gdcurv->nj2_to_glob_phys0 = gdcurv->gnj2;
+  gdcurv->nk1_to_glob_phys0 = gdcurv->gnk1;
+  gdcurv->nk2_to_glob_phys0 = gdcurv->gnk2;
+  
+  gdcurv->npoint_x = number_of_total_grid_points_x; 
+  gdcurv->npoint_y = number_of_total_grid_points_y; 
+  gdcurv->npoint_z = number_of_total_grid_points_z;
+
+  // x dimention varies first
+  gdcurv->siz_iy   = nx; 
+  gdcurv->siz_iz   = nx * ny; 
+  gdcurv->siz_icmp = nx * ny * nz;
+
+  gdcurv->siz_iz_yz = ny * nz;
+  gdcurv->siz_iz_yz2 = 2 * ny * nz;
+
+  // set npoint_ghosts according to fdz_nghosts
+  gdcurv->npoint_ghosts = fdz_nghosts;
+
+  gdcurv->fdx_nghosts = fdx_nghosts;
+  gdcurv->fdy_nghosts = fdy_nghosts;
+  gdcurv->fdz_nghosts = fdz_nghosts;
+
+  gdcurv->index_name = fdlib_mem_malloc_2l_char(
+                        CONST_NDIM, CONST_MAX_STRLEN, "gdcurv name");
+
+  // grid coord name
+  sprintf(gdcurv->index_name[0],"%s","i");
+  sprintf(gdcurv->index_name[1],"%s","j");
+  sprintf(gdcurv->index_name[2],"%s","k");
+
+  return ierr;
+}
+
+/*
+ * give a local index ref, check if in this thread
+ */
+
+int
+gd_info_lindx_is_inner(int i, int j, int k, gdcurv_t *gdcurv)
+{
+  int is_in = 0;
+
+  if (   i >= gdcurv->ni1 && i <= gdcurv->ni2
+      && j >= gdcurv->nj1 && j <= gdcurv->nj2
+      && k >= gdcurv->nk1 && k <= gdcurv->nk2)
+  {
+    is_in = 1;
+  }
+
+  return is_in;
+}  
+
+/*
+ * give a global index ref to phys0, check if in this thread
+ */
+
+int
+gd_info_gindx_is_inner(int gi, int gj, int gk, gdcurv_t *gdcurv)
+{
+  int ishere = 0;
+
+  if ( gi >= gdcurv->ni1_to_glob_phys0 && gi <= gdcurv->ni2_to_glob_phys0 &&
+       gj >= gdcurv->nj1_to_glob_phys0 && gj <= gdcurv->nj2_to_glob_phys0 &&
+       gk >= gdcurv->nk1_to_glob_phys0 && gk <= gdcurv->nk2_to_glob_phys0 )
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+/*
+ * glphyinx, glextind, gp,ge
+ * lcphyind, lcextind
+ * gl: global
+ * lc: local
+ * inx: index
+ * phy: physical points only, do not count ghost
+ * ext: include extended points, with ghots points
+ */
+
+int
+gd_info_gindx_is_inner_i(int gi, gdcurv_t *gdcurv)
+{
+  int ishere = 0;
+
+  if ( gi >= gdcurv->ni1_to_glob_phys0 && gi <= gdcurv->ni2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+int
+gd_info_gindx_is_inner_j(int gj, gdcurv_t *gdcurv)
+{
+  int ishere = 0;
+
+  if ( gj >= gdcurv->nj1_to_glob_phys0 && gj <= gdcurv->nj2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+int
+gd_info_gindx_is_inner_k(int gk, gdcurv_t *gdcurv)
+{
+  int ishere = 0;
+
+  if ( gk >= gdcurv->nk1_to_glob_phys0 && gk <= gdcurv->nk2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+/*
+ * convert global index to local
+ */
+
+int
+gd_info_ind_glphy2lcext_i(int gi, gdcurv_t *gdcurv)
+{
+  return gi - gdcurv->ni1_to_glob_phys0 + gdcurv->npoint_ghosts;
+}
+
+int
+gd_info_ind_glphy2lcext_j(int gj, gdcurv_t *gdcurv)
+{
+  return gj - gdcurv->nj1_to_glob_phys0 + gdcurv->npoint_ghosts;
+}
+
+int
+gd_info_ind_glphy2lcext_k(int gk, gdcurv_t *gdcurv)
+{
+  return gk - gdcurv->nk1_to_glob_phys0 + gdcurv->npoint_ghosts;
+}
+
+/*
+ * convert local index to global
+ */
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_i(int i, gdcurv_t *gdcurv)
+{
+  return i - gdcurv->npoint_ghosts + gdcurv->ni1_to_glob_phys0;
+}
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_j(int j, gdcurv_t *gdcurv)
+{
+  return j - gdcurv->npoint_ghosts + gdcurv->nj1_to_glob_phys0;
+}
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_k(int k, gdcurv_t *gdcurv)
+{
+  return k - gdcurv->npoint_ghosts + gdcurv->nk1_to_glob_phys0;
+}
+
+/*
+ * print for QC
+ */
+
+int
+gd_info_print(gdcurv_t *gdcurv)
+{    
+  fprintf(stdout, "-------------------------------------------------------\n");
+  fprintf(stdout, "--> grid info:\n");
+  fprintf(stdout, "-------------------------------------------------------\n");
+  fprintf(stdout, " nx    = %-10d\n", gdcurv->nx);
+  fprintf(stdout, " ny    = %-10d\n", gdcurv->ny);
+  fprintf(stdout, " nz    = %-10d\n", gdcurv->nz);
+  fprintf(stdout, " ni    = %-10d\n", gdcurv->ni);
+  fprintf(stdout, " nj    = %-10d\n", gdcurv->nj);
+  fprintf(stdout, " nk    = %-10d\n", gdcurv->nk);
+
+  fprintf(stdout, " ni1   = %-10d\n", gdcurv->ni1);
+  fprintf(stdout, " ni2   = %-10d\n", gdcurv->ni2);
+  fprintf(stdout, " nj1   = %-10d\n", gdcurv->nj1);
+  fprintf(stdout, " nj2   = %-10d\n", gdcurv->nj2);
+  fprintf(stdout, " nk1   = %-10d\n", gdcurv->nk1);
+  fprintf(stdout, " nk2   = %-10d\n", gdcurv->nk2);
+
+  fprintf(stdout, " ni1_to_glob_phys0   = %-10d\n", gdcurv->gni1);
+  fprintf(stdout, " ni2_to_glob_phys0   = %-10d\n", gdcurv->gni2);
+  fprintf(stdout, " nj1_to_glob_phys0   = %-10d\n", gdcurv->gnj1);
+  fprintf(stdout, " nj2_to_glob_phys0   = %-10d\n", gdcurv->gnj2);
+  fprintf(stdout, " nk1_to_glob_phys0   = %-10d\n", gdcurv->gnk1);
+  fprintf(stdout, " nk2_to_glob_phys0   = %-10d\n", gdcurv->gnk2);
+
   fprintf(stdout, "\n-------------------------------------------------------\n");
   fprintf(stdout, "print grid structure info:\n");
   fprintf(stdout, "-------------------------------------------------------\n\n");
 
-  if (gd->type == GD_TYPE_CART) {
-    fprintf(stdout, " grid type is cartesian\n");
-  } else if (gd->type == GD_TYPE_VMAP) {
-    fprintf(stdout, " grid type is vmap\n");
-  } else {
-    fprintf(stdout, " grid type is general curvilinear\n");
-  }
-
-  fprintf(stdout," xmin=%g, xmax=%g\n", gd->xmin,gd->xmax);
-  fprintf(stdout," ymin=%g, ymax=%g\n", gd->ymin,gd->ymax);
-  fprintf(stdout," zmin=%g, zmax=%g\n", gd->zmin,gd->zmax);
+  fprintf(stdout," xmin=%g, xmax=%g\n", gdcurv->xmin,gdcurv->xmax);
+  fprintf(stdout," ymin=%g, ymax=%g\n", gdcurv->ymin,gdcurv->ymax);
+  fprintf(stdout," zmin=%g, zmax=%g\n", gdcurv->zmin,gdcurv->zmax);
+  /*
   for (int k_tile = 0; k_tile < GD_TILE_NZ; k_tile++)
   {
     fprintf(stdout," tile k=%d, pt k in (%d,%d)\n",
-                k_tile, gd->tile_kstart[k_tile],gd->tile_kend[k_tile]);
+                k_tile, gdcurv->tile_kstart[k_tile],gdcurv->tile_kend[k_tile]);
   }
   for (int j_tile = 0; j_tile < GD_TILE_NY; j_tile++)
   {
     fprintf(stdout," tile j=%d, pt j in (%d,%d)\n",
-                  j_tile, gd->tile_jstart[j_tile],gd->tile_jend[j_tile]);
+                  j_tile, gdcurv->tile_jstart[j_tile],gdcurv->tile_jend[j_tile]);
   }
   for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
   {
     fprintf(stdout," tile i=%d, pt i in (%d,%d)\n",
-                  i_tile, gd->tile_istart[i_tile],gd->tile_iend[i_tile]);
+                  i_tile, gdcurv->tile_istart[i_tile],gdcurv->tile_iend[i_tile]);
   }
   for (int k_tile = 0; k_tile < GD_TILE_NZ; k_tile++)
   {
@@ -1868,16 +2188,18 @@ gd_print(gd_t *gd)
       {
         fprintf(stdout," tile %d,%d,%d, range (%g,%g,%g,%g,%g,%g)\n",
           i_tile,j_tile,k_tile,
-          gd->tile_xmin[k_tile][j_tile][i_tile],
-          gd->tile_xmax[k_tile][j_tile][i_tile],
-          gd->tile_ymin[k_tile][j_tile][i_tile],
-          gd->tile_ymax[k_tile][j_tile][i_tile],
-          gd->tile_zmin[k_tile][j_tile][i_tile],
-          gd->tile_zmax[k_tile][j_tile][i_tile]);
+          gdcurv->tile_xmin[k_tile][j_tile][i_tile],
+          gdcurv->tile_xmax[k_tile][j_tile][i_tile],
+          gdcurv->tile_ymin[k_tile][j_tile][i_tile],
+          gdcurv->tile_ymax[k_tile][j_tile][i_tile],
+          gdcurv->tile_zmin[k_tile][j_tile][i_tile],
+          gdcurv->tile_zmax[k_tile][j_tile][i_tile]);
       }
     }
   }
+  */
+
   fflush(stdout);
 
-  return 0;
+  return(0);
 }

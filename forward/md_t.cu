@@ -14,13 +14,13 @@
 #include "md_t.h"
 
 int
-md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
+md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type)
 {
   int ierr = 0;
 
-  md->nx   = gdinfo->nx;
-  md->ny   = gdinfo->ny;
-  md->nz   = gdinfo->nz;
+  md->nx   = gdcurv->nx;
+  md->ny   = gdcurv->ny;
+  md->nz   = gdcurv->nz;
 
   md->siz_iy   = md->nx;
   md->siz_iz  = md->nx * md->ny;
@@ -254,10 +254,10 @@ md_import(md_t *md, char *fname_coords, char *in_dir)
 }
 
 int
-md_export(gdinfo_t  *gdinfo,
-                 md_t *md,
-                 char *fname_coords,
-                 char *output_dir)
+md_export(gdcurv_t *gdcurv,
+          md_t *md,
+          char *fname_coords,
+          char *output_dir)
 {
   int ierr = 0;
 
@@ -267,15 +267,15 @@ md_export(gdinfo_t  *gdinfo,
   int  nx = md->nx;
   int  ny = md->ny;
   int  nz = md->nz;
-  int  ni1 = gdinfo->ni1;
-  int  nj1 = gdinfo->nj1;
-  int  nk1 = gdinfo->nk1;
-  int  ni  = gdinfo->ni;
-  int  nj  = gdinfo->nj;
-  int  nk  = gdinfo->nk;
-  int  gni1 = gdinfo->ni1_to_glob_phys0;
-  int  gnj1 = gdinfo->nj1_to_glob_phys0;
-  int  gnk1 = gdinfo->nk1_to_glob_phys0;
+  int  ni1 = gdcurv->ni1;
+  int  nj1 = gdcurv->nj1;
+  int  nk1 = gdcurv->nk1;
+  int  ni  = gdcurv->ni;
+  int  nj  = gdcurv->nj;
+  int  nk  = gdcurv->nk;
+  int  gni1 = gdcurv->ni1_to_glob_phys0;
+  int  gnj1 = gdcurv->nj1_to_glob_phys0;
+  int  gnk1 = gdcurv->nk1_to_glob_phys0;
 
   // construct file name
   char ou_file[CONST_MAX_STRLEN];

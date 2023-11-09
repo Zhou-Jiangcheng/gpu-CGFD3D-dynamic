@@ -1,7 +1,7 @@
 #ifndef FT_WAVE_H
 #define FT_WAVE_H
 
-#include "gd_info.h"
+#include "gd_t.h"
 #include "fault_info.h"
 #include <cuda_runtime.h>
 
@@ -63,13 +63,13 @@ typedef struct {
  *************************************************/
 
 int 
-fault_wav_init(gdinfo_t *gdinfo,
+fault_wav_init(gdcurv_t *gdcurv,
                fault_wav_t *FW,
                int number_of_levels);
 
 int 
 fault_var_update(float *f_end_d, int it, float dt, 
-                 gdinfo_t gdinfo_d, fault_t F, 
+                 gdcurv_t gdcurv_d, fault_t F, 
                  fault_coef_t FC, fault_wav_t FW);
 
 __global__ void
@@ -86,12 +86,12 @@ __global__ void
 fault_stress_update(int nj, int nk, float coef, fault_t F);
 
 __global__ void
-fault_wav_update(gdinfo_t gdinfo_d, int num_of_vars, 
+fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars, 
                  float coef, fault_t F,
                  float *w_update, float *w_input1, float *w_input2);
 
 __global__ void
-fault_wav_update_end(gdinfo_t gdinfo_d, int num_of_vars, 
+fault_wav_update_end(gdcurv_t gdcurv_d, int num_of_vars, 
                      float coef, fault_t F,
                      float *w_update, float *w_input2);
 #endif

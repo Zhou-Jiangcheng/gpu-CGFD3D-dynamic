@@ -60,8 +60,7 @@ bdry_pml_cal_b(float x, float L, float bmax)
 }
 
 int
-bdry_pml_set(gdinfo_t *gdinfo,
-             gd_t *gd,
+bdry_pml_set(gdcurv_t *gdcurv,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -72,17 +71,17 @@ bdry_pml_set(gdinfo_t *gdinfo,
              float in_velocity[][2], //
              int verbose)
 {
-  int    ni1 = gdinfo->ni1;
-  int    ni2 = gdinfo->ni2;
-  int    nj1 = gdinfo->nj1;
-  int    nj2 = gdinfo->nj2;
-  int    nk1 = gdinfo->nk1;
-  int    nk2 = gdinfo->nk2;
-  int    nx  = gdinfo->nx ;
-  int    ny  = gdinfo->ny ;
-  int    nz  = gdinfo->nz ;
-  int    siz_iy = gdinfo->siz_iy;
-  int    siz_iz = gdinfo->siz_iz;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int nx  = gdcurv->nx ;
+  int ny  = gdcurv->ny ;
+  int nz  = gdcurv->nz ;
+  int siz_iy = gdcurv->siz_iy;
+  int siz_iz = gdcurv->siz_iz;
 
   // default disable
   bdrypml->is_enable = 0;
@@ -173,14 +172,14 @@ bdry_pml_set(gdinfo_t *gdinfo,
 
       // esti L0 and dh
       float L0, dh;
-      bdry_pml_cal_len_dh(gd,bdrypml->ni1[idim][iside],
-                             bdrypml->ni2[idim][iside],
-                             bdrypml->nj1[idim][iside],
-                             bdrypml->nj2[idim][iside],
-                             bdrypml->nk1[idim][iside],
-                             bdrypml->nk2[idim][iside],
-                             idim,
-                             &L0, &dh);
+      bdry_pml_cal_len_dh(gdcurv,bdrypml->ni1[idim][iside],
+                                 bdrypml->ni2[idim][iside],
+                                 bdrypml->nj1[idim][iside],
+                                 bdrypml->nj2[idim][iside],
+                                 bdrypml->nk1[idim][iside],
+                                 bdrypml->nk2[idim][iside],
+                                 idim,
+                                 &L0, &dh);
 
       // para
       int npoints = bdrypml->num_of_layers[idim][iside] + 1;
@@ -237,8 +236,7 @@ bdry_pml_set(gdinfo_t *gdinfo,
 }
 
 int
-bdry_pml_set_stg(gdinfo_t *gdinfo,
-                 gd_t *gd,
+bdry_pml_set_stg(gdcurv_t *gdcurv,
                  wav_t *wav,
                  bdrypml_t *bdrypml,
                  int   *neighid, 
@@ -249,17 +247,17 @@ bdry_pml_set_stg(gdinfo_t *gdinfo,
                  float in_velocity[][2], //
                  int verbose)
 {
-  int    ni1 = gdinfo->ni1;
-  int    ni2 = gdinfo->ni2;
-  int    nj1 = gdinfo->nj1;
-  int    nj2 = gdinfo->nj2;
-  int    nk1 = gdinfo->nk1;
-  int    nk2 = gdinfo->nk2;
-  int    nx  = gdinfo->nx ;
-  int    ny  = gdinfo->ny ;
-  int    nz  = gdinfo->nz ;
-  int    siz_iy = gdinfo->siz_iy;
-  int    siz_iz = gdinfo->siz_iz;
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int nx  = gdcurv->nx ;
+  int ny  = gdcurv->ny ;
+  int nz  = gdcurv->nz ;
+  int siz_iy = gdcurv->siz_iy;
+  int siz_iz = gdcurv->siz_iz;
 
   // default disable
   bdrypml->is_enable = 0;
@@ -360,14 +358,14 @@ bdry_pml_set_stg(gdinfo_t *gdinfo,
 
       // esti L0 and dh
       float L0, dh;
-      bdry_pml_cal_len_dh(gd,bdrypml->ni1[idim][iside],
-                             bdrypml->ni2[idim][iside],
-                             bdrypml->nj1[idim][iside],
-                             bdrypml->nj2[idim][iside],
-                             bdrypml->nk1[idim][iside],
-                             bdrypml->nk2[idim][iside],
-                             idim,
-                             &L0, &dh);
+      bdry_pml_cal_len_dh(gdcurv,bdrypml->ni1[idim][iside],
+                                 bdrypml->ni2[idim][iside],
+                                 bdrypml->nj1[idim][iside],
+                                 bdrypml->nj2[idim][iside],
+                                 bdrypml->nk1[idim][iside],
+                                 bdrypml->nk2[idim][iside],
+                                 idim,
+                                 &L0, &dh);
 
       // adjust L0 to include half length
       L0 += dh / 2.0;
@@ -488,7 +486,7 @@ bdry_pml_auxvar_init(int nx, int ny, int nz,
  */
 
 int
-bdry_pml_cal_len_dh(gd_t *gd, 
+bdry_pml_cal_len_dh(gdcurv_t *gdcurv, 
                     int abs_ni1, int abs_ni2,
                     int abs_nj1, int abs_nj2,
                     int abs_nk1, int abs_nk2,
@@ -497,129 +495,110 @@ bdry_pml_cal_len_dh(gd_t *gd,
 {
   int ierr = 0;
 
-  int siz_iy  = gd->siz_iy;
-  int siz_iz = gd->siz_iz;
+  int siz_iy  = gdcurv->siz_iy;
+  int siz_iz  = gdcurv->siz_iz;
 
-  // cartesian grid is simple
-  if (gd->type == GD_TYPE_CART)
+  float *x3d = gdcurv->x3d;
+  float *y3d = gdcurv->y3d;
+  float *z3d = gdcurv->z3d;
+
+  double L  = 0.0;
+  double dh = 0.0;
+  int    num = 0;
+
+  if (idim == 0) // x-axis
   {
-    if (idim == 0) { // x-axis
-      *avg_dh = gd->dx;
-      *avg_L  = gd->dx * (abs_ni2 - abs_ni1);
-    } else if (idim == 1) { // y-axis
-      *avg_dh = gd->dy;
-      *avg_L  = gd->dy * (abs_nj2 - abs_nj1);
-    } else { // z-axis
-      *avg_dh = gd->dz;
-      *avg_L  = gd->dz * (abs_nk2 - abs_nk1);
-    }
-  }
-  // curv grid needs avg
-  else if (gd->type == GD_TYPE_CURV)
-  {
-    float *x3d = gd->x3d;
-    float *y3d = gd->y3d;
-    float *z3d = gd->z3d;
-
-    double L  = 0.0;
-    double dh = 0.0;
-    int    num = 0;
-
-    if (idim == 0) // x-axis
+    for (int k=abs_nk1; k<=abs_nk2; k++)
     {
-      for (int k=abs_nk1; k<=abs_nk2; k++)
-      {
-        for (int j=abs_nj1; j<=abs_nj2; j++)
-        {
-          int iptr = abs_ni1 + j * siz_iy + k * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int i=abs_ni1+1; i<=abs_ni2; i++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
-
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
-
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
-
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
-        }
-      }
-
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_ni2 - abs_ni1);
-    } 
-    else if (idim == 1) // y-axis
-    { 
-      for (int k=abs_nk1; k<=abs_nk2; k++)
-      {
-        for (int i=abs_ni1; i<=abs_ni2; i++)
-        {
-          int iptr = i + abs_nj1 * siz_iy + k * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int j=abs_nj1+1; j<=abs_nj2; j++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
-
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
-
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
-
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
-        }
-      }
-
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_nj2 - abs_nj1);
-    }
-    else // z-axis
-    { 
       for (int j=abs_nj1; j<=abs_nj2; j++)
       {
-        for (int i=abs_ni1; i<=abs_ni2; i++)
+        int iptr = abs_ni1 + j * siz_iy + k * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int i=abs_ni1+1; i<=abs_ni2; i++)
         {
-          int iptr = i + j * siz_iy + abs_nk1 * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int k=abs_nk1+1; k<=abs_nk2; k++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
+          int iptr = i + j * siz_iy + k * siz_iz;
 
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
 
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
 
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
         }
       }
+    }
 
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_nk2 - abs_nk1);
-    } // idim
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_ni2 - abs_ni1);
+  } 
+  else if (idim == 1) // y-axis
+  { 
+    for (int k=abs_nk1; k<=abs_nk2; k++)
+    {
+      for (int i=abs_ni1; i<=abs_ni2; i++)
+      {
+        int iptr = i + abs_nj1 * siz_iy + k * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int j=abs_nj1+1; j<=abs_nj2; j++)
+        {
+          int iptr = i + j * siz_iy + k * siz_iz;
 
-  } // gd type
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
+
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
+        }
+      }
+    }
+
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_nj2 - abs_nj1);
+  }
+  else // z-axis
+  { 
+    for (int j=abs_nj1; j<=abs_nj2; j++)
+    {
+      for (int i=abs_ni1; i<=abs_ni2; i++)
+      {
+        int iptr = i + j * siz_iy + abs_nk1 * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int k=abs_nk1+1; k<=abs_nk2; k++)
+        {
+          int iptr = i + j * siz_iy + k * siz_iz;
+
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
+
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
+        }
+      }
+    }
+
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_nk2 - abs_nk1);
+  } // idim
 
   return ierr;
 }

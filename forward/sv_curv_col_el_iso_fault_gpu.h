@@ -2,7 +2,6 @@
 #define SV_CURV_COL_EL_ISO_FAULT_H
 
 #include "fd_t.h"
-#include "gd_info.h"
 #include "fault_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
@@ -25,7 +24,7 @@ sv_curv_col_el_iso_fault_onestage(
                     fault_wav_t FW,
                     fault_t F,
                     fault_coef_t FC,
-                    gdinfo_t  gdinfo_d,
+                    gdcurv_t  gdcurv_d,
                     gd_metric_t metric_d,
                     md_t md_d,
                     bdryfree_t bdryfree_d,

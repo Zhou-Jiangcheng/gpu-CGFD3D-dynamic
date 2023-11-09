@@ -17,7 +17,7 @@
  */
 
 int
-bdry_free_set(gdinfo_t        *gdinfo,
+bdry_free_set(gdcurv_t        *gdcurv,
               bdryfree_t      *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
@@ -25,7 +25,7 @@ bdry_free_set(gdinfo_t        *gdinfo,
 {
   int ierr = 0;
 
-  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_iz  = gdcurv->siz_iz;
 
   // default disable
   bdryfree->is_enable = 0;

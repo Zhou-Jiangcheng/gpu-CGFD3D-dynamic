@@ -1,7 +1,7 @@
 #ifndef WF_EL_1ST_H
 #define WF_EL_1ST_H
 
-#include "gd_info.h"
+#include "gd_t.h"
 
 /*************************************************
  * structure
@@ -84,15 +84,15 @@ struct var5d_t
  *************************************************/
 
 int 
-wav_init(gdinfo_t *gdinfo,
-               wav_t *V,
-               int number_of_levels);
+wav_init(gdcurv_t *gdcurv,
+         wav_t *V,
+         int number_of_levels);
 
 int
 wav_check_value(float *w, wav_t *wav);
 
 __global__ void
-PG_calcu_gpu(float *w_end, float *w_pre, gdinfo_t gdinfo, float *PG_d, float *Dis_accu, float dt);
+PG_calcu_gpu(float *w_end, float *w_pre, gdcurv_t gdcurv, float *PG_d, float *Dis_accu, float dt);
 
 __global__ void
 wav_update(size_t size, float coef, float *w_update, float *w_input1, float *w_input2);

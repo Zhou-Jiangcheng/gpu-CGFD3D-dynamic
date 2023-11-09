@@ -3,7 +3,6 @@
 
 #include "constants.h"
 #include "fd_t.h"
-#include "gd_info.h"
 #include "fault_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
@@ -31,12 +30,9 @@ typedef struct
 
   // mpi
   mympi_t *mympi;
-
-  // grid index info
-  gdinfo_t *gdinfo;
   
   // coordnate: x3d, y3d, z3d
-  gd_t *gd;
+  gdcurv_t *gdcurv;
 
   // grid metrics: jac, xi_x, etc
   gd_metric_t *gd_metric;
@@ -122,7 +118,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
 int
 blk_macdrp_pack_mesg_gpu(float *w_cur,
                          fd_t *fd,
-                         gdinfo_t *gdinfo,
+                         gdcurv_t *gdcurv,
                          mympi_t *mpmpi,
                          int ipair_mpi,
                          int istage_mpi,
@@ -152,7 +148,7 @@ blk_macdrp_pack_mesg_z2(
 int 
 blk_macdrp_unpack_mesg_gpu(float *w_cur, 
                            fd_t *fd,
-                           gdinfo_t *gdinfo,
+                           gdcurv_t *gdcurv,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
@@ -182,7 +178,7 @@ blk_macdrp_unpack_mesg_z2(
 int 
 blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
                                fd_t *fd,
-                               gdinfo_t *gdinfo, 
+                               gdcurv_t *gdcurv, 
                                mympi_t *mympi, 
                                int ipair_mpi,
                                int istage_mpi,
@@ -212,7 +208,7 @@ blk_macdrp_pack_fault_mesg_z2(
 int 
 blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur, 
                                  fd_t *fd,
-                                 gdinfo_t *gdinfo,
+                                 gdcurv_t *gdcurv,
                                  mympi_t *mympi, 
                                  int ipair_mpi,
                                  int istage_mpi,
@@ -243,7 +239,7 @@ int
 blk_print(blk_t *blk);
 
 int
-blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
+blk_dt_esti_curv(gdcurv_t *gdcurv, md_t *md,
     float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
     int *dtmaxi, int *dtmaxj, int *dtmaxk);
 

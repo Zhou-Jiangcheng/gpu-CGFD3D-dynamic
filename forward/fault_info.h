@@ -1,7 +1,6 @@
 #ifndef FT_INFO_H
 #define FT_INFO_H
 
-#include "gd_info.h"
 #include "gd_t.h"
 #include "md_t.h"
 
@@ -115,10 +114,10 @@ typedef struct
 
 int
 fault_coef_init(fault_coef_t *FC,
-                gdinfo_t *gdinfo);
+                gdcurv_t *gdcurv);
 
 int 
-fault_coef_cal(gdinfo_t *gdinfo, 
+fault_coef_cal(gdcurv_t *gdcurv, 
                gd_metric_t *metric, 
                md_t *md, 
                int fault_i_global_index,
@@ -126,19 +125,19 @@ fault_coef_cal(gdinfo_t *gdinfo,
 
 int
 fault_init(fault_t *F,
-           gdinfo_t *gdinfo);
+           gdcurv_t *gdcurv);
 
 int
 fault_set(fault_t *F,
           fault_coef_t *FC,
-          gdinfo_t *gdinfo,
+          gdcurv_t *gdcurv,
           int bdry_has_free,
           int *fault_grid,
           char *init_stress_nc);
 
 int 
 nc_read_init_stress(fault_t *F, 
-                    gdinfo_t *gdinfo, 
+                    gdcurv_t *gdcurv, 
                     char *init_stress_nc);
 
 #endif

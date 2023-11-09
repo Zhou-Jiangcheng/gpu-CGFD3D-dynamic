@@ -4,7 +4,7 @@
 #include <mpi.h>
 
 #include "constants.h"
-#include "gd_info.h"
+#include "mympi_t.h"
 
 #define GD_TILE_NX 4
 #define GD_TILE_NY 4
@@ -13,22 +13,33 @@
  * structure
  *************************************************/
 
-typedef enum {
-
-  GD_TYPE_CART = 1,
-  GD_TYPE_VMAP = 2,
-  GD_TYPE_CURV = 3
-
-} gd_type_t;
-
-//  grid coordinate for both cart, vmap and curv
-//    to reduce duplicated functions
 typedef struct {
+  int ni, nj, nk;
+  int nx, ny, nz;
+  int ni1, ni2;
+  int nj1, nj2;
+  int nk1, nk2;
 
-  gd_type_t type;
+  int npoint_ghosts;
+  int fdx_nghosts;
+  int fdy_nghosts;
+  int fdz_nghosts;
 
-  int n1, n2, n3, n4;
-  int nx, ny, nz, ncmp;
+  int npoint_x; 
+  int npoint_y; 
+  int npoint_z; 
+  // global index
+  int gni1, gnj1, gnk1; // global index, do not accout ghost point
+  int gni2, gnj2, gnk2; // global index
+  // new naming
+  int ni1_to_glob_phys0;
+  int nj1_to_glob_phys0;
+  int nk1_to_glob_phys0;
+  int ni2_to_glob_phys0;
+  int nj2_to_glob_phys0;
+  int nk2_to_glob_phys0;
+
+  int ncmp;
   float *v4d; // allocated var
 
   //to avoid ref x3d at different funcs
@@ -79,11 +90,12 @@ typedef struct {
 
   size_t *cmp_pos;
   char  **cmp_name;
-} gd_t;
+  // curvilinear coord name,
+  char **index_name;
+} gdcurv_t;
 
 //  for metric
 typedef struct {
-  int n1, n2, n3, n4;
   int nx, ny, nz, ncmp;
   float *v4d; // allocated var
 
@@ -112,64 +124,54 @@ typedef struct {
  *************************************************/
 
 int 
-gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv);
+gd_curv_init(gdcurv_t *gdcurv);
 
 int 
-gd_curv_metric_init(gdinfo_t    *gdinfo,
+gd_curv_metric_init(gdcurv_t    *gdcurv,
                     gd_metric_t *metric);
 int
-gd_curv_metric_cal(gdinfo_t    *gdinfo,
-                   gd_t        *gdcurv,
+gd_curv_metric_cal(gdcurv_t    *gdcurv,
                    gd_metric_t *metric);
 
 int
-gd_curv_exchange(gdinfo_t *gdinfo,
+gd_curv_exchange(gdcurv_t *gdcurv,
                  float *g3d,
                  int ncmp,
                  int *neighid,
                  MPI_Comm topocomm);
 
+int
+gd_curv_gen_fault(gdcurv_t *gdcurv,
+                  int  num_of_x_points,
+                  float dh,
+                  char *in_grid_fault_nc);
 
 int
-gd_curv_gen_fault(
-  gd_t *gdcurv,
-  gdinfo_t *gdinfo,
-  int  num_of_x_points,
-  float dh,
-  char *in_grid_fault_nc);
-
-int
-nc_read_fault_geometry(
-        float *fault_x, float *fault_y, float *fault_z, 
-        char *in_grid_fault_nc, gdinfo_t *gdinfo);
+nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z, 
+                       char *in_grid_fault_nc, gdcurv_t *gdcurv);
 
 int
 gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir);
 
 int
-gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir);
+gd_curv_coord_import(gdcurv_t *gdcurv, char *fname_coords, char *import_dir);
 
 int
-gd_curv_coord_export(
-  gdinfo_t *gdinfo,
-  gd_t *gdcurv,
-  char *fname_coords,
-  char *output_dir);
-
+gd_curv_coord_export(gdcurv_t *gdcurv,
+                     char *fname_coords,
+                     char *output_dir);
 
 int
-gd_curv_metric_export(gdinfo_t    *gdinfo,
+gd_curv_metric_export(gdcurv_t    *gdcurv,
                       gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 
+int
+gd_curv_set_minmax(gdcurv_t *gdcurv);
 
 int
-gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
-
-int
-gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcurv,
+gd_curv_coord_to_glob_indx(gdcurv_t *gdcurv,
                            float sx,
                            float sy,
                            float sz,
@@ -178,8 +180,7 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
                            int   *ou_si, int *ou_sj, int *ou_sk,
                            float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
 __device__ int
-gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
-                               gd_t *gdcurv,
+gd_curv_coord_to_glob_indx_gpu(gdcurv_t *gdcurv,
                                float sx,
                                float sy,
                                float sz,
@@ -190,15 +191,13 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
 
 
 __host__ __device__ int
-gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
-                            gd_t *gd,
+gd_curv_coord_to_local_indx(gdcurv_t *gdcurv,
                             float sx, float sy, float sz,
                             int *si, int *sj, int *sk,
                             float *sx_inc, float *sy_inc, float *sz_inc);
 
 __host__ __device__
-int gd_curv_depth_to_axis(gdinfo_t *gdinfo,
-                          gd_t  *gd,
+int gd_curv_depth_to_axis(gdcurv_t *gdcurv,
                           float sx,
                           float sy,
                           float *sz,
@@ -234,27 +233,27 @@ gd_curv_coord2index_sample(float sx, float sy, float sz,
     float *sj_curv,
     float *sk_curv);
 
-  int
+int
 gd_curv_coord2index_rdinterp(float sx, float sy, float sz, 
-    int num_points,
-    float *points_x, // x coord of all points
-    float *points_y,
-    float *points_z,
-    float *points_i, // curv coord of all points
-    float *points_j,
-    float *points_k,
-    float *si_curv, // interped curv coord
-    float *sj_curv,
-    float *sk_curv);
+                             int num_points,
+                             float *points_x, // x coord of all points
+                             float *points_y,
+                             float *points_z,
+                             float *points_i, // curv coord of all points
+                             float *points_j,
+                             float *points_k,
+                             float *si_curv, // interped curv coord
+                             float *sj_curv,
+                             float *sk_curv);
 
 float
-gd_coord_get_x(gd_t *gd, int i, int j, int k);
+gd_coord_get_x(gdcurv_t *gdcurv, int i, int j, int k);
 
 float
-gd_coord_get_y(gd_t *gd, int i, int j, int k);
+gd_coord_get_y(gdcurv_t *gdcurv, int i, int j, int k);
 
 float
-gd_coord_get_z(gd_t *gd, int i, int j, int k);
+gd_coord_get_z(gdcurv_t *gdcurv, int i, int j, int k);
 
 __host__ __device__
 int isPointInHexahedron_c(float px,  float py,  float pz,
@@ -267,6 +266,50 @@ __host__ __device__
 int face_normal(float (*hexa2d)[3], float *normal_unit);
 
 int
-gd_print(gd_t *gd);
+gd_info_set(gdcurv_t *const gdcurv,
+            const mympi_t *const mympi,
+            const int number_of_total_grid_points_x,
+            const int number_of_total_grid_points_y,
+            const int number_of_total_grid_points_z,
+                  int abs_num_of_layers[][2],
+            const int fdx_nghosts,
+            int const fdy_nghosts,
+            const int fdz_nghosts,
+            const int verbose);
+int
+gd_info_lindx_is_inner(int i, int j, int k, gdcurv_t *gdcurv);
+
+int
+gd_info_gindx_is_inner(int gi, int gj, int gk, gdcurv_t *gdcurv);
+
+int
+gd_info_gindx_is_inner_i(int gi, gdcurv_t *gdcurv);
+
+int
+gd_info_gindx_is_inner_j(int gj, gdcurv_t *gdcurv);
+
+int
+gd_info_gindx_is_inner_k(int gk, gdcurv_t *gdcurv);
+
+int
+gd_info_ind_glphy2lcext_i(int gi, gdcurv_t *gdcurv);
+
+int
+gd_info_ind_glphy2lcext_j(int gj, gdcurv_t *gdcurv);
+
+int
+gd_info_ind_glphy2lcext_k(int gk, gdcurv_t *gdcurv);
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_i(int i, gdcurv_t *gdcurv);
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_j(int j, gdcurv_t *gdcurv);
+
+__host__ __device__ int
+gd_info_ind_lcext2glphy_k(int k, gdcurv_t *gdcurv);
+
+int
+gd_info_print(gdcurv_t *gdcurv);
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef T_SW_H
 #define T_SW_H
 
-#include "gd_info.h"
 #include "wav_t.h"
 #include "fd_t.h"
 #include "gd_t.h"
@@ -17,7 +16,7 @@ trial_slipweakening_onestage(
                   int i0,
                   int isfree,
                   float dt,
-                  gdinfo_t gdinfo_d,
+                  gdcurv_t gdcurv_d,
                   gd_metric_t metric_d,
                   wav_t wav_d,
                   fault_wav_t FW,

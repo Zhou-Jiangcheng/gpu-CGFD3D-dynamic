@@ -5,16 +5,10 @@
 #include "alloc.h"
 #include "cuda_common.h"
 
-int init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d)
-{
-  memcpy(gdinfo_d,gdinfo,sizeof(gdinfo_t));
-  return 0;
-}
-
-int init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d)
+int init_gdcurv_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d)
 {
   size_t siz_icmp = gdcurv->siz_icmp;
-  memcpy(gdcurv_d,gdcurv,sizeof(gd_t));
+  memcpy(gdcurv_d,gdcurv,sizeof(gdcurv_t));
   gdcurv_d->x3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
   gdcurv_d->y3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
   gdcurv_d->z3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
@@ -168,10 +162,10 @@ int init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d)
   return 0;
 }
 
-int init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_d)
+int init_fault_coef_device(gdcurv_t *gdcurv, fault_coef_t *FC, fault_coef_t *FC_d)
 {
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int ny = gdcurv->ny;
+  int nz = gdcurv->nz;
   memcpy(FC_d,FC,sizeof(fault_coef_t));
 
   FC_d->rho_f = (float *) cuda_malloc(sizeof(float)*ny*nz*2);
@@ -300,10 +294,10 @@ int init_fault_coef_device(gdinfo_t *gdinfo, fault_coef_t *FC, fault_coef_t *FC_
   return 0;
 }
 
-int init_fault_device(gdinfo_t *gdinfo, fault_t *F, fault_t *F_d)
+int init_fault_device(gdcurv_t *gdcurv, fault_t *F, fault_t *F_d)
 {
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
+  int nj = gdcurv->nj;
+  int nk = gdcurv->nk;
   memcpy(F_d,F,sizeof(fault_t));
   // for input
   F_d->T0x   = (float *) cuda_malloc(sizeof(float)*nj*nk);  // stress_init_x
@@ -377,16 +371,16 @@ int init_fault_wav_device(fault_wav_t *FW, fault_wav_t *FW_d)
   int nlevel = FW->nlevel;
   size_t siz_ilevel = FW->siz_ilevel;
   memcpy(FW_d,FW,sizeof(fault_wav_t));
-  FW_d->v5d   = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
-  FW_d->T1x   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->T1y   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->T1z   = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
-  FW_d->hT1x  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->hT1y  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->hT1z  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->mT1x  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->mT1y  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
-  FW_d->mT1z  = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->v5d  = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
+  FW_d->T1x  = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->T1y  = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->T1z  = (float *) cuda_malloc(sizeof(float)*7*ny*nz); 
+  FW_d->hT1x = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT1y = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->hT1z = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->mT1x = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->mT1y = (float *) cuda_malloc(sizeof(float)*ny*nz); 
+  FW_d->mT1z = (float *) cuda_malloc(sizeof(float)*ny*nz); 
   CUDACHECK(cudaMemset(FW_d->v5d,  0, sizeof(float)*siz_ilevel*nlevel));
   CUDACHECK(cudaMemset(FW_d->T1x,  0, sizeof(float)*7*ny*nz));
   CUDACHECK(cudaMemset(FW_d->T1y,  0, sizeof(float)*7*ny*nz));
@@ -401,17 +395,17 @@ int init_fault_wav_device(fault_wav_t *FW, fault_wav_t *FW_d)
   return 0;
 }
 
-int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
+int init_bdryfree_device(gdcurv_t *gdcurv, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
 {
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
 
   memcpy(bdryfree_d,bdryfree,sizeof(bdryfree_t));
   
   if (bdryfree->is_at_sides[CONST_NDIM-1][1] == 1)
   {
-    bdryfree_d->matVx2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
-    bdryfree_d->matVy2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdryfree_d->matVx2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdryfree_d->matVy2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
 
     CUDACHECK(cudaMemcpy(bdryfree_d->matVx2Vz2, bdryfree->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(bdryfree_d->matVy2Vz2, bdryfree->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
@@ -420,7 +414,7 @@ int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdr
   return 0;
 }
 
-int init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
+int init_bdrypml_device(gdcurv_t *gdcurv, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
 {
   memcpy(bdrypml_d,bdrypml,sizeof(bdrypml_t));
   for(int idim=0; idim<CONST_NDIM; idim++){
@@ -467,22 +461,22 @@ int init_wave_device(wav_t *wav, wav_t *wav_d)
   return 0;
 }
 
-float *init_PGVAD_device(gdinfo_t *gdinfo)
+float *init_PGVAD_device(gdcurv_t *gdcurv)
 {
   float *PG_d;
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
   PG_d = (float *) cuda_malloc(sizeof(float)*CONST_NDIM_5*nx*ny);
   CUDACHECK(cudaMemset(PG_d,0,sizeof(float)*CONST_NDIM_5*nx*ny));
 
   return PG_d;
 }
 
-float *init_Dis_accu_device(gdinfo_t *gdinfo)
+float *init_Dis_accu_device(gdcurv_t *gdcurv)
 {
   float *Dis_accu_d;
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
+  int nx = gdcurv->nx;
+  int ny = gdcurv->ny;
   Dis_accu_d = (float *) cuda_malloc(sizeof(float)*CONST_NDIM*nx*ny);
   CUDACHECK(cudaMemset(Dis_accu_d,0,sizeof(float)*CONST_NDIM*nx*ny));
 
@@ -498,7 +492,7 @@ int *init_neighid_device(int *neighid)
   return neighid_d;
 }
 
-int dealloc_gdcurv_device(gd_t gdcurv_d)
+int dealloc_gdcurv_device(gdcurv_t gdcurv_d)
 {
   CUDACHECK(cudaFree(gdcurv_d.x3d)); 
   CUDACHECK(cudaFree(gdcurv_d.y3d)); 

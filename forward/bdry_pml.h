@@ -2,7 +2,6 @@
 #define BDRY_PML_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "gd_t.h"
 #include "wav_t.h"
 
@@ -91,8 +90,7 @@ float
 bdry_pml_cal_b(float x, float L, float bmax);
 
 int
-bdry_pml_set(gdinfo_t *gdinfo,
-             gd_t *gd,
+bdry_pml_set(gdcurv_t *gdcurv,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -104,8 +102,7 @@ bdry_pml_set(gdinfo_t *gdinfo,
              int verbose);
 
 int
-bdry_pml_set_stg(gdinfo_t *gdinfo,
-                 gd_t *gd,
+bdry_pml_set_stg(gdcurv_t *gdcurv,
                  wav_t *wav,
                  bdrypml_t *bdrypml,
                  int   *neighid, 
@@ -124,7 +121,7 @@ bdry_pml_auxvar_init(int nx, int ny, int nz,
                      const int verbose);
 
 int
-bdry_pml_cal_len_dh(gd_t *gd, 
+bdry_pml_cal_len_dh(gdcurv_t *gdcurv, 
                     int abs_ni1, int abs_ni2,
                     int abs_nj1, int abs_nj2,
                     int abs_nk1, int abs_nk2,

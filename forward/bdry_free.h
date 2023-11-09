@@ -2,7 +2,6 @@
 #define BDRY_FREE_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "gd_t.h"
 
 /*************************************************
@@ -49,7 +48,7 @@ typedef struct
  *************************************************/
 
 int
-bdry_free_set(gdinfo_t        *gdinfo,
+bdry_free_set(gdcurv_t        *gdcurv,
               bdryfree_t      *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],

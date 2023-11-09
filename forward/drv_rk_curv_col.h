@@ -2,7 +2,6 @@
 #define DRV_RK_CURV_COL_H
 
 #include "fd_t.h"
-#include "gd_info.h"
 #include "fault_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
@@ -20,7 +19,7 @@
 int
 drv_rk_curv_col_allstep(
   fd_t        *fd,
-  gdinfo_t    *gdinfo,
+  gdcurv_t    *gdcurv,
   gd_metric_t *metric,
   md_t      *md,
   bdryfree_t *bdryfree,

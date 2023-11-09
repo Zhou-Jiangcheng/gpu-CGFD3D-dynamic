@@ -11,7 +11,7 @@ trial_slipweakening_onestage(
                   int i0,
                   int isfree,
                   float dt,
-                  gdinfo_t gdinfo_d,
+                  gdcurv_t gdcurv_d,
                   gd_metric_t metric_d,
                   wav_t wav_d,
                   fault_wav_t FW,
@@ -52,15 +52,15 @@ trial_slipweakening_onestage(
   float *xi_z  = metric_d.xi_z;
   float *jac3d = metric_d.jac;
 
-  int nj1 = gdinfo_d.nj1;
-  int nk1 = gdinfo_d.nk1;
-  int nj  = gdinfo_d.nj;
-  int nk  = gdinfo_d.nk;
-  int ny  = gdinfo_d.ny;
+  int nj1 = gdcurv_d.nj1;
+  int nk1 = gdcurv_d.nk1;
+  int nj  = gdcurv_d.nj;
+  int nk  = gdcurv_d.nk;
+  int ny  = gdcurv_d.ny;
 
-  size_t siz_iy  = gdinfo_d.siz_iy;
-  size_t siz_iz  = gdinfo_d.siz_iz;
-  size_t siz_iz_yz = gdinfo_d.siz_iz_yz;
+  size_t siz_iy  = gdcurv_d.siz_iy;
+  size_t siz_iz  = gdcurv_d.siz_iz;
+  size_t siz_iz_yz = gdcurv_d.siz_iz_yz;
 
   int jdir = fdy_op->dir;
   int kdir = fdz_op->dir;

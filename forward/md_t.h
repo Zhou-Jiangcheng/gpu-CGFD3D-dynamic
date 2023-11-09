@@ -1,7 +1,7 @@
 #ifndef MD_EL_ISO_H
 #define MD_EL_ISO_H
 
-#include "gd_info.h"
+#include "gd_t.h"
 #include "par_t.h"
 
 /*************************************************
@@ -9,7 +9,6 @@
  *************************************************/
 
 typedef struct {
-  int n1, n2, n3, n4;
   int nx, ny, nz, ncmp;
   float *v4d; // allocated var
 
@@ -69,16 +68,16 @@ typedef struct {
  *************************************************/
 
 int
-md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type);
+md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type);
 
 int
 md_import(md_t *md, char *fname_coords, char *in_dir);
 
 int
-md_export(gdinfo_t  *gdinfo,
-                 md_t *md,
-                 char *fname_coords,
-                 char *output_dir);
+md_export(gdcurv_t  *gdcurv,
+          md_t *md,
+          char *fname_coords,
+          char *output_dir);
 
 int
 md_gen_uniform_el_iso(md_t *md);
