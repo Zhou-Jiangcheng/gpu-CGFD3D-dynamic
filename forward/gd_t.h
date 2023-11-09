@@ -70,12 +70,12 @@ typedef struct {
   float tile_zmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
   float tile_zmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
 
-  size_t siz_line;
-  size_t siz_slice;
-  size_t siz_volume;
+  size_t siz_iy;
+  size_t siz_iz;
+  size_t siz_icmp;
   
-  size_t siz_slice_yz; 
-  size_t siz_slice_yz2; 
+  size_t siz_iz_yz; 
+  size_t siz_iz_yz2; 
 
   size_t *cmp_pos;
   char  **cmp_name;
@@ -98,9 +98,9 @@ typedef struct {
   float *zeta_y;
   float *zeta_z;
 
-  size_t siz_line;
-  size_t siz_slice;
-  size_t siz_volume;
+  size_t siz_iy;
+  size_t siz_iz;
+  size_t siz_icmp;
 
   size_t *cmp_pos;
   char  **cmp_name;

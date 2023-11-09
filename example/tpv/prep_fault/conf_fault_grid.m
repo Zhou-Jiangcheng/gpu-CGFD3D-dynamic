@@ -17,15 +17,16 @@ x = zeros(nj, nk);
 y = zeros(nj, nk);
 z = zeros(nj, nk);
 
+theta = 1/4*pi;
 for k = 1:nk
   for j = 1:nj
-        x(j,k) = 0;
+        x(j,k) = 0 + (k-nk)*dh*tan(theta);
         y(j,k) = (j-1-nj/2)*dh;
 %         y(j,k) = (j-1)*dh;
         z(j,k) = (k-nk)*dh;
     end
 end
-if 1
+if 0
 for j = 1:nj
     for k = 1:nk
         r1 = sqrt((y(j,k)+10.5e3).^2 + (z(j,k)+7.5e3).^2);
@@ -79,4 +80,18 @@ netcdf.putVar(ncid,varid(6),vec_l);
 netcdf.putVar(ncid,varid(7),jac);
 netcdf.close(ncid);
 
-
+if 1
+figure;
+surf(x/1e3, y/1e3, z/1e3); 
+% surf(xf_inv, yf_inv, zf_inv);
+shading interp;
+title('Tangshan fault');
+xlabel('x axis(km)');
+ylabel('y axis(km)');
+zlabel('depth(km)');
+axis equal;
+view([60, 30]);
+set(gca,'FontName','Times New Roman','FontSize',15,'LineWidth',1.5);
+set(gcf,'color','w');
+% set(gca,'YDir','reverse');
+end

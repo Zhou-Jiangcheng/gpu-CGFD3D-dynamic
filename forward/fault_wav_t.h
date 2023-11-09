@@ -1,5 +1,5 @@
-#ifndef FT_EL_1ST_H
-#define FT_EL_1ST_H
+#ifndef FT_WAVE_H
+#define FT_WAVE_H
 
 #include "gd_info.h"
 #include "fault_info.h"
@@ -28,8 +28,8 @@ typedef struct {
   float *mT1z;
   int nx, ny, nz, ncmp, nlevel;
 
-  size_t siz_slice_yz;
-  size_t siz_slice_yz_2;
+  size_t siz_iz_yz;
+  size_t siz_iz_yz_2;
   size_t siz_ilevel;
 
   size_t *cmp_pos;
@@ -75,7 +75,7 @@ fault_var_update(float *f_end_d, int it, float dt,
 __global__ void
 fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
                      int nj, int nj1, int nk, int nk1, 
-                     int ny, size_t siz_slice_yz,
+                     int ny, size_t siz_iz_yz,
                      int it, float dt, fault_coef_t FC, 
                      fault_t F, fault_wav_t FW);
 

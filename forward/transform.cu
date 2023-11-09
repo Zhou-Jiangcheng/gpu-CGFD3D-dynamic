@@ -14,9 +14,9 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
   int ny = gdinfo_d.ny;
   int nj1 = gdinfo_d.nj1;
   int nk1 = gdinfo_d.nk1;
-  size_t siz_line   = gdinfo_d.siz_line;
-  size_t siz_slice  = gdinfo_d.siz_slice;
-  size_t siz_slice_yz = gdinfo_d.siz_slice_yz;
+  size_t siz_iy   = gdinfo_d.siz_iy;
+  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_iz_yz = gdinfo_d.siz_iz_yz;
 
   // INPUT
   // local pointer get each vars
@@ -87,8 +87,8 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
                                      et_x, et_y, et_z,
                                      zt_x, zt_y, zt_z,
                                      jac3d, i0, nj, nj1, nk, nk1, ny, 
-                                     siz_line, siz_slice,
-                                     siz_slice_yz, F);
+                                     siz_iy, siz_iz,
+                                     siz_iz_yz, F);
   }
   return 0;
 }
@@ -110,8 +110,8 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
                float * zt_x,  float * zt_y,  float * zt_z,
                float * jac3d, int i0, int nj, int nj1, 
                int nk, int nk1, int ny, 
-               size_t siz_line, size_t siz_slice, 
-               size_t siz_slice_yz, fault_t F)
+               size_t siz_iy, size_t siz_iz, 
+               size_t siz_iz_yz, fault_t F)
 {
   // it's not necessary do
   // transform
@@ -134,7 +134,7 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
   // pml + strong boundry easy implement
   if( iy < nj && iz < nk && F.united[iy + iz * nj] == 1) 
   {
-    iptr = i0 + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
+    iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     metric[0][0]=xi_x[iptr];metric[0][1]=et_x[iptr];metric[0][2]=zt_x[iptr];
     metric[1][0]=xi_y[iptr];metric[1][1]=et_y[iptr];metric[1][2]=zt_y[iptr];
     metric[2][0]=xi_z[iptr];metric[2][1]=et_z[iptr];metric[2][2]=zt_z[iptr];
@@ -153,8 +153,8 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
         traction[i][j] *= jac;
       }
     }
-    //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_slice_yz   
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_slice_yz;  
+    //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_iz_yz   
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_iz_yz;  
     f_T1x[iptr_f] = traction[0][0];
     f_T1y[iptr_f] = traction[1][0];
     f_T1z[iptr_f] = traction[2][0];
@@ -162,7 +162,7 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
     for (int m = 0; m < 2; m++)
     {
       // Split nodes => 0: minus side, 1: plus side
-      iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_slice_yz;
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_iz_yz;
       f_Vx [iptr_f] = Vx[iptr];
       f_Vy [iptr_f] = Vy[iptr];
       f_Vz [iptr_f] = Vz[iptr];
@@ -190,7 +190,7 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
 
     for (int m = 0; m < 2; m++) 
     {
-      iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_slice_yz;
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_iz_yz;
       f_hT2x[iptr_f] = traction[0][1];
       f_hT2y[iptr_f] = traction[1][1];
       f_hT2z[iptr_f] = traction[2][1];
@@ -213,9 +213,9 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
   int nz = gdinfo_d.nz;
   int nj1 = gdinfo_d.nj1;
   int nk1 = gdinfo_d.nk1;
-  size_t siz_line   = gdinfo_d.siz_line;
-  size_t siz_slice  = gdinfo_d.siz_slice;
-  size_t siz_slice_yz = gdinfo_d.siz_slice_yz;
+  size_t siz_iy   = gdinfo_d.siz_iy;
+  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_iz_yz = gdinfo_d.siz_iz_yz;
 
   // OUTPUT
   float *Vx    = w_cur_d + wav_d.Vx_pos ;
@@ -267,8 +267,8 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
                                      et_x, et_y, et_z,
                                      zt_x, zt_y, zt_z,
                                      jac3d, i0, nj, nj1, nk, nk1, ny, 
-                                     siz_line, siz_slice, 
-                                     siz_slice_yz, F);
+                                     siz_iy, siz_iz, 
+                                     siz_iz_yz, F);
   }
 
   return 0;
@@ -287,8 +287,8 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
                float * zt_x,  float * zt_y, float * zt_z,
                float *jac3d, int i0, int nj, int nj1,
                int nk, int nk1,int ny, 
-               size_t siz_line, size_t siz_slice, 
-               size_t siz_slice_yz, fault_t F)
+               size_t siz_iy, size_t siz_iz, 
+               size_t siz_iz_yz, fault_t F)
 {
   // it's necessary for wave output
   // transform
@@ -311,24 +311,24 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
   // only united == 0 , fault transform wave
   if( iy < nj && iz < nk && F.united[iy + iz * nj] == 0)
   { 
-    iptr = i0 + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
+    iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     metric[0][0]=xi_x[iptr];metric[0][1]=et_x[iptr];metric[0][2]=zt_x[iptr];
     metric[1][0]=xi_y[iptr];metric[1][1]=et_y[iptr];metric[1][2]=zt_y[iptr];
     metric[2][0]=xi_z[iptr];metric[2][1]=et_z[iptr];metric[2][2]=zt_z[iptr];
     jac = 1.0/jac3d[iptr];
 
-    //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_slice_yz
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_slice_yz;  
+    //NOTE  T1x -3 : 3. fault T1x is medium, = 0. so 3 * siz_iz_yz
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_iz_yz;  
     traction[0][0] = f_T1x[iptr_f];
     traction[1][0] = f_T1y[iptr_f];
     traction[2][0] = f_T1z[iptr_f];
     iptr_f = (iy+nj1) + (iz+nk1) * ny;
-    traction[0][1] = (f_T2x[iptr_f] + f_T2x[iptr_f + siz_slice_yz]) * 0.5; // T2x
-    traction[1][1] = (f_T2y[iptr_f] + f_T2y[iptr_f + siz_slice_yz]) * 0.5; // T2y
-    traction[2][1] = (f_T2z[iptr_f] + f_T2z[iptr_f + siz_slice_yz]) * 0.5; // T2z
-    traction[0][2] = (f_T3x[iptr_f] + f_T3x[iptr_f + siz_slice_yz]) * 0.5; // T3x
-    traction[1][2] = (f_T3y[iptr_f] + f_T3y[iptr_f + siz_slice_yz]) * 0.5; // T3y
-    traction[2][2] = (f_T3z[iptr_f] + f_T3z[iptr_f + siz_slice_yz]) * 0.5; // T3z
+    traction[0][1] = (f_T2x[iptr_f] + f_T2x[iptr_f + siz_iz_yz]) * 0.5; // T2x
+    traction[1][1] = (f_T2y[iptr_f] + f_T2y[iptr_f + siz_iz_yz]) * 0.5; // T2y
+    traction[2][1] = (f_T2z[iptr_f] + f_T2z[iptr_f + siz_iz_yz]) * 0.5; // T2z
+    traction[0][2] = (f_T3x[iptr_f] + f_T3x[iptr_f + siz_iz_yz]) * 0.5; // T3x
+    traction[1][2] = (f_T3y[iptr_f] + f_T3y[iptr_f + siz_iz_yz]) * 0.5; // T3y
+    traction[2][2] = (f_T3z[iptr_f] + f_T3z[iptr_f + siz_iz_yz]) * 0.5; // T3z
 
     fdlib_math_invert3x3(metric);
     fdlib_math_matmul3x3(traction, metric, stress);
@@ -341,9 +341,9 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
       }
     }
 
-    Vx [iptr] = (f_Vx[iptr_f] + f_Vx[iptr_f + siz_slice_yz]) * 0.5;
-    Vy [iptr] = (f_Vy[iptr_f] + f_Vy[iptr_f + siz_slice_yz]) * 0.5;
-    Vz [iptr] = (f_Vz[iptr_f] + f_Vz[iptr_f + siz_slice_yz]) * 0.5;
+    Vx [iptr] = (f_Vx[iptr_f] + f_Vx[iptr_f + siz_iz_yz]) * 0.5;
+    Vy [iptr] = (f_Vy[iptr_f] + f_Vy[iptr_f + siz_iz_yz]) * 0.5;
+    Vz [iptr] = (f_Vz[iptr_f] + f_Vz[iptr_f + siz_iz_yz]) * 0.5;
     Txx[iptr] = stress[0][0];
     Tyy[iptr] = stress[1][1];
     Tzz[iptr] = stress[2][2];

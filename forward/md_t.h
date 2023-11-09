@@ -13,9 +13,9 @@ typedef struct {
   int nx, ny, nz, ncmp;
   float *v4d; // allocated var
 
-  size_t siz_line;
-  size_t siz_slice;
-  size_t siz_volume;
+  size_t siz_iy;
+  size_t siz_iz;
+  size_t siz_icmp;
 
   size_t *cmp_pos;
   char  **cmp_name;
@@ -93,6 +93,6 @@ int
 md_gen_uniform_el_aniso(md_t *md);
 
 int
-md_rho_to_slow(float *rho, size_t siz_volume);
+md_rho_to_slow(float *rho, size_t siz_icmp);
 
 #endif

@@ -25,7 +25,7 @@ bdry_free_set(gdinfo_t        *gdinfo,
 {
   int ierr = 0;
 
-  size_t siz_slice  = gdinfo->siz_slice;
+  size_t siz_iz  = gdinfo->siz_iz;
 
   // default disable
   bdryfree->is_enable = 0;
@@ -54,12 +54,12 @@ bdry_free_set(gdinfo_t        *gdinfo,
 
   // following only implement z2 (top) right now
   float *matVx2Vz = (float *)fdlib_mem_calloc_1d_float(
-                                      siz_slice * CONST_NDIM * CONST_NDIM,
+                                      siz_iz * CONST_NDIM * CONST_NDIM,
                                       0.0,
                                       "bdry_free_set");
 
   float *matVy2Vz = (float *)fdlib_mem_calloc_1d_float(
-                                      siz_slice * CONST_NDIM * CONST_NDIM,
+                                      siz_iz * CONST_NDIM * CONST_NDIM,
                                       0.0,
                                       "bdry_free_set");
 

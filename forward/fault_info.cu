@@ -89,9 +89,9 @@ fault_coef_cal(gdinfo_t *gdinfo,
 {
   int ny = gdinfo->ny;
   int nz = gdinfo->nz;
-  size_t siz_line = gdinfo->siz_line;
-  size_t siz_slice = gdinfo->siz_slice;
-  size_t siz_slice_yz = gdinfo->siz_slice_yz;
+  size_t siz_iy = gdinfo->siz_iy;
+  size_t siz_iz = gdinfo->siz_iz;
+  size_t siz_iz_yz = gdinfo->siz_iz_yz;
   // x direction only has 1 mpi. 
   int npoint_z = gdinfo->npoint_z;
   int gnk1 = gdinfo->gnk1;
@@ -143,7 +143,7 @@ fault_coef_cal(gdinfo_t *gdinfo,
   {
     for(int j=0; j<ny; j++) 
     {
-      iptr = i0 + j * siz_line + k * siz_slice;  
+      iptr = i0 + j * siz_iy + k * siz_iz;  
       iptr_f = j + k * ny;
       rho = rho3d[iptr];
       mu  = mu3d[iptr];
@@ -160,13 +160,13 @@ fault_coef_cal(gdinfo_t *gdinfo,
       e32 = zt_y[iptr];
       e33 = zt_z[iptr];
       //mimus media
-      FC->rho_f[iptr_f+0*siz_slice_yz] = rho;
-      FC->lam_f[iptr_f+0*siz_slice_yz] = lam;
-      FC->mu_f [iptr_f+0*siz_slice_yz] = mu;
+      FC->rho_f[iptr_f+0*siz_iz_yz] = rho;
+      FC->lam_f[iptr_f+0*siz_iz_yz] = lam;
+      FC->mu_f [iptr_f+0*siz_iz_yz] = mu;
       //plus media
-      FC->rho_f[iptr_f+1*siz_slice_yz] = rho;
-      FC->lam_f[iptr_f+1*siz_slice_yz] = lam;
-      FC->mu_f [iptr_f+1*siz_slice_yz] = mu;
+      FC->rho_f[iptr_f+1*siz_iz_yz] = rho;
+      FC->lam_f[iptr_f+1*siz_iz_yz] = lam;
+      FC->mu_f [iptr_f+1*siz_iz_yz] = mu;
       // minus -
       D11_1[0][0] = lam2mu*e11*e11+mu*(e12*e12+e13*e13);
       D11_1[0][1] = lam*e11*e12+mu*e12*e11;

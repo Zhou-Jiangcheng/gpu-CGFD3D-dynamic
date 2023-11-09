@@ -96,7 +96,7 @@ drv_rk_curv_col_allstep(
   init_fault_wav_device(fault_wav, &fault_wav_d);
 
   // get device wavefield 
-  float *w_buff = wav->v5d; // size number is V->siz_volume * (V->ncmp+6)
+  float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
   // GPU local pointer
   float * w_cur_d;
   float * w_pre_d;
@@ -554,10 +554,10 @@ drv_rk_curv_col_allstep(
     fault_var_update(f_end_d, it, dt, gdinfo_d, fault_d, fault_coef_d, fault_wav_d);
 
     //-- recv by interp
-    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
+    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
 
     //-- line values
-    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_volume);
+    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
     if( (it+1)%io_time_skip == 0)
     {
       int it_skip = (int)(it/io_time_skip);

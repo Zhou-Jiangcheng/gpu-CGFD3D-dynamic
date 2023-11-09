@@ -9,19 +9,19 @@ addmypath;
 nj = 400; 
 nk = 200;
 dh = 100;
-mu_s = 0.355; 
-mu_d = 0.265; 
-Dc = 0.5;
+mu_s = 0.457; 
+mu_d = 0.385; 
+Dc = 0.4;
 j1 = 51;
 j2 = 350;
 k1 = 51;
-k2 = 200;
+k2 = 181;
 % nucleation shape. 1 is square, 2 is circle.
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 150;
-srck = 150;   
+srcj = 200;
+srck = 100;   
 
 % 1st method
 % R = 0.6;
@@ -41,7 +41,7 @@ Stress_pri = [ SH, 0.0, 0.0; ...
               0.0, 0.0, Sh]*(-1.0e6);
 
 % azimuth of SH_max, degree in the East of North, x -axis
-Angle_SH = 87;
+Angle_SH = 40;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate

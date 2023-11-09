@@ -40,16 +40,15 @@ typedef struct {
   int nj2_to_glob_phys0;
   int nk2_to_glob_phys0;
 
-
   // size of a single var
   //  the following two naming are same
 
-  size_t siz_line;
-  size_t siz_slice;
-  size_t siz_volume; // number of points per var
+  size_t siz_iy;
+  size_t siz_iz;
+  size_t siz_icmp; // number of points per var
 
-  size_t siz_slice_yz;
-  size_t siz_slice_yz2;
+  size_t siz_iz_yz;
+  size_t siz_iz_yz2;
   // curvilinear coord name,
   char **index_name;
   

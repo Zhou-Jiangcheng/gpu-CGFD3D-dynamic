@@ -43,10 +43,10 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_z" : 2,
 
   "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,200],
+  "fault_grid" : [51,350,51,181],
 
-  "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 1000,
+  "size_of_time_step" : 0.005,
+  "number_of_time_steps" : 3000,
   "#time_window_length" : 4,
   "check_stability" : 1,
   "io_time_skip" : 1,

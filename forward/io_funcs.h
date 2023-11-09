@@ -292,8 +292,8 @@ io_snap_stress_to_strain_eliso(float *lam3d,
                                float *Eyz,
                                float *Exz,
                                float *Exy,
-                               size_t siz_line,
-                               size_t siz_slice,
+                               size_t siz_iy,
+                               size_t siz_iz,
                                int starti,
                                int counti,
                                int increi,
@@ -305,18 +305,18 @@ io_snap_stress_to_strain_eliso(float *lam3d,
                                int increk);
 
 __global__ void
-io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
-io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
-io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
 io_snap_pack_buff(float *var,
-                  size_t siz_line,
-                  size_t siz_slice,
+                  size_t siz_iy,
+                  size_t siz_iz,
                   int starti,
                   int counti,
                   int increi,
@@ -339,11 +339,11 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc);
 
 int
 io_recv_keep(iorecv_t *iorecv, float *w_end_d,
-             float* buff, int it, int ncmp, size_t siz_volume);
+             float* buff, int it, int ncmp, size_t siz_icmp);
 
 int
 io_line_keep(ioline_t *ioline, float *w_end_d,
-             float *buff, int it, int ncmp, size_t siz_volume);
+             float *buff, int it, int ncmp, size_t siz_icmp);
 
 __global__ void
 recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
@@ -357,11 +357,11 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
 
 //use trilinear interpolation 
 __global__ void
-io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_volume, size_t *indx1d_d);
+io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, size_t *indx1d_d);
 
 __global__ void
 io_recv_line_pack_buff(float *var, float *buff_d, int ncmp,
-                  size_t siz_volume, int iptr);
+                  size_t siz_icmp, int iptr);
 
 int
 io_recv_output_sac(iorecv_t *iorecv,

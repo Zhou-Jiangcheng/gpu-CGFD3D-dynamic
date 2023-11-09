@@ -48,7 +48,7 @@ sv_curv_col_el_iso_rhs_fault_velo_gpu(
                        float * zt_x,  float * zt_y, float * zt_z,
                        float * jac3d, float * slw3d, fault_t F, fault_coef_t FC, 
                        int i0, int isfree, int nj1, int nj, int nk1, int nk, int ny, 
-                       size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
+                       size_t siz_iy, size_t siz_iz, size_t siz_iz_yz,
                        int idir, int jdir, int kdir);
 
 
@@ -68,7 +68,7 @@ sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        float *matVx2Vz, float *matVy2Vz, int i0,
                        int isfree, int imethod, fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
-                       size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
+                       size_t siz_iy, size_t siz_iz, size_t siz_iz_yz,
                        int jdir, int kdir);
 
 __global__ void 
@@ -87,7 +87,7 @@ sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        float *matVx2Vz, float *matVy2Vz, int i0,
                        int isfree, int imethod, fault_t F, fault_coef_t FC,
                        int nj1, int nj, int nk1, int nk, int ny, 
-                       size_t siz_line, size_t siz_slice, size_t siz_slice_yz,
+                       size_t siz_iy, size_t siz_iz, size_t siz_iz_yz,
                        int jdir, int kdir);
 
 #endif

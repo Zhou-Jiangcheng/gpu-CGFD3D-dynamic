@@ -182,12 +182,12 @@ gd_info_set(gdinfo_t *const gdinfo,
   gdinfo->npoint_z = number_of_total_grid_points_z;
 
   // x dimention varies first
-  gdinfo->siz_line   = nx; 
-  gdinfo->siz_slice  = nx * ny; 
-  gdinfo->siz_volume = nx * ny * nz;
+  gdinfo->siz_iy   = nx; 
+  gdinfo->siz_iz  = nx * ny; 
+  gdinfo->siz_icmp = nx * ny * nz;
 
-  gdinfo->siz_slice_yz = ny * nz;
-  gdinfo->siz_slice_yz2 = 2 * ny * nz;
+  gdinfo->siz_iz_yz = ny * nz;
+  gdinfo->siz_iz_yz2 = 2 * ny * nz;
 
   // set npoint_ghosts according to fdz_nghosts
   gdinfo->npoint_ghosts = fdz_nghosts;

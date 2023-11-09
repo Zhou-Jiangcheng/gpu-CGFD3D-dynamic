@@ -22,9 +22,9 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   md->ny   = gdinfo->ny;
   md->nz   = gdinfo->nz;
 
-  md->siz_line   = md->nx;
-  md->siz_slice  = md->nx * md->ny;
-  md->siz_volume = md->nx * md->ny * md->nz;
+  md->siz_iy   = md->nx;
+  md->siz_iz  = md->nx * md->ny;
+  md->siz_icmp = md->nx * md->ny * md->nz;
 
   // media type
   md->medium_type = media_type;
@@ -52,7 +52,7 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   
   // vars
   md->v4d = (float *) fdlib_mem_calloc_1d_float(
-                          md->siz_volume * md->ncmp,
+                          md->siz_icmp * md->ncmp,
                           0.0, "md_init");
   if (md->v4d == NULL) {
       fprintf(stderr,"Error: failed to alloc medium_el_iso\n");
@@ -72,7 +72,7 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
   // set pos
   for (int icmp=0; icmp < md->ncmp; icmp++)
   {
-    cmp_pos[icmp] = icmp * md->siz_volume;
+    cmp_pos[icmp] = icmp * md->siz_icmp;
   }
 
   // init
@@ -334,8 +334,8 @@ md_gen_uniform_el_iso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_line;
-  size_t siz_slice = md->siz_slice;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   float *lam3d = md->lambda;
   float  *mu3d = md->mu;
@@ -355,7 +355,7 @@ md_gen_uniform_el_iso(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
         float mu = Vs*Vs*rho;
         float lam = Vp*Vp*rho - 2.0*mu;
         lam3d[iptr] = lam;
@@ -376,8 +376,8 @@ md_gen_uniform_Qs(md_t *md, float Qs_freq)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_line;
-  size_t siz_slice = md->siz_slice;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   md->visco_Qs_freq = Qs_freq;
 
@@ -389,7 +389,7 @@ md_gen_uniform_Qs(md_t *md, float Qs_freq)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
         Qs[iptr] = 20;
       }
     }
@@ -406,8 +406,8 @@ md_gen_uniform_el_vti(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_line;
-  size_t siz_slice = md->siz_slice;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
   float rho = 1500; 
   float c11 = 25200000000;
   float c13 = 10962000000;
@@ -420,7 +420,7 @@ md_gen_uniform_el_vti(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
 
         md->rho[iptr] = rho; 
 	      md->c11[iptr] = c11;
@@ -444,8 +444,8 @@ md_gen_uniform_el_aniso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_line;
-  size_t siz_slice = md->siz_slice;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   float rho = 1500; 
   float c11 = 25200000000;
@@ -476,7 +476,7 @@ md_gen_uniform_el_aniso(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
 
         md->rho[iptr] = rho; 
 	      md->c11[iptr] = c11;
@@ -518,11 +518,11 @@ md_gen_uniform_el_aniso(md_t *md)
  */
 
 int
-md_rho_to_slow(float *rho, size_t siz_volume)
+md_rho_to_slow(float *rho, size_t siz_icmp)
 {
   int ierr = 0;
 
-  for (size_t iptr=0; iptr<siz_volume; iptr++) {
+  for (size_t iptr=0; iptr<siz_icmp; iptr++) {
     if (rho[iptr] > 1e-10) {
       rho[iptr] = 1.0 / rho[iptr];
     } else {
@@ -534,11 +534,11 @@ md_rho_to_slow(float *rho, size_t siz_volume)
 }
 
 int
-md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_volume)
+md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_icmp)
 {
   int ierr = 0;
 
-  for (size_t iptr=0; iptr<siz_volume; iptr++) {
+  for (size_t iptr=0; iptr<siz_icmp; iptr++) {
     if (rho[iptr] > 1e-10) {
       float Vp = kappa[iptr];
       kappa[iptr] = Vp * Vp * rho[iptr];

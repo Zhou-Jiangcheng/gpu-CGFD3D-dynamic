@@ -665,7 +665,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
   
   // convert rho to 1 / rho to reduce number of arithmetic cal
-  md_rho_to_slow(md->rho, md->siz_volume);
+  md_rho_to_slow(md->rho, md->siz_icmp);
 
   if (myid==0 && verbose>0) fprintf(stdout,"start solver ...\n"); 
   
