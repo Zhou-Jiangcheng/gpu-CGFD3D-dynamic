@@ -296,7 +296,7 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
-      par->fault_i_global_index = (int) par->number_of_total_grid_points_x/2;
+      par->fault_i_global_index = (int)(par->number_of_total_grid_points_x/2);
       par->grid_generation_itype = PAR_FAULT_PLANE;
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);

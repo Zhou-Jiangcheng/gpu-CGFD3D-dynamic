@@ -14,6 +14,8 @@
 /*
  * set MacCormack DRP scheme with rk 4
  */
+#define  m_mac_max_len   5
+#define  m_mac_num_lay   4
 
 int 
 fd_set_macdrp(fd_t *fd)
@@ -65,8 +67,6 @@ fd_set_macdrp(fd_t *fd)
   //----------------------------------------------------------------------------
   // 1d scheme for different points to surface, or different half length
   //----------------------------------------------------------------------------
-#define  m_mac_max_len   5
-#define  m_mac_num_lay   4
   // op index at all layers, zero not used point
   int  mac_all_indx[m_mac_num_lay][2][m_mac_max_len] =
   {

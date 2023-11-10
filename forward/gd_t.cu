@@ -270,117 +270,8 @@ gd_curv_metric_cal(gdcurv_t    *gdcurv,
     }
   }
     
-  // extend to ghosts. may replaced by mpi exchange
-  // x1, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < ni1; i++)
-      {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr + (ni1-i)*2 -1 ];
-         xi_x[iptr] =  xi_x[iptr + (ni1-i)*2 -1 ];
-         xi_y[iptr] =  xi_y[iptr + (ni1-i)*2 -1 ];
-         xi_z[iptr] =  xi_z[iptr + (ni1-i)*2 -1 ];
-         et_x[iptr] =  et_x[iptr + (ni1-i)*2 -1 ];
-         et_y[iptr] =  et_y[iptr + (ni1-i)*2 -1 ];
-         et_z[iptr] =  et_z[iptr + (ni1-i)*2 -1 ];
-         zt_x[iptr] =  zt_x[iptr + (ni1-i)*2 -1 ];
-         zt_y[iptr] =  zt_y[iptr + (ni1-i)*2 -1 ];
-         zt_z[iptr] =  zt_z[iptr + (ni1-i)*2 -1 ];
-      }
-    }
-  }
-  // x2, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = ni2+1; i < nx; i++)
-      {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr - (i-ni2)*2 +1 ];
-         xi_x[iptr] =  xi_x[iptr - (i-ni2)*2 +1 ];
-         xi_y[iptr] =  xi_y[iptr - (i-ni2)*2 +1 ];
-         xi_z[iptr] =  xi_z[iptr - (i-ni2)*2 +1 ];
-         et_x[iptr] =  et_x[iptr - (i-ni2)*2 +1 ];
-         et_y[iptr] =  et_y[iptr - (i-ni2)*2 +1 ];
-         et_z[iptr] =  et_z[iptr - (i-ni2)*2 +1 ];
-         zt_x[iptr] =  zt_x[iptr - (i-ni2)*2 +1 ];
-         zt_y[iptr] =  zt_y[iptr - (i-ni2)*2 +1 ];
-         zt_z[iptr] =  zt_z[iptr - (i-ni2)*2 +1 ];
-      }
-    }
-  }
-  // y1, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < nj1; j++) {
-      for (size_t i = 0; i < nx; i++) {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         xi_x[iptr] =  xi_x[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         xi_y[iptr] =  xi_y[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         xi_z[iptr] =  xi_z[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         et_x[iptr] =  et_x[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         et_y[iptr] =  et_y[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         et_z[iptr] =  et_z[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         zt_x[iptr] =  zt_x[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         zt_y[iptr] =  zt_y[iptr + ((nj1-j)*2 -1) * siz_iy ];
-         zt_z[iptr] =  zt_z[iptr + ((nj1-j)*2 -1) * siz_iy ];
-      }
-    }
-  }
-  // y2, mirror
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = nj2+1; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++) {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         xi_x[iptr] =  xi_x[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         xi_y[iptr] =  xi_y[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         xi_z[iptr] =  xi_z[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         et_x[iptr] =  et_x[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         et_y[iptr] =  et_y[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         et_z[iptr] =  et_z[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         zt_x[iptr] =  zt_x[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         zt_y[iptr] =  zt_y[iptr - ((j-nj2)*2 -1) * siz_iy ];
-         zt_z[iptr] =  zt_z[iptr - ((j-nj2)*2 -1) * siz_iy ];
-      }
-    }
-  }
-  // z1, mirror
-  for (size_t k = 0; k < nk1; k++) {
-    for (size_t j = 0; j < ny; j++){
-      for (size_t i = 0; i < nx; i++) {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         xi_x[iptr] =  xi_x[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         xi_y[iptr] =  xi_y[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         xi_z[iptr] =  xi_z[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         et_x[iptr] =  et_x[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         et_y[iptr] =  et_y[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         et_z[iptr] =  et_z[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         zt_x[iptr] =  zt_x[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         zt_y[iptr] =  zt_y[iptr + ((nk1-k)*2 -1) * siz_iz ];
-         zt_z[iptr] =  zt_z[iptr + ((nk1-k)*2 -1) * siz_iz ];
-      }
-    }
-  }
-  // z2, mirror
-  for (size_t k = nk2+1; k < nz; k++) {
-    for (size_t j = 0; j < ny; j++){
-      for (size_t i = 0; i < nx; i++) {
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = jac3d[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         xi_x[iptr] =  xi_x[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         xi_y[iptr] =  xi_y[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         xi_z[iptr] =  xi_z[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         et_x[iptr] =  et_x[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         et_y[iptr] =  et_y[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         et_z[iptr] =  et_z[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         zt_x[iptr] =  zt_x[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         zt_y[iptr] =  zt_y[iptr - ((k-nk2)*2 -1) * siz_iz ];
-         zt_z[iptr] =  zt_z[iptr - ((k-nk2)*2 -1) * siz_iz ];
-      }
-    }
-  }
+  //mirror_symmetry(gdcurv,metric->v4d,metric->ncmp);
+  geometric_symmetry(gdcurv,metric->v4d,metric->ncmp);
 
   return 0;
 }
@@ -581,87 +472,89 @@ gd_curv_gen_fault(gdcurv_t *gdcurv,
   }
 
   // extend to ghosts. 
-  // x1, mirror
+  geometric_symmetry(gdcurv,gdcurv->v4d,gdcurv->ncmp);
 
-  for (int k = 0; k < nz; k++){
-    for (int j = 0; j < ny; j++) {
-      for (int i = 0; i < ni1; i++)
-      {
-        iptr   = i + j * siz_iy + k * siz_iz;
-        iptr_b = ni1 + j * siz_iy + k * siz_iz;
-        iptr_c = (ni1*2-i) + j * siz_iy + k * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
-  // x2, mirror
-  for (int k = 0; k < nz; k++){
-    for (int j = 0; j < ny; j++) {
-      for (int i = ni2+1; i < nx; i++)
-      {
-        iptr = i + j * siz_iy + k * siz_iz;
-        iptr_b = ni2 + j * siz_iy + k * siz_iz;
-        iptr_c = (ni2*2-i) + j * siz_iy + k * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
-  // y1, mirror
-  for (int k = 0; k < nz; k++){
-    for (int j = 0; j < nj1; j++) {
-      for (int i = 0; i < nx; i++) {
-        iptr = i + j * siz_iy + k * siz_iz;
-        iptr_b = i + nj1 * siz_iy + k * siz_iz;
-        iptr_c = i + (nj1*2-j) * siz_iy + k * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
-  // y2, mirror
-  for (int k = 0; k < nz; k++){
-    for (int j = nj2+1; j < ny; j++) {
-      for (int i = 0; i < nx; i++) {
-        iptr = i + j * siz_iy + k * siz_iz;
-        iptr_b = i + nj2 * siz_iy + k * siz_iz;
-        iptr_c = i + (nj2*2-j) * siz_iy + k * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
-  // z1, mirror
-  for (int k = 0; k < nk1; k++) {
-    for (int j = 0; j < ny; j++) {
-      for (int i = 0; i < nx; i++) {
-        iptr = i + j * siz_iy + k * siz_iz;
-        iptr_b = i + j * siz_iy + nk1 * siz_iz;
-        iptr_c = i + j * siz_iy + (nk1*2-k) * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
-  // z2, mirror
-  for (int k = nk2+1; k < nz; k++) {
-    for (int j = 0; j < ny; j++) {
-      for (int i = 0; i < nx; i++) {
-        iptr = i + j * siz_iy + k * siz_iz;
-        iptr_b = i + j * siz_iy + nk2 * siz_iz;
-        iptr_c = i + j * siz_iy + (nk2*2-k) * siz_iz;
-        x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-        y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-        z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-      }
-    }
-  }
+  //// x1, mirror
+
+  //for (int k = 0; k < nz; k++){
+  //  for (int j = 0; j < ny; j++) {
+  //    for (int i = 0; i < ni1; i++)
+  //    {
+  //      iptr   = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = ni1 + j * siz_iy + k * siz_iz;
+  //      iptr_c = (ni1*2-i) + j * siz_iy + k * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
+  //// x2, mirror
+  //for (int k = 0; k < nz; k++){
+  //  for (int j = 0; j < ny; j++) {
+  //    for (int i = ni2+1; i < nx; i++)
+  //    {
+  //      iptr = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = ni2 + j * siz_iy + k * siz_iz;
+  //      iptr_c = (ni2*2-i) + j * siz_iy + k * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
+  //// y1, mirror
+  //for (int k = 0; k < nz; k++){
+  //  for (int j = 0; j < nj1; j++) {
+  //    for (int i = 0; i < nx; i++) {
+  //      iptr = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = i + nj1 * siz_iy + k * siz_iz;
+  //      iptr_c = i + (nj1*2-j) * siz_iy + k * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
+  //// y2, mirror
+  //for (int k = 0; k < nz; k++){
+  //  for (int j = nj2+1; j < ny; j++) {
+  //    for (int i = 0; i < nx; i++) {
+  //      iptr = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = i + nj2 * siz_iy + k * siz_iz;
+  //      iptr_c = i + (nj2*2-j) * siz_iy + k * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
+  //// z1, mirror
+  //for (int k = 0; k < nk1; k++) {
+  //  for (int j = 0; j < ny; j++) {
+  //    for (int i = 0; i < nx; i++) {
+  //      iptr = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = i + j * siz_iy + nk1 * siz_iz;
+  //      iptr_c = i + j * siz_iy + (nk1*2-k) * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
+  //// z2, mirror
+  //for (int k = nk2+1; k < nz; k++) {
+  //  for (int j = 0; j < ny; j++) {
+  //    for (int i = 0; i < nx; i++) {
+  //      iptr = i + j * siz_iy + k * siz_iz;
+  //      iptr_b = i + j * siz_iy + nk2 * siz_iz;
+  //      iptr_c = i + j * siz_iy + (nk2*2-k) * siz_iz;
+  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
+  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
+  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
+  //    }
+  //  }
+  //}
    
   free(fault_x);
   free(fault_y);
@@ -697,6 +590,190 @@ nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z,
   ierr = nc_get_vara_float(ncid, zid, start, count, fault_z); handle_nc_err(ierr);
 
   ierr = nc_close(ncid); handle_nc_err(ierr);
+
+  return 0;
+}
+
+int
+mirror_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp)
+{
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int nx  = gdcurv->nx;
+  int ny  = gdcurv->ny;
+  int nz  = gdcurv->nz;
+  size_t siz_iy  = gdcurv->siz_iy;
+  size_t siz_iz  = gdcurv->siz_iz;
+  size_t siz_icmp  = gdcurv->siz_icmp;
+
+  size_t iptr, iptr1, iptr2; 
+  for(int icmp=0; icmp<ncmp; icmp++){
+    iptr = icmp * siz_icmp;
+    // x1, mirror
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = 0; i < ni1; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + (2*ni1-i) + j * siz_iy +  k * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+    // x2, mirror
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = ni2+1; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + (2*ni2-i) + j * siz_iy + k * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+    // y1, mirror
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < nj1; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + (2*nj1-j) * siz_iy +  k * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+    // y2, mirror
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = nj2+1; j < ny; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + (2*nj2-j) * siz_iy +  k * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+    // z1, mirror
+    for (size_t k = 0; k < nk1; k++) {
+      for (size_t j = 0; j < ny; j++) {
+        for (size_t i = 0; i < nx; i++) {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + j * siz_iy + (2*nk1-k) * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+    // z2, mirror
+    for (size_t k = nk2+1; k < nz; k++) {
+      for (size_t j = 0; j < ny; j++) {
+        for (size_t i = 0; i < nx; i++) {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + j * siz_iy + (2*nk2-k) * siz_iz;
+          v4d[iptr1] = v4d[iptr2];
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+int 
+geometric_symmetry(gdcurv_t *gdcurv,float *v4d, int ncmp)
+{
+  int ni1 = gdcurv->ni1;
+  int ni2 = gdcurv->ni2;
+  int nj1 = gdcurv->nj1;
+  int nj2 = gdcurv->nj2;
+  int nk1 = gdcurv->nk1;
+  int nk2 = gdcurv->nk2;
+  int nx  = gdcurv->nx;
+  int ny  = gdcurv->ny;
+  int nz  = gdcurv->nz;
+  size_t siz_iy  = gdcurv->siz_iy;
+  size_t siz_iz  = gdcurv->siz_iz;
+  size_t siz_icmp  = gdcurv->siz_icmp;
+
+  size_t iptr, iptr1, iptr2, iptr3; 
+  for(int icmp=0; icmp<ncmp; icmp++){
+    iptr = icmp * siz_icmp;
+    // x1 
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = 0; i < ni1; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + ni1 + j * siz_iy + k * siz_iz;
+          iptr3 = iptr + (2*ni1-i) + j * siz_iy + k * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+    // x2
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = ni2+1; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + ni2 + j * siz_iy + k * siz_iz;
+          iptr3 = iptr + (2*ni2-i) + j * siz_iy + k * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+    // y1 
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = 0; j < nj1; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + nj1 * siz_iy + k * siz_iz;
+          iptr3 = iptr + i + (2*nj1-j) * siz_iy + k * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+    // y2 
+    for (size_t k = 0; k < nz; k++){
+      for (size_t j = nj2+1; j < ny; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + nj2 * siz_iy + k * siz_iz;
+          iptr3 = iptr + i + (2*nj2-j) * siz_iy + k * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+    // z1
+    for (size_t k = 0; k < nk1; k++){
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + j * siz_iy + nk1 * siz_iz;
+          iptr3 = iptr + i + j * siz_iy + (2*nk1-k) * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+    // z2
+    for (size_t k = nk2+1; k < nz; k++) {
+      for (size_t j = 0; j < ny; j++){
+        for (size_t i = 0; i < nx; i++)
+        {
+          iptr1 = iptr + i + j * siz_iy + k * siz_iz;
+          iptr2 = iptr + i + j * siz_iy + nk2 * siz_iz;
+          iptr3 = iptr + i + j * siz_iy + (2*nk2-k) * siz_iz;
+          v4d[iptr1] = 2*v4d[iptr2] - v4d[iptr3];
+        }
+      }
+    }
+  }
 
   return 0;
 }
@@ -1856,7 +1933,7 @@ gd_info_set(gdcurv_t *const gdcurv,
     gdcurv->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers[0][0];
   }
   if (nx_left != 0) {
-    gdcurv->gni1 += (mympi->topoid[0] < nx_left)? mympi->topoid[0] : nx_left;
+    gdcurv->gni1 += (mympi->topoid[0] < nx_left) ? mympi->topoid[0] : nx_left;
   }
 
   // determine nj
@@ -1892,7 +1969,7 @@ gd_info_set(gdcurv_t *const gdcurv,
     gdcurv->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers[1][0];
   }
   if (ny_left != 0) {
-    gdcurv->gnj1 += (mympi->topoid[1] < ny_left)? mympi->topoid[1] : ny_left;
+    gdcurv->gnj1 += (mympi->topoid[1] < ny_left) ? mympi->topoid[1] : ny_left;
   }
 
   // determine nk
@@ -1928,7 +2005,7 @@ gd_info_set(gdcurv_t *const gdcurv,
     gdcurv->gnk1 = mympi->topoid[2] * nz_avg - abs_num_of_layers[2][0];
   }
   if (nz_left != 0) {
-    gdcurv->gnk1 += (mympi->topoid[2] < nz_left)? mympi->topoid[2] : nz_left;
+    gdcurv->gnk1 += (mympi->topoid[2] < nz_left) ? mympi->topoid[2] : nz_left;
   }
   
   // add ghost points
@@ -1972,7 +2049,7 @@ gd_info_set(gdcurv_t *const gdcurv,
   // x dimention varies first
   gdcurv->siz_iy   = nx; 
   gdcurv->siz_iz   = nx * ny; 
-  gdcurv->siz_icmp = nx * ny * nz;
+  gdcurv->siz_icmp = gdcurv->siz_iz * nz;
 
   gdcurv->siz_iz_yz = ny * nz;
   gdcurv->siz_iz_yz2 = 2 * ny * nz;

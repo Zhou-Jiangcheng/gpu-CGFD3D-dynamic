@@ -140,6 +140,12 @@ gd_curv_exchange(gdcurv_t *gdcurv,
                  int *neighid,
                  MPI_Comm topocomm);
 
+int 
+mirror_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
+
+int
+geometric_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
+
 int
 gd_curv_gen_fault(gdcurv_t *gdcurv,
                   int  num_of_x_points,
