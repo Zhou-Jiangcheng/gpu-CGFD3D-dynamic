@@ -940,7 +940,7 @@ par_read_from_str(const char *str, par_t *par)
 
   //-- misc
   if (item = cJSON_GetObjectItem(root, "check_nan_every_nummber_of_steps")) {
-      par->check_nan_every_nummber_of_steps = item->valueint;
+      par->qc_check_nan_nummber_of_step = item->valueint;
   }
   if (item = cJSON_GetObjectItem(root, "output_all")) {
       par->output_all = item->valueint;

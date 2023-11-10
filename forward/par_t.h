@@ -216,7 +216,7 @@ typedef struct{
   int *snapshot_save_strain;
 
   // misc
-  int check_nan_every_nummber_of_steps;
+  int qc_check_nan_number_of_step;
   int output_all;
 } par_t;
 

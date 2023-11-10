@@ -9,8 +9,8 @@ addmypath;
 nj = 400; 
 nk = 200;
 dh = 100;
-mu_s = 0.457; 
-mu_d = 0.385; 
+mu_s = 0.377; 
+mu_d = 0.325; 
 Dc = 0.4;
 j1 = 51;
 j2 = 350;
@@ -41,7 +41,7 @@ Stress_pri = [ SH, 0.0, 0.0; ...
               0.0, 0.0, Sh]*(-1.0e6);
 
 % azimuth of SH_max, degree in the East of North, x -axis
-Angle_SH = 40;
+Angle_SH = 187;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate

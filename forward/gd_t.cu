@@ -373,7 +373,7 @@ gd_curv_exchange(gdcurv_t *gdcurv,
 
 int
 gd_curv_gen_fault(gdcurv_t *gdcurv,
-                  int  num_of_x_points,
+                  int fault_i_global_indx,
                   float dh,
                   char *in_grid_fault_nc)
 {
@@ -409,7 +409,7 @@ gd_curv_gen_fault(gdcurv_t *gdcurv,
 
   nc_read_fault_geometry(fault_x, fault_y, fault_z, in_grid_fault_nc, gdcurv);
 
-  int i0 = npoint_x/2 + 3; 
+  int i0 = fault_i_global_indx + 3;  // now with ghost index 
   xline[i0] = 0.0;
   int width1 = 10;
   int width2 = 55;
@@ -473,88 +473,6 @@ gd_curv_gen_fault(gdcurv_t *gdcurv,
 
   // extend to ghosts. 
   geometric_symmetry(gdcurv,gdcurv->v4d,gdcurv->ncmp);
-
-  //// x1, mirror
-
-  //for (int k = 0; k < nz; k++){
-  //  for (int j = 0; j < ny; j++) {
-  //    for (int i = 0; i < ni1; i++)
-  //    {
-  //      iptr   = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = ni1 + j * siz_iy + k * siz_iz;
-  //      iptr_c = (ni1*2-i) + j * siz_iy + k * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
-  //// x2, mirror
-  //for (int k = 0; k < nz; k++){
-  //  for (int j = 0; j < ny; j++) {
-  //    for (int i = ni2+1; i < nx; i++)
-  //    {
-  //      iptr = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = ni2 + j * siz_iy + k * siz_iz;
-  //      iptr_c = (ni2*2-i) + j * siz_iy + k * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
-  //// y1, mirror
-  //for (int k = 0; k < nz; k++){
-  //  for (int j = 0; j < nj1; j++) {
-  //    for (int i = 0; i < nx; i++) {
-  //      iptr = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = i + nj1 * siz_iy + k * siz_iz;
-  //      iptr_c = i + (nj1*2-j) * siz_iy + k * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
-  //// y2, mirror
-  //for (int k = 0; k < nz; k++){
-  //  for (int j = nj2+1; j < ny; j++) {
-  //    for (int i = 0; i < nx; i++) {
-  //      iptr = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = i + nj2 * siz_iy + k * siz_iz;
-  //      iptr_c = i + (nj2*2-j) * siz_iy + k * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
-  //// z1, mirror
-  //for (int k = 0; k < nk1; k++) {
-  //  for (int j = 0; j < ny; j++) {
-  //    for (int i = 0; i < nx; i++) {
-  //      iptr = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = i + j * siz_iy + nk1 * siz_iz;
-  //      iptr_c = i + j * siz_iy + (nk1*2-k) * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
-  //// z2, mirror
-  //for (int k = nk2+1; k < nz; k++) {
-  //  for (int j = 0; j < ny; j++) {
-  //    for (int i = 0; i < nx; i++) {
-  //      iptr = i + j * siz_iy + k * siz_iz;
-  //      iptr_b = i + j * siz_iy + nk2 * siz_iz;
-  //      iptr_c = i + j * siz_iy + (nk2*2-k) * siz_iz;
-  //      x3d[iptr] = 2.0*x3d[iptr_b] - x3d[iptr_c];
-  //      y3d[iptr] = 2.0*y3d[iptr_b] - y3d[iptr_c];
-  //      z3d[iptr] = 2.0*z3d[iptr_b] - z3d[iptr_c];
-  //    }
-  //  }
-  //}
    
   free(fault_x);
   free(fault_y);

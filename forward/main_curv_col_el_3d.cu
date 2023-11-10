@@ -139,9 +139,9 @@ int main(int argc, char** argv)
                  par->media_export_dir,
                  verbose);
 
-//-------------------------------------------------------------------------------
-//-- grid generation or import
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- grid generation or import
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"allocate grid vars ...\n"); 
 
@@ -156,12 +156,12 @@ int main(int argc, char** argv)
   {
     case PAR_FAULT_PLANE : {
 
-        if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
-        gd_curv_gen_fault(gdcurv, par->number_of_total_grid_points_x, par->dh, par->fault_coord_nc);
-        if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
-        gd_curv_exchange(gdcurv,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
+      if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
+      gd_curv_gen_fault(gdcurv, par->fault_i_global_index, par->dh, par->fault_coord_nc);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
+      gd_curv_exchange(gdcurv,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
 
-        break;
+      break;
     }
   }
 
@@ -189,20 +189,20 @@ int main(int argc, char** argv)
   {
     case PAR_METRIC_CALCULATE : {
 
-        if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
-        gd_curv_metric_cal(gdcurv, gd_metric);
+      if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
+      gd_curv_metric_cal(gdcurv, gd_metric);
 
-        if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-        gd_curv_exchange(gdcurv,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      gd_curv_exchange(gdcurv,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
-        break;
+      break;
     }
     case PAR_METRIC_IMPORT : {
 
-        if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gd_metric, blk->output_fname_part, par->metric_import_dir);
+      if (myid==0) fprintf(stdout,"import metric file ...\n"); 
+      gd_curv_metric_import(gd_metric, blk->output_fname_part, par->metric_import_dir);
 
-        break;
+      break;
     }
   }
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
@@ -221,9 +221,9 @@ int main(int argc, char** argv)
   // print basic info for QC
   fprintf(stdout,"gdcurv info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]); 
 
-//-------------------------------------------------------------------------------
-//-- media generation or import
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- media generation or import
+  //-------------------------------------------------------------------------------
 
   // allocate media vars
   if (myid==0 && verbose>0) {fprintf(stdout,"allocate media vars ...\n"); fflush(stdout);}
@@ -235,130 +235,151 @@ int main(int argc, char** argv)
   {
     case PAR_MEDIA_CODE : {
 
-        if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
+      if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
-          md_gen_uniform_el_iso(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
+        md_gen_uniform_el_iso(md);
+      }
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
-          md_gen_uniform_el_vti(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+        md_gen_uniform_el_vti(md);
+      }
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
-          md_gen_uniform_el_aniso(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+        md_gen_uniform_el_aniso(md);
+      }
 
-        if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-          md_gen_uniform_Qs(md, par->visco_Qs_freq);
-        }
+      if (md->visco_type == CONST_VISCO_GRAVES_QS) {
+        md_gen_uniform_Qs(md, par->visco_Qs_freq);
+      }
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_IMPORT : {
 
-        if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
-        md_import(md, blk->output_fname_part, par->media_import_dir);
+      if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
+      md_import(md, blk->output_fname_part, par->media_import_dir);
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_3LAY : {
 
-        if (myid==0) fprintf(stdout,"read and discretize 3D layer medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and discretize 3D layer medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-            media_layer2model_el_iso(md->lambda, md->mu, md->rho,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-            media_layer2model_el_vti(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-            media_layer2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+          media_layer2model_el_iso(md->lambda, md->mu, md->rho,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      }
+      else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
+      {
+          media_layer2model_el_vti(md->rho, md->c11, md->c33,
+                                   md->c55,md->c66,md->c13,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
+      {
+          media_layer2model_el_aniso(md->rho,
+                                   md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                           md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                   md->c33,md->c34,md->c35,md->c36,
+                                                           md->c44,md->c45,md->c46,
+                                                                   md->c55,md->c56,
+                                                                           md->c66,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      }
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_3GRD : {
 
-        if (myid==0) fprintf(stdout,"read and descretize 3D grid medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and descretize 3D grid medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-            media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-            media_grid2model_el_vti(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-            media_grid2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+          media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   gdcurv->xmin,gdcurv->xmax,
+                                   gdcurv->ymin,gdcurv->ymax,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      }
+      else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
+      {
+          media_grid2model_el_vti(md->rho, md->c11, md->c33,
+                                   md->c55,md->c66,md->c13,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   gdcurv->xmin,gdcurv->xmax,
+                                   gdcurv->ymin,gdcurv->ymax,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
+      {
+          media_grid2model_el_aniso(md->rho,
+                                   md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                           md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                   md->c33,md->c34,md->c35,md->c36,
+                                                           md->c44,md->c45,md->c46,
+                                                                   md->c55,md->c56,
+                                                                           md->c66,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   gdcurv->xmin,gdcurv->xmax,
+                                   gdcurv->ymin,gdcurv->ymax,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method);
+      }
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_3BIN : {
 
-        if (myid==0) fprintf(stdout,"read and descretize 3D bin medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and descretize 3D bin medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-            media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+          media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
+                                 gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                 gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                 gdcurv->xmin,gdcurv->xmax,
+                                 gdcurv->ymin,gdcurv->ymax,
+                                 MEDIA_USE_CURV,
+                                 par->bin_order,
+                                 par->bin_size,
+                                 par->bin_spacing,
+                                 par->bin_origin,
+                                 par->bin_file_rho,
+                                 par->bin_file_vp,
+                                 par->bin_file_vs);
+      }
+      else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
+      {
+        fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_VTI\n");
+        fflush(stdout);
+        exit(1);
+          /*
+          media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
+                                   md->c55,md->c66,md->c13,
                                    gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
                                    gdcurv->nx, gdcurv->ny, gdcurv->nz,
                                    gdcurv->xmin,gdcurv->xmax,
@@ -370,80 +391,59 @@ int main(int argc, char** argv)
                                    par->bin_origin,
                                    par->bin_file_rho,
                                    par->bin_file_vp,
-                                   par->bin_file_vs);
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-          fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_VTI\n");
-          fflush(stdout);
-          exit(1);
-            /*
-            media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->bin_order,
-                                     par->bin_size,
-                                     par->bin_spacing,
-                                     par->bin_origin,
-                                     par->bin_file_rho,
-                                     par->bin_file_vp,
-                                     par->bin_file_epsilon,
-                                     par->bin_file_delta,
-                                     par->bin_file_gamma);
-          */
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-          fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_ANISO\n");
-          fflush(stdout);
-          exit(1);
-            /*
-            media_bin2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->bin_order,
-                                     par->bin_size,
-                                     par->bin_spacing,
-                                     par->bin_origin,
-                                     par->bin_file_rho,
-                                     par->bin_file_c11,
-                                     par->bin_file_c12,
-                                     par->bin_file_c13,
-                                     par->bin_file_c14,
-                                     par->bin_file_c15,
-                                     par->bin_file_c16,
-                                     par->bin_file_c22,
-                                     par->bin_file_c23,
-                                     par->bin_file_c24,
-                                     par->bin_file_c25,
-                                     par->bin_file_c26,
-                                     par->bin_file_c33,
-                                     par->bin_file_c34,
-                                     par->bin_file_c35,
-                                     par->bin_file_c36,
-                                     par->bin_file_c44,
-                                     par->bin_file_c45,
-                                     par->bin_file_c46,
-                                     par->bin_file_c55,
-                                     par->bin_file_c56,
-                                     par->bin_file_c66);
-          */
-        }
+                                   par->bin_file_epsilon,
+                                   par->bin_file_delta,
+                                   par->bin_file_gamma);
+        */
+      }
+      else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
+      {
+        fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_ANISO\n");
+        fflush(stdout);
+        exit(1);
+          /*
+          media_bin2model_el_aniso(md->rho,
+                                   md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                           md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                   md->c33,md->c34,md->c35,md->c36,
+                                                           md->c44,md->c45,md->c46,
+                                                                   md->c55,md->c56,
+                                                                           md->c66,
+                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
+                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                   gdcurv->xmin,gdcurv->xmax,
+                                   gdcurv->ymin,gdcurv->ymax,
+                                   MEDIA_USE_CURV,
+                                   par->bin_order,
+                                   par->bin_size,
+                                   par->bin_spacing,
+                                   par->bin_origin,
+                                   par->bin_file_rho,
+                                   par->bin_file_c11,
+                                   par->bin_file_c12,
+                                   par->bin_file_c13,
+                                   par->bin_file_c14,
+                                   par->bin_file_c15,
+                                   par->bin_file_c16,
+                                   par->bin_file_c22,
+                                   par->bin_file_c23,
+                                   par->bin_file_c24,
+                                   par->bin_file_c25,
+                                   par->bin_file_c26,
+                                   par->bin_file_c33,
+                                   par->bin_file_c34,
+                                   par->bin_file_c35,
+                                   par->bin_file_c36,
+                                   par->bin_file_c44,
+                                   par->bin_file_c45,
+                                   par->bin_file_c46,
+                                   par->bin_file_c55,
+                                   par->bin_file_c56,
+                                   par->bin_file_c66);
+        */
+      }
 
-        break;
+      break;
     } 
   }
 
@@ -465,9 +465,9 @@ int main(int argc, char** argv)
     if (myid==0) fprintf(stdout,"do not export medium\n"); 
   }
 
-//-------------------------------------------------------------------------------
-//-- estimate/check/set time step
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- estimate/check/set time step
+  //-------------------------------------------------------------------------------
 
   float   t0 = par->time_start;
   float   dt = par->size_of_time_step;
@@ -532,9 +532,9 @@ int main(int argc, char** argv)
     MPI_Bcast(&nt_total, 1, MPI_INT , 0, MPI_COMM_WORLD);
   }
 
-//-------------------------------------------------------------------------------
-//-- fault init
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- fault init
+  //-------------------------------------------------------------------------------
 
   fault_coef_init(fault_coef, gdcurv); 
   fault_coef_cal(gdcurv, gd_metric, md, par->fault_i_global_index, fault_coef);
@@ -542,16 +542,16 @@ int main(int argc, char** argv)
   fault_set(fault, fault_coef, gdcurv, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
   fault_wav_init(gdcurv, fault_wav, fd->num_rk_stages);
 
-//-------------------------------------------------------------------------------
-//-- allocate main var
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- allocate main var
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"allocate solver vars ...\n"); 
   wav_init(gdcurv, wav, fd->num_rk_stages);
 
-//-------------------------------------------------------------------------------
-//-- setup output, may require coord info
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- setup output, may require coord info
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"setup output info ...\n"); 
 
@@ -604,9 +604,9 @@ int main(int argc, char** argv)
                      blk->output_fname_part,
                      blk->output_dir);
 
-//-------------------------------------------------------------------------------
-//-- absorbing boundary etc auxiliary variables
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- absorbing boundary etc auxiliary variables
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
   
@@ -622,9 +622,9 @@ int main(int argc, char** argv)
                  verbose);
   }
 
-//-------------------------------------------------------------------------------
-//-- free surface preproc
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- free surface preproc
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
 
@@ -633,17 +633,17 @@ int main(int argc, char** argv)
     bdry_free_set(gdcurv, bdryfree, mympi->neighid, par->free_is_sides, verbose);
   }
 
-//-------------------------------------------------------------------------------
-//-- setup mesg
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- setup mesg
+  //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
   blk_macdrp_mesg_init(mympi, fd, gdcurv->ni, gdcurv->nj, gdcurv->nk,
                   wav->ncmp, fault_wav->ncmp);
 
-//-------------------------------------------------------------------------------
-//-- qc
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- qc
+  //-------------------------------------------------------------------------------
 
   mympi_print(mympi);
 
@@ -653,9 +653,9 @@ int main(int argc, char** argv)
 
   iosnap_print(iosnap);
 
-//-------------------------------------------------------------------------------
-//-- slover
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- slover
+  //-------------------------------------------------------------------------------
   
   // convert rho to 1 / rho to reduce number of arithmetic cal
   md_rho_to_slow(md->rho, md->siz_icmp);
@@ -664,17 +664,13 @@ int main(int argc, char** argv)
   
   time_t t_start = time(NULL);
 
-  drv_rk_curv_col_allstep(fd,gdcurv,gd_metric,md,
+  drv_rk_curv_col_allstep(fd,gdcurv,gd_metric,md,par,
                           bdryfree,bdrypml, wav, mympi,
                           fault_coef,fault,fault_wav,
                           iorecv,ioline,iofault,ioslice,iosnap,
-                          par->imethod, dt,nt_total,t0,
+                          dt,nt_total,t0,
                           blk->output_fname_part,
                           blk->output_dir,
-                          par->fault_i_global_index,
-                          par->io_time_skip,
-                          par->check_nan_every_nummber_of_steps,
-                          par->output_all,
                           verbose);
 
   time_t t_end = time(NULL);
@@ -683,9 +679,9 @@ int main(int argc, char** argv)
     fprintf(stdout,"\n\nRuning Time of time :%f s \n", difftime(t_end,t_start));
   }
 
-//-------------------------------------------------------------------------------
-//-- save station and line seismo to sac
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- save station and line seismo to sac
+  //-------------------------------------------------------------------------------
   io_recv_output_sac(iorecv,dt,wav->ncmp,wav->cmp_name,
                       blk->output_dir,err_message);
 
@@ -696,9 +692,9 @@ int main(int argc, char** argv)
 
   io_line_output_sac(ioline,dt,wav->cmp_name,blk->output_dir);
 
-//-------------------------------------------------------------------------------
-//-- postprocess
-//-------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------
+  //-- postprocess
+  //-------------------------------------------------------------------------------
 
   MPI_Finalize();
 

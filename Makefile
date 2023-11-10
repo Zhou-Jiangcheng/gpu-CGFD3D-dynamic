@@ -54,12 +54,12 @@ main_curv_col_el_3d: \
 		media_read_file.o \
 		fault_wav_t.o fault_info.o \
 		transform.o trial_slipweakening.o \
-		gd_info.o gd_t.o md_t.o wav_t.o \
+		gd_t.o md_t.o wav_t.o \
 		bdry_free.o bdry_pml.o io_funcs.o \
 		blk_t.o cuda_common.o \
-		sv_eq1st_curv_col.o \
-		sv_eq1st_curv_col_el_iso_gpu.o \
-		sv_eq1st_curv_col_el_iso_fault_gpu.o \
+		drv_rk_curv_col.o \
+		sv_curv_col_el_iso_gpu.o \
+		sv_curv_col_el_iso_fault_gpu.o \
 		main_curv_col_el_3d.o
 	$(GC) -o $@ $^ $(LDFLAGS) 
 
@@ -92,8 +92,6 @@ interp.o: forward/interp.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 mympi_t.o: forward/mympi_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-gd_info.o: forward/gd_info.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 gd_t.o: forward/gd_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 md_t.o: forward/md_t.cu
@@ -120,11 +118,11 @@ transform.o: forward/transform.cu
 	$(GC) -c -o $@ $(CFLAGS_CUDA) $<
 trial_slipweakening.o: forward/trial_slipweakening.cu
 	$(GC) -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col.o:          forward/sv_eq1st_curv_col.cu
+drv_rk_curv_col.o:   forward/drv_rk_curv_col.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col_el_iso_gpu.o:   forward/sv_eq1st_curv_col_el_iso_gpu.cu
+sv_curv_col_el_iso_gpu.o:   forward/sv_curv_col_el_iso_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col_el_iso_fault_gpu.o:   forward/sv_eq1st_curv_col_el_iso_fault_gpu.cu
+sv_curv_col_el_iso_fault_gpu.o:   forward/sv_curv_col_el_iso_fault_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 main_curv_col_el_3d.o: forward/main_curv_col_el_3d.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<

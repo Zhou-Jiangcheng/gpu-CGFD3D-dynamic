@@ -8,9 +8,9 @@ parfnm='../../project/params.json'
 output_dir='../../project/output'
 
 % which grid profile to plot
-subs=[1,101,1];     % start from index '1'
-subc=[-1,1,-1];     % '-1' to plot all points in this dimension
-subt=[2,2,2];
+subs=[101,1,1];     % start from index '1'
+subc=[1,-1,-1];     % '-1' to plot all points in this dimension
+subt=[1,1,1];
 
 % figure control parameters
 flag_km     = 0;
@@ -39,42 +39,11 @@ end
 x=squeeze(x);
 y=squeeze(y);
 z=squeeze(z);
-pltincre1=1;
-pltincre2=1;
+pltincre1=2;
+pltincre2=2;
 figure;
-if nx == 1
-    plot(permute(y(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-         permute(z(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-        'k-');
-    hold on;
-    plot(y(1:pltincre1:end,1:pltincre2:end),...
-         z(1:pltincre1:end,1:pltincre2:end),...
-        'k-');
-    xlabel(['Y axis (' str_unit ')']);
-    ylabel(['Z axis (' str_unit ')']);
-     
-elseif ny == 1
-    plot(permute(x(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-         permute(z(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-         'k-');
-    hold on;
-    plot(x(1:pltincre1:end,1:pltincre2:end),...
-         z(1:pltincre1:end,1:pltincre2:end),...
-         'k-');
-    xlabel(['X axis (' str_unit ')']);
-    ylabel(['Z axis (' str_unit ')']);
-     
-else
-    plot(permute(x(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-         permute(y(1:pltincre1:end,1:pltincre2:end),[2,1]),...
-         'k-');
-    hold on;
-    plot(x(1:pltincre1:end,1:pltincre2:end),...
-         y(1:pltincre1:end,1:pltincre2:end),...
-         'k-');
-    xlabel(['X axis (' str_unit ')']);
-    ylabel(['Y axis (' str_unit ')']);
-end
+
+plot3(x,y,z);
 
 set(gca,'layer','top');
 set(gcf,'color','white','renderer','painters');

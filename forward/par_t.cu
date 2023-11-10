@@ -820,8 +820,8 @@ par_read_from_str(const char *str, par_t *par)
   }
 
   //-- misc
-  if (item = cJSON_GetObjectItem(root, "check_nan_every_nummber_of_steps")) {
-      par->check_nan_every_nummber_of_steps = item->valueint;
+  if (item = cJSON_GetObjectItem(root, "check_nan_every_number_of_steps")) {
+      par->qc_check_nan_number_of_step = item->valueint;
   }
   if (item = cJSON_GetObjectItem(root, "output_all")) {
       par->output_all = item->valueint;
@@ -1060,7 +1060,7 @@ par_print(par_t *par)
   }
 
   fprintf(stdout, "--> qc parameters:\n");
-  fprintf(stdout, "check_nan_every_nummber_of_steps=%d\n", par->check_nan_every_nummber_of_steps);
+  fprintf(stdout, "check_nan_every_number_of_steps=%d\n", par->qc_check_nan_number_of_step);
   fprintf(stdout, "output_all=%d\n", par->output_all);
 
   return ierr;

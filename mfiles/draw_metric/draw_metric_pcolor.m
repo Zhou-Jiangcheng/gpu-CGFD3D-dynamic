@@ -4,13 +4,13 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project3/params.json';
-output_dir='../../project3/output';
+parfnm='../../project/params.json';
+output_dir='../../project/output';
 
 % which metric profile to plot
 subs=[1,100,1];     % start from index '1'
 subc=[-1,1,-1];     % '-1' to plot all points in this dimension
-subt=[1,1,1];
+subt=[2,2,2];
 
 % variable to plot
 % 'jac', 'xi_x', 'xi_y', 'xi_z', 'eta_x', 'eta_y', 'eta_z',

@@ -349,7 +349,6 @@ fault_coef_cal(gdcurv_t *gdcurv,
       FC->D33_2[iptr_f*9+7] = mu*e32*e33+lam*e33*e32;
       FC->D33_2[iptr_f*9+8] = lam2mu*e33*e33+mu*(e31*e31+e32*e32);
 
-
       for (int ii = 0; ii < 3; ii++) 
       {
         for (int jj = 0; jj < 3; jj++) 

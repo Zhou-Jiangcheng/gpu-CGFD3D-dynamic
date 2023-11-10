@@ -31,6 +31,7 @@ drv_rk_curv_col_allstep(
   gdcurv_t     *gdcurv,
   gd_metric_t  *metric,
   md_t         *md,
+  par_t        *par,
   bdryfree_t   *bdryfree,
   bdrypml_t    *bdrypml,
   wav_t        *wav,
@@ -43,18 +44,17 @@ drv_rk_curv_col_allstep(
   iofault_t    *iofault,
   ioslice_t    *ioslice,
   iosnap_t     *iosnap,
-  int imethod,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
   char *output_dir,
-  int fault_i_global_indx,
-  int io_time_skip,
-  int qc_check_nan_num_of_step,
-  const int output_all, // qc all var
   const int verbose)
 {
-  // retrieve from struct
+  int imethod = par->imethod;
+  int fault_i_global_index = par->fault_i_global_index;
+  int io_time_skip = par->io_time_skip;
+  int qc_check_nan_number_of_step = par->qc_check_nan_number_of_step;
+
   int num_rk_stages = fd->num_rk_stages;
   int num_of_pairs =  fd->num_of_pairs;
   float *rk_a = fd->rk_a;
@@ -65,7 +65,7 @@ drv_rk_curv_col_allstep(
   int nj = gdcurv->nj;
   int nk = gdcurv->nk;
   // fault x index with ghost
-  int i0 = fault_i_global_indx + gdcurv->fdx_nghosts;
+  int i0 = fault_i_global_index + gdcurv->fdx_nghosts;
   // mpi
   int myid = mympi->myid;
   int *topoid = mympi->topoid;
@@ -532,7 +532,7 @@ drv_rk_curv_col_allstep(
     //--------------------------------------------
     // QC
     //--------------------------------------------
-    if (qc_check_nan_num_of_step >0  && (it % qc_check_nan_num_of_step) == 0) {
+    if (qc_check_nan_number_of_step >0  && (it % qc_check_nan_number_of_step) == 0) {
       if (myid==0 && verbose>10) fprintf(stdout,"-> check value nan\n");
         //wav_check_value(w_end);
     }
