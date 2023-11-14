@@ -31,7 +31,7 @@ wav_init(gdcurv_t *gdcurv,
 
   // vars
   // 3 Vi, 6 Tij, 4 rk stages
-  //V->v5d = (float *) fdlib_mem_calloc_1d_float(V->siz_ilevel * V->nlevel,
+  // V->v5d = (float *) fdlib_mem_calloc_1d_float(V->siz_ilevel * V->nlevel,
   //                      0.0, "v5d, wf_el3d_1st");
   // no need alloc space in cpu, all wave in device.
   // just need alloc space to recv wave from device

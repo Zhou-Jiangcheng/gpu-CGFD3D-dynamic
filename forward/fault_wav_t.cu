@@ -23,8 +23,8 @@ fault_wav_init(gdcurv_t *gdcurv,
   FW->nz   = gdcurv->nz;
   FW->ncmp = 9;
   FW->nlevel = number_of_levels;
-  FW->siz_iz_yz = ny * nz;
-  FW->siz_iz_yz_2 = 2 * ny * nz;
+  FW->siz_slice_yz = ny * nz;
+  FW->siz_slice_yz_2 = 2 * ny * nz;
   FW->siz_ilevel = 2 * ny * nz * FW->ncmp;
 
   // NOTE ! 
@@ -144,7 +144,7 @@ fault_var_update(float *f_end_d, int it, float dt,
   int nk  = gdcurv_d.nk;
   int nk1 = gdcurv_d.nk1;
   int ny  = gdcurv_d.ny;
-  size_t siz_iz_yz  = gdcurv_d.siz_iz_yz;
+  size_t siz_slice_yz  = gdcurv_d.siz_slice_yz;
   float *f_Vx = f_end_d + FW.Vx_pos; 
   float *f_Vy = f_end_d + FW.Vy_pos; 
   float *f_Vz = f_end_d + FW.Vz_pos; 
@@ -155,7 +155,7 @@ fault_var_update(float *f_end_d, int it, float dt,
     grid.y = (nk + block.y - 1) / block.y;
     fault_var_update_gpu<<<grid, block >>> ( f_Vx, f_Vy, f_Vz, 
                                              nj, nj1, nk, nk1, ny, 
-                                             siz_iz_yz, it, dt, FC, F, FW);
+                                             siz_slice_yz, it, dt, FC, F, FW);
   }
   return 0;
 }
@@ -163,7 +163,7 @@ fault_var_update(float *f_end_d, int it, float dt,
 __global__ void
 fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz, 
                      int nj, int nj1, int nk, int nk1, 
-                     int ny, size_t siz_iz_yz,
+                     int ny, size_t siz_slice_yz,
                      int it, float dt, fault_coef_t FC,  
                      fault_t F, fault_wav_t FW)
 {
@@ -179,9 +179,9 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
 
   if(iy<nj && iz<nk && F.united[iptr_t] == 0)
   {
-    dVx = f_Vx[iptr_f + siz_iz_yz] - f_Vx[iptr_f];
-    dVy = f_Vy[iptr_f + siz_iz_yz] - f_Vy[iptr_f];
-    dVz = f_Vz[iptr_f + siz_iz_yz] - f_Vz[iptr_f];
+    dVx = f_Vx[iptr_f + siz_slice_yz] - f_Vx[iptr_f];
+    dVy = f_Vy[iptr_f + siz_slice_yz] - f_Vy[iptr_f];
+    dVz = f_Vz[iptr_f + siz_slice_yz] - f_Vz[iptr_f];
 
     vec_s1[0] = FC.vec_s1[iptr_f*3 + 0];
     vec_s1[1] = FC.vec_s1[iptr_f*3 + 1];
@@ -200,13 +200,13 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     F.slip1[iptr_t] += Vs1 * dt; 
     F.slip2[iptr_t] += Vs2 * dt; 
 
-    FW.hT1x[iptr_f] = (FW.T1x[iptr_f+3*siz_iz_yz] - FW.mT1x[iptr_f])/dt;
-    FW.hT1y[iptr_f] = (FW.T1y[iptr_f+3*siz_iz_yz] - FW.mT1y[iptr_f])/dt;
-    FW.hT1z[iptr_f] = (FW.T1z[iptr_f+3*siz_iz_yz] - FW.mT1z[iptr_f])/dt;
+    FW.hT1x[iptr_f] = (FW.T1x[iptr_f+3*siz_slice_yz] - FW.mT1x[iptr_f])/dt;
+    FW.hT1y[iptr_f] = (FW.T1y[iptr_f+3*siz_slice_yz] - FW.mT1y[iptr_f])/dt;
+    FW.hT1z[iptr_f] = (FW.T1z[iptr_f+3*siz_slice_yz] - FW.mT1z[iptr_f])/dt;
 
-    FW.mT1x[iptr_f] = FW.T1x[iptr_f+3*siz_iz_yz];
-    FW.mT1y[iptr_f] = FW.T1y[iptr_f+3*siz_iz_yz];
-    FW.mT1z[iptr_f] = FW.T1z[iptr_f+3*siz_iz_yz];
+    FW.mT1x[iptr_f] = FW.T1x[iptr_f+3*siz_slice_yz];
+    FW.mT1y[iptr_f] = FW.T1y[iptr_f+3*siz_slice_yz];
+    FW.mT1z[iptr_f] = FW.T1z[iptr_f+3*siz_slice_yz];
 
     if(Vs > F.peak_Vs[iptr_t]) 
     {
@@ -266,13 +266,18 @@ fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars,
   int nj1 = gdcurv_d.nj1;
   int nk1 = gdcurv_d.nk1;
   int ny = gdcurv_d.ny;
-  size_t siz_iz_yz = gdcurv_d.siz_iz_yz;
+  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
 
   size_t iptr_t = iy+iz*nj;
   size_t iptr_f;
+  //if(ix ==4 && iy == 100 && iz == 100 )
+  //{
+  //  iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
+  //  printf("w_input2[iptr_f] is %f\n",w_input2[iptr_f]);
+  //}
   if(ix < 2*num_of_vars && iy < nj && iz < nk && F.united[iptr_t]==0)
   {
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_iz_yz;
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
     w_update[iptr_f] = w_input1[iptr_f] + coef * w_input2[iptr_f];
   }
 }
@@ -291,13 +296,13 @@ fault_wav_update_end(gdcurv_t gdcurv_d, int num_of_vars,
   int nj1 = gdcurv_d.nj1;
   int nk1 = gdcurv_d.nk1;
   int ny = gdcurv_d.ny;
-  size_t siz_iz_yz = gdcurv_d.siz_iz_yz;
+  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
 
   size_t iptr_t = iy+iz*nj;
   size_t iptr_f;
   if(ix < 2*num_of_vars && iy < nj && iz < nk && F.united[iptr_t]==0)
   {
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_iz_yz;
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
     w_update[iptr_f] += coef * w_input2[iptr_f];
   }
 }

@@ -162,7 +162,7 @@ sv_curv_col_el_iso_onestage(
                         lfdy_shift_d, lfdy_coef_d,
                         lfdz_shift_d, lfdz_coef_d,
                         myid, verbose);
-    CUDACHECK( cudaDeviceSynchronize() );
+    CUDACHECK(cudaDeviceSynchronize());
   }
 
   // free, abs, source in turn
@@ -185,7 +185,7 @@ sv_curv_col_el_iso_onestage(
                           fdz_len, lfdz_indx_d,
                           idir, jdir, kdir,
                           myid, verbose);
-      cudaDeviceSynchronize();
+      CUDACHECK(cudaDeviceSynchronize());
     }
     // velocity: vlow
     {
@@ -201,7 +201,7 @@ sv_curv_col_el_iso_onestage(
                         ni1,ni,nj1,nj,nk1,nk2,siz_iy,siz_iz,
                         idir, jdir, kdir,
                         myid, verbose);
-      CUDACHECK( cudaDeviceSynchronize() );
+      CUDACHECK(cudaDeviceSynchronize());
     }
   }
 
@@ -209,15 +209,15 @@ sv_curv_col_el_iso_onestage(
   if (bdrypml_d.is_enable == 1)
   {
     sv_curv_col_el_iso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
-                                        hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
-                                        xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
-                                        lam3d, mu3d, slw3d,
-                                        nk2, siz_iy,siz_iz,
-                                        lfdx_shift_d, lfdx_coef_d,
-                                        lfdy_shift_d, lfdy_coef_d,
-                                        lfdz_shift_d, lfdz_coef_d,
-                                        bdrypml_d, bdryfree_d,
-                                        myid, verbose);
+                                  hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
+                                  xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
+                                  lam3d, mu3d, slw3d,
+                                  nk2, siz_iy,siz_iz,
+                                  lfdx_shift_d, lfdx_coef_d,
+                                  lfdy_shift_d, lfdy_coef_d,
+                                  lfdz_shift_d, lfdz_coef_d,
+                                  bdrypml_d, bdryfree_d,
+                                  myid, verbose);
   }
   
   // end func
@@ -247,7 +247,6 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     int * lfdz_shift, float * lfdz_coef,
     const int myid, const int verbose)
 {
-  
   // local var
   float DxTxx,DxTyy,DxTzz,DxTxy,DxTxz,DxTyz,DxVx,DxVy,DxVz;
   float DyTxx,DyTyy,DyTzz,DyTxy,DyTxz,DyTyz,DyVx,DyVy,DyVz;
@@ -283,7 +282,6 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     Txz_ptr = Txz + iptr;
     Tyz_ptr = Tyz + iptr;
     Txy_ptr = Txy + iptr;
-
 
     // Vx derivatives
     M_FD_SHIFT_PTR_MACDRP_COEF(DxVx, Vx_ptr, lfdx_shift, lfdx_coef);

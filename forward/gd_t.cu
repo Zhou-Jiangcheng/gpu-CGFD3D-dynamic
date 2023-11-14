@@ -1969,8 +1969,8 @@ gd_info_set(gdcurv_t *const gdcurv,
   gdcurv->siz_iz   = nx * ny; 
   gdcurv->siz_icmp = gdcurv->siz_iz * nz;
 
-  gdcurv->siz_iz_yz = ny * nz;
-  gdcurv->siz_iz_yz2 = 2 * ny * nz;
+  gdcurv->siz_slice_yz = ny * nz;
+  gdcurv->siz_slice_yz2 = 2 * ny * nz;
 
   // set npoint_ghosts according to fdz_nghosts
   gdcurv->npoint_ghosts = fdz_nghosts;

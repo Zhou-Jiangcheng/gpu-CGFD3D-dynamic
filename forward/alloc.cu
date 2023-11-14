@@ -149,16 +149,16 @@ int init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d)
   metric_d->zeta_y  = (float *) cuda_malloc(sizeof(float)*siz_icmp);
   metric_d->zeta_z  = (float *) cuda_malloc(sizeof(float)*siz_icmp);
 
-  CUDACHECK( cudaMemcpy(metric_d->jac,   metric->jac,     sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->xi_x,  metric->xi_x,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->xi_y,  metric->xi_y,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->xi_z,  metric->xi_z,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->eta_x, metric->eta_x,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->eta_y, metric->eta_y,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->eta_z, metric->eta_z,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->zeta_x, metric->zeta_x, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->zeta_y, metric->zeta_y, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(metric_d->zeta_z, metric->zeta_z, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(metric_d->jac,   metric->jac,     sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->xi_x,  metric->xi_x,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->xi_y,  metric->xi_y,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->xi_z,  metric->xi_z,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->eta_x, metric->eta_x,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->eta_y, metric->eta_y,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->eta_z, metric->eta_z,   sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->zeta_x, metric->zeta_x, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->zeta_y, metric->zeta_y, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(metric_d->zeta_z, metric->zeta_z, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
   return 0;
 }
 
@@ -228,68 +228,68 @@ int init_fault_coef_device(gdcurv_t *gdcurv, fault_coef_t *FC, fault_coef_t *FC_
   FC_d->matT1toVxf_Plus = (float *) cuda_malloc(sizeof(float)*ny*3*3);
   FC_d->matVytoVxf_Plus = (float *) cuda_malloc(sizeof(float)*ny*3*3);
 
-  CUDACHECK( cudaMemcpy(FC_d->rho_f, FC->rho_f, sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->mu_f,  FC->mu_f,  sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->lam_f, FC->lam_f, sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->rho_f, FC->rho_f, sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->mu_f,  FC->mu_f,  sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->lam_f, FC->lam_f, sizeof(float)*ny*nz*2, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->D21_1, FC->D21_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D22_1, FC->D22_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D23_1, FC->D23_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D31_1, FC->D31_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D32_1, FC->D32_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D33_1, FC->D33_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->D21_1, FC->D21_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D22_1, FC->D22_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D23_1, FC->D23_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D31_1, FC->D31_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D32_1, FC->D32_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D33_1, FC->D33_1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->D21_2, FC->D21_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D22_2, FC->D22_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D23_2, FC->D23_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D31_2, FC->D31_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D32_2, FC->D32_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->D33_2, FC->D33_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->D21_2, FC->D21_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D22_2, FC->D22_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D23_2, FC->D23_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D31_2, FC->D31_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D32_2, FC->D32_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->D33_2, FC->D33_2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->vec_n,  FC->vec_n,  sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->vec_s1, FC->vec_s1, sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->vec_s2, FC->vec_s2, sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->vec_n,  FC->vec_n,  sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->vec_s1, FC->vec_s1, sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->vec_s2, FC->vec_s2, sizeof(float)*ny*nz*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->x_et, FC->x_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->y_et, FC->y_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->z_et, FC->z_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->x_et, FC->x_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->y_et, FC->y_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->z_et, FC->z_et, sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus1, FC->matMin2Plus1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus2, FC->matMin2Plus2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus3, FC->matMin2Plus3, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus4, FC->matMin2Plus4, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus5, FC->matMin2Plus5, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus1, FC->matMin2Plus1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus2, FC->matMin2Plus2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus3, FC->matMin2Plus3, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus4, FC->matMin2Plus4, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus5, FC->matMin2Plus5, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min1, FC->matPlus2Min1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min2, FC->matPlus2Min2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min3, FC->matPlus2Min3, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min4, FC->matPlus2Min4, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min5, FC->matPlus2Min5, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min1, FC->matPlus2Min1, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min2, FC->matPlus2Min2, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min3, FC->matPlus2Min3, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min4, FC->matPlus2Min4, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min5, FC->matPlus2Min5, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matT1toVx_Min, FC->matT1toVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVytoVx_Min, FC->matVytoVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVztoVx_Min, FC->matVztoVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matT1toVx_Min, FC->matT1toVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVytoVx_Min, FC->matVytoVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVztoVx_Min, FC->matVztoVx_Min, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matT1toVx_Plus, FC->matT1toVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVytoVx_Plus, FC->matVytoVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVztoVx_Plus, FC->matVztoVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matT1toVx_Plus, FC->matT1toVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVytoVx_Plus, FC->matVytoVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVztoVx_Plus, FC->matVztoVx_Plus, sizeof(float)*ny*nz*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matVx2Vz1, FC->matVx2Vz1, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVy2Vz1, FC->matVy2Vz1, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVx2Vz2, FC->matVx2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVy2Vz2, FC->matVy2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matVx2Vz1, FC->matVx2Vz1, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVy2Vz1, FC->matVy2Vz1, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVx2Vz2, FC->matVx2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVy2Vz2, FC->matVy2Vz2, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min1f, FC->matPlus2Min1f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min2f, FC->matPlus2Min2f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matPlus2Min3f, FC->matPlus2Min3f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus1f, FC->matMin2Plus1f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus2f, FC->matMin2Plus2f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matMin2Plus3f, FC->matMin2Plus3f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min1f, FC->matPlus2Min1f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min2f, FC->matPlus2Min2f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matPlus2Min3f, FC->matPlus2Min3f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus1f, FC->matMin2Plus1f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus2f, FC->matMin2Plus2f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matMin2Plus3f, FC->matMin2Plus3f, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(FC_d->matT1toVxf_Min,  FC->matT1toVxf_Min, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVytoVxf_Min,  FC->matVytoVxf_Min, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matT1toVxf_Plus, FC->matT1toVxf_Plus, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(FC_d->matVytoVxf_Plus, FC->matVytoVxf_Plus, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(FC_d->matT1toVxf_Min,  FC->matT1toVxf_Min, sizeof(float)*ny*3*3,  cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVytoVxf_Min,  FC->matVytoVxf_Min, sizeof(float)*ny*3*3,  cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matT1toVxf_Plus, FC->matT1toVxf_Plus, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(FC_d->matVytoVxf_Plus, FC->matVytoVxf_Plus, sizeof(float)*ny*3*3, cudaMemcpyHostToDevice));
 
   return 0;
 }
@@ -330,36 +330,36 @@ int init_fault_device(gdcurv_t *gdcurv, fault_t *F, fault_t *F_d)
   F_d->flag_rup     = (int *)   cuda_malloc(sizeof(int)*nj*nk);
   F_d->init_t0_flag = (int *)   cuda_malloc(sizeof(int)*nj*nk);
 
-  CUDACHECK( cudaMemcpy(F_d->T0x,  F->T0x,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->T0y,  F->T0y,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->T0z,  F->T0z,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->mu_s, F->mu_s, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->mu_d, F->mu_d, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Dc,   F->Dc,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->C0,   F->C0,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(F_d->T0x,  F->T0x,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->T0y,  F->T0y,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->T0z,  F->T0z,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->mu_s, F->mu_s, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->mu_d, F->mu_d, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Dc,   F->Dc,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->C0,   F->C0,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(F_d->Tn,    F->Tn,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Ts1,   F->Ts1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Ts2,   F->Ts2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->slip,  F->slip,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->slip1, F->slip1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->slip2, F->slip2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Vs,    F->Vs,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Vs1,   F->Vs1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->Vs2,   F->Vs2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->peak_Vs, F->peak_Vs, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->init_t0, F->init_t0, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(F_d->Tn,    F->Tn,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Ts1,   F->Ts1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Ts2,   F->Ts2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->slip,  F->slip,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->slip1, F->slip1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->slip2, F->slip2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Vs,    F->Vs,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Vs1,   F->Vs1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Vs2,   F->Vs2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->peak_Vs, F->peak_Vs, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->init_t0, F->init_t0, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(F_d->tTn,  F->tTn,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->tTs1, F->tTs1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->tTs2, F->tTs2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(F_d->tTn,  F->tTn,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->tTs1, F->tTs1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->tTs2, F->tTs2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
 
-  CUDACHECK( cudaMemcpy(F_d->united,       F->united,       sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->faultgrid,    F->faultgrid,    sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->rup_index_y,  F->rup_index_y,  sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->rup_index_z,  F->rup_index_z,  sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->flag_rup,     F->flag_rup,     sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
-  CUDACHECK( cudaMemcpy(F_d->init_t0_flag, F->init_t0_flag, sizeof(int)*nj*nk, cudaMemcpyHostToDevice) );
+  CUDACHECK(cudaMemcpy(F_d->united,       F->united,       sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->faultgrid,    F->faultgrid,    sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->rup_index_y,  F->rup_index_y,  sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->rup_index_z,  F->rup_index_z,  sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->flag_rup,     F->flag_rup,     sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->init_t0_flag, F->init_t0_flag, sizeof(int)*nj*nk, cudaMemcpyHostToDevice));
 
   return 0;
 }
@@ -406,9 +406,10 @@ int init_bdryfree_device(gdcurv_t *gdcurv, bdryfree_t *bdryfree, bdryfree_t *bdr
   {
     bdryfree_d->matVx2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
     bdryfree_d->matVy2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
-
-    CUDACHECK(cudaMemcpy(bdryfree_d->matVx2Vz2, bdryfree->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
-    CUDACHECK(cudaMemcpy(bdryfree_d->matVy2Vz2, bdryfree->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
+    
+    // use gpu calculate, not need copy 
+    //CUDACHECK(cudaMemcpy(bdryfree_d->matVx2Vz2, bdryfree->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
+    //CUDACHECK(cudaMemcpy(bdryfree_d->matVy2Vz2, bdryfree->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
   }
 
   return 0;

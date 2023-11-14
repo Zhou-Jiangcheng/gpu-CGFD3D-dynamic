@@ -85,8 +85,8 @@ typedef struct {
   size_t siz_iz;
   size_t siz_icmp;
   
-  size_t siz_iz_yz; 
-  size_t siz_iz_yz2; 
+  size_t siz_slice_yz; 
+  size_t siz_slice_yz2; 
 
   size_t *cmp_pos;
   char  **cmp_name;

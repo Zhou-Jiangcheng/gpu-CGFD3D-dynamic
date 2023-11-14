@@ -91,7 +91,7 @@ fault_coef_cal(gdcurv_t *gdcurv,
   int nz = gdcurv->nz;
   size_t siz_iy = gdcurv->siz_iy;
   size_t siz_iz = gdcurv->siz_iz;
-  size_t siz_iz_yz = gdcurv->siz_iz_yz;
+  size_t siz_slice_yz = gdcurv->siz_slice_yz;
   // x direction only has 1 mpi. 
   int npoint_z = gdcurv->npoint_z;
   int gnk1 = gdcurv->gnk1;
@@ -160,13 +160,13 @@ fault_coef_cal(gdcurv_t *gdcurv,
       e32 = zt_y[iptr];
       e33 = zt_z[iptr];
       //mimus media
-      FC->rho_f[iptr_f+0*siz_iz_yz] = rho;
-      FC->lam_f[iptr_f+0*siz_iz_yz] = lam;
-      FC->mu_f [iptr_f+0*siz_iz_yz] = mu;
+      FC->rho_f[iptr_f+0*siz_slice_yz] = rho;
+      FC->lam_f[iptr_f+0*siz_slice_yz] = lam;
+      FC->mu_f [iptr_f+0*siz_slice_yz] = mu;
       //plus media
-      FC->rho_f[iptr_f+1*siz_iz_yz] = rho;
-      FC->lam_f[iptr_f+1*siz_iz_yz] = lam;
-      FC->mu_f [iptr_f+1*siz_iz_yz] = mu;
+      FC->rho_f[iptr_f+1*siz_slice_yz] = rho;
+      FC->lam_f[iptr_f+1*siz_slice_yz] = lam;
+      FC->mu_f [iptr_f+1*siz_slice_yz] = mu;
       // minus -
       D11_1[0][0] = lam2mu*e11*e11+mu*(e12*e12+e13*e13);
       D11_1[0][1] = lam*e11*e12+mu*e12*e11;
@@ -1021,7 +1021,7 @@ nc_read_init_stress(fault_t *F,
   ierr = nc_inq_varid(ncid, "C0", &varid); handle_nc_err(ierr);
   ierr = nc_get_vara_float(ncid, varid, start, count, F->C0); handle_nc_err(ierr);
 
-  ierr = nc_close(ncid);handle_nc_err(ierr);
+  ierr = nc_close(ncid); handle_nc_err(ierr);
   
   return 0;
 }

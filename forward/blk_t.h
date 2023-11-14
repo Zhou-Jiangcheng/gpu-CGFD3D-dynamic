@@ -187,22 +187,22 @@ blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
 
 __global__ void
 blk_macdrp_pack_fault_mesg_y1(
-             float *fw_cur, float *sbuff_y1_fault, size_t siz_iz_yz, 
+             float *fw_cur, float *sbuff_y1_fault, size_t siz_slice_yz, 
              int num_of_vars_fault, int ny, int nj1, int nk1, int ny1_g, int nk);
 
 __global__ void
 blk_macdrp_pack_fault_mesg_y2(
-             float *fw_cur, float *sbuff_y2_fault, size_t siz_iz_yz, 
+             float *fw_cur, float *sbuff_y2_fault, size_t siz_slice_yz, 
              int num_of_vars_fault, int ny, int nj2, int nk1, int ny2_g, int nk);
 
 __global__ void
 blk_macdrp_pack_fault_mesg_z1(
-             float *fw_cur, float *sbuff_z1_fault, size_t siz_iz_yz, 
+             float *fw_cur, float *sbuff_z1_fault, size_t siz_slice_yz, 
              int num_of_vars_fault, int ny, int nj1, int nk1, int nj, int nz1_g);
 
 __global__ void
 blk_macdrp_pack_fault_mesg_z2(
-             float *fw_cur, float *sbuff_z2_fault, size_t siz_iz_yz, 
+             float *fw_cur, float *sbuff_z2_fault, size_t siz_slice_yz, 
              int num_of_vars_fault, int ny, int nj1, int nk2, int nj, int nz2_g);
 
 int 
@@ -217,22 +217,22 @@ blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur,
 
 __global__ void
 blk_macdrp_unpack_fault_mesg_y1(
-           float *fw_cur, float *rbuff_y1_fault, size_t siz_iz_yz, 
+           float *fw_cur, float *rbuff_y1_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk1, int ny2_g, int nk, int *neighid);
 
 __global__ void
 blk_macdrp_unpack_fault_mesg_y2(
-           float *fw_cur, float *rbuff_y2_fault, size_t siz_iz_yz, 
+           float *fw_cur, float *rbuff_y2_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj2, int nk1, int ny1_g, int nk, int *neighid);
 
 __global__ void
 blk_macdrp_unpack_fault_mesg_z1(
-           float *fw_cur, float *rbuff_z1_fault, size_t siz_iz_yz, 
+           float *fw_cur, float *rbuff_z1_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk1, int nj, int nz2_g, int *neighid);
 
 __global__ void
 blk_macdrp_unpack_fault_mesg_z2(
-           float *fw_cur, float *rbuff_z2_fault, size_t siz_iz_yz, 
+           float *fw_cur, float *rbuff_z2_fault, size_t siz_slice_yz, 
            int num_of_vars, int ny, int nj1, int nk2, int nj, int nz1_g, int *neighid);
 
 int

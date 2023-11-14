@@ -60,7 +60,7 @@ trial_slipweakening_onestage(
 
   size_t siz_iy  = gdcurv_d.siz_iy;
   size_t siz_iz  = gdcurv_d.siz_iz;
-  size_t siz_iz_yz = gdcurv_d.siz_iz_yz;
+  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
 
   int jdir = fdy_op->dir;
   int kdir = fdz_op->dir;
@@ -79,7 +79,7 @@ trial_slipweakening_onestage(
                          xi_x,  xi_y,  xi_z,
                          jac3d, i0, isfree, dt, 
                          nj1, nj, nk1, nk, ny, siz_iy, 
-                         siz_iz, siz_iz_yz, 
+                         siz_iz, siz_slice_yz, 
                          jdir, kdir, F, FC);
   }
  
@@ -98,7 +98,7 @@ trial_slipweakening_gpu(
     float *jac3d, int i0, int isfree, float dt, 
     int nj1, int nj, int nk1, int nk, int ny,
     size_t siz_iy, size_t siz_iz, 
-    size_t siz_iz_yz, int jdir, int kdir,
+    size_t siz_slice_yz, int jdir, int kdir,
     fault_t F, fault_coef_t FC)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
@@ -137,7 +137,7 @@ trial_slipweakening_gpu(
       iptr_f = (iy+nj1) + (iz+nk1) * ny; 
       iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
       jac = jac3d[iptr];
-      rho = FC.rho_f[iptr_f + m * siz_iz_yz];
+      rho = FC.rho_f[iptr_f + m * siz_slice_yz];
       // dh = 1, so omit dh in formula
       Mrho[m] = 0.5*jac*rho;
 
@@ -153,15 +153,15 @@ trial_slipweakening_gpu(
         T1x = jac*(xix * Txx[iptr] + xiy * Txy[iptr] + xiz * Txz[iptr]);
         T1y = jac*(xix * Txy[iptr] + xiy * Tyy[iptr] + xiz * Tyz[iptr]);
         T1z = jac*(xix * Txz[iptr] + xiy * Tyz[iptr] + xiz * Tzz[iptr]);
-        f_T1x[(3+(2*m-1)*l)*siz_iz_yz + iptr_f] = T1x;
-        f_T1y[(3+(2*m-1)*l)*siz_iz_yz + iptr_f] = T1y;
-        f_T1z[(3+(2*m-1)*l)*siz_iz_yz + iptr_f] = T1z;
+        f_T1x[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T1x;
+        f_T1y[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T1y;
+        f_T1z[(3+(2*m-1)*l)*siz_slice_yz + iptr_f] = T1z;
       }
 
       iptr_f = (iy+nj1) + (iz+nk1) * ny; 
-      T2x_ptr = f_T2x + iptr_f + m*siz_iz_yz;
-      T2y_ptr = f_T2y + iptr_f + m*siz_iz_yz;
-      T2z_ptr = f_T2z + iptr_f + m*siz_iz_yz;
+      T2x_ptr = f_T2x + iptr_f + m*siz_slice_yz;
+      T2y_ptr = f_T2y + iptr_f + m*siz_slice_yz;
+      T2z_ptr = f_T2z + iptr_f + m*siz_slice_yz;
       // fault point use short stencil
       // due to slip change sharp
       if(F.rup_index_y[iptr_t] == 1)
@@ -178,9 +178,9 @@ trial_slipweakening_gpu(
       }
 
       iptr_f = (iy+nj1) + (iz+nk1) * ny; 
-      T3x_ptr = f_T3x + iptr_f + m*siz_iz_yz;
-      T3y_ptr = f_T3y + iptr_f + m*siz_iz_yz;
-      T3z_ptr = f_T3z + iptr_f + m*siz_iz_yz;
+      T3x_ptr = f_T3x + iptr_f + m*siz_slice_yz;
+      T3y_ptr = f_T3y + iptr_f + m*siz_slice_yz;
+      T3z_ptr = f_T3z + iptr_f + m*siz_slice_yz;
       if(F.rup_index_z[iptr_t] == 1)
       {
         M_FD_SHIFT_PTR_MAC22(DzT3x, T3x_ptr, ny, kdir);
@@ -199,7 +199,7 @@ trial_slipweakening_gpu(
       {
         for (int l=-3; l<=3 ; l++)
         {
-          iptr_f = (iy+nj1) + (iz+nk1+l) * ny + m*siz_iz_yz;
+          iptr_f = (iy+nj1) + (iz+nk1+l) * ny + m*siz_slice_yz;
           vecT3x[l+3] = f_T3x[iptr_f];
           vecT3y[l+3] = f_T3y[iptr_f];
           vecT3z[l+3] = f_T3z[iptr_f];
@@ -223,30 +223,30 @@ trial_slipweakening_gpu(
       iptr_f = (iy+nj1) + (iz+nk1) * ny;
       if (m == 0){ // "-" side
         Rx[m] =
-          a_1 * f_T1x[2*siz_iz_yz+iptr_f] +
-          a_2 * f_T1x[1*siz_iz_yz+iptr_f] +
-          a_3 * f_T1x[0*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1x[2*siz_slice_yz+iptr_f] +
+          a_2 * f_T1x[1*siz_slice_yz+iptr_f] +
+          a_3 * f_T1x[0*siz_slice_yz+iptr_f] ;
         Ry[m] =
-          a_1 * f_T1y[2*siz_iz_yz+iptr_f] +
-          a_2 * f_T1y[1*siz_iz_yz+iptr_f] +
-          a_3 * f_T1y[0*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1y[2*siz_slice_yz+iptr_f] +
+          a_2 * f_T1y[1*siz_slice_yz+iptr_f] +
+          a_3 * f_T1y[0*siz_slice_yz+iptr_f] ;
         Rz[m] =
-          a_1 * f_T1z[2*siz_iz_yz+iptr_f] +
-          a_2 * f_T1z[1*siz_iz_yz+iptr_f] +
-          a_3 * f_T1z[0*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1z[2*siz_slice_yz+iptr_f] +
+          a_2 * f_T1z[1*siz_slice_yz+iptr_f] +
+          a_3 * f_T1z[0*siz_slice_yz+iptr_f] ;
       }else{ // "+" side
         Rx[m] =
-          a_1 * f_T1x[4*siz_iz_yz+iptr_f] +
-          a_2 * f_T1x[5*siz_iz_yz+iptr_f] +
-          a_3 * f_T1x[6*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1x[4*siz_slice_yz+iptr_f] +
+          a_2 * f_T1x[5*siz_slice_yz+iptr_f] +
+          a_3 * f_T1x[6*siz_slice_yz+iptr_f] ;
         Ry[m] =
-          a_1 * f_T1y[4*siz_iz_yz+iptr_f] +
-          a_2 * f_T1y[5*siz_iz_yz+iptr_f] +
-          a_3 * f_T1y[6*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1y[4*siz_slice_yz+iptr_f] +
+          a_2 * f_T1y[5*siz_slice_yz+iptr_f] +
+          a_3 * f_T1y[6*siz_slice_yz+iptr_f] ;
         Rz[m] =
-          a_1 * f_T1z[4*siz_iz_yz+iptr_f] +
-          a_2 * f_T1z[5*siz_iz_yz+iptr_f] +
-          a_3 * f_T1z[6*siz_iz_yz+iptr_f] ;
+          a_1 * f_T1z[4*siz_slice_yz+iptr_f] +
+          a_2 * f_T1z[5*siz_slice_yz+iptr_f] +
+          a_3 * f_T1z[6*siz_slice_yz+iptr_f] ;
       }
       // dh = 1, so omit dh in formula
       Rx[m] = 0.5*((2*m-1)*Rx[m] + (DyT2x + DzT3x));
@@ -256,9 +256,9 @@ trial_slipweakening_gpu(
 
     // dv = (V+) - (V-)
     iptr_f = (iy+nj1) + (iz+nk1) * ny;
-    float dVx = f_mVx[iptr_f + siz_iz_yz] - f_mVx[iptr_f];
-    float dVy = f_mVy[iptr_f + siz_iz_yz] - f_mVy[iptr_f];
-    float dVz = f_mVz[iptr_f + siz_iz_yz] - f_mVz[iptr_f];
+    float dVx = f_mVx[iptr_f + siz_slice_yz] - f_mVx[iptr_f];
+    float dVy = f_mVy[iptr_f + siz_slice_yz] - f_mVy[iptr_f];
+    float dVz = f_mVz[iptr_f + siz_slice_yz] - f_mVz[iptr_f];
 
     float Trial[3];       // stress variation
     float Trial_local[3]; // + init background stress
@@ -290,7 +290,7 @@ trial_slipweakening_gpu(
     jacvec = jac3d[iptr] * vec_n0;
     for (int i=0; i<3; i++)
     {
-        vec_n[i] /= vec_n0;
+      vec_n[i] /= vec_n0;
     }
     
     iptr_t = iy + iz * nj; 
@@ -364,13 +364,13 @@ trial_slipweakening_gpu(
 
     iptr_f = (iy+nj1) + (iz+nk1) * ny;
     if(ifchange == 1){
-      f_T1x[iptr_f+3*siz_iz_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
-      f_T1y[iptr_f+3*siz_iz_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
-      f_T1z[iptr_f+3*siz_iz_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
+      f_T1x[iptr_f+3*siz_slice_yz] = (Tau[0] - F.T0x[iptr_t])*jacvec;
+      f_T1y[iptr_f+3*siz_slice_yz] = (Tau[1] - F.T0y[iptr_t])*jacvec;
+      f_T1z[iptr_f+3*siz_slice_yz] = (Tau[2] - F.T0z[iptr_t])*jacvec;
     }else{
-      f_T1x[iptr_f+3*siz_iz_yz] = Trial[0];
-      f_T1y[iptr_f+3*siz_iz_yz] = Trial[1];
-      f_T1z[iptr_f+3*siz_iz_yz] = Trial[2];
+      f_T1x[iptr_f+3*siz_slice_yz] = Trial[0];
+      f_T1y[iptr_f+3*siz_slice_yz] = Trial[1];
+      f_T1z[iptr_f+3*siz_slice_yz] = Trial[2];
     }
 
     F.tTs1[iptr_t] = fdlib_math_dot_product(Tau, vec_s1);

@@ -71,7 +71,7 @@ drv_rk_curv_col_allstep(
   int *topoid = mympi->topoid;
   MPI_Comm comm = mympi->comm;
   int *neighid_d = init_neighid_device(mympi->neighid);
-  // local allocated array
+
   gdcurv_t     gdcurv_d;
   md_t         md_d;
   wav_t        wav_d;
@@ -192,6 +192,7 @@ drv_rk_curv_col_allstep(
       MPI_Abort(MPI_COMM_WORLD,1);
     }
   }
+
   //--------------------------------------------------------
   // time loop
   //--------------------------------------------------------
@@ -200,7 +201,7 @@ drv_rk_curv_col_allstep(
 
   for (int it=0; it<nt_total; it++)
   {
-    t_cur  = it * dt + t0;
+    t_cur = it * dt + t0;
     t_end = t_cur +dt;
 
     if (myid==0 && verbose>10) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
@@ -285,6 +286,7 @@ drv_rk_curv_col_allstep(
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
                         myid, verbose);
+
           break;
         }
       //  synchronize onestage device func.
@@ -558,7 +560,7 @@ drv_rk_curv_col_allstep(
 
     //-- line values
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
-    if( (it+1)%io_time_skip == 0)
+    if((it+1)%io_time_skip == 0)
     {
       int it_skip = (int)(it/io_time_skip);
       // io fault var each dt, use w_buff as buff

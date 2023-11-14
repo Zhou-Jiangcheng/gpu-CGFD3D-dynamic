@@ -29,7 +29,7 @@ wave2fault_gpu(float * Vx,  float * Vy,  float * Vz,
                float * jac3d,  int i0, int nj, int nj1, 
                int nk, int nk1, int ny, 
                size_t siz_iy, size_t siz_iz, 
-               size_t siz_iz_yz, fault_t F);
+               size_t siz_slice_yz, fault_t F);
 
 int
 fault2wave_onestage(float *w_cur_d, wav_t wav_d, 
@@ -50,6 +50,6 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
                float * jac3d, int i0, int nj, int nj1,
                int nk, int nk1, int ny, 
                size_t siz_iy, size_t siz_iz, 
-               size_t siz_iz_yz, fault_t F);
+               size_t siz_slice_yz, fault_t F);
 
 #endif
