@@ -270,11 +270,16 @@ fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars,
 
   size_t iptr_t = iy+iz*nj;
   size_t iptr_f;
-  //if(ix ==4 && iy == 100 && iz == 100 )
-  //{
-  //  iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
-  //  printf("w_input2[iptr_f] is %f\n",w_input2[iptr_f]);
-  //}
+  if(ix==8 && iy==200 && iz==100 )
+  {
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
+    printf("w_input2[iptr_f] is %f\n",w_input2[iptr_f]);
+  }
+  if(ix==9 && iy==200 && iz==100 )
+  {
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;
+    printf("w_input2[iptr_f] is %f\n",w_input2[iptr_f]);
+  }
   if(ix < 2*num_of_vars && iy < nj && iz < nk && F.united[iptr_t]==0)
   {
     iptr_f = (iy+nj1) + (iz+nk1) * ny + ix * siz_slice_yz;

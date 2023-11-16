@@ -13,9 +13,8 @@ float fdlib_math_norm3(float *A)
 __host__ __device__
 void fdlib_math_invert3x3(float m[][3])
 {
-  float inv[3][3];
-  float det;
-  int i, j;
+  double inv[3][3];
+  double det;
 
   inv[0][0] = m[1][1]*m[2][2] - m[2][1]*m[1][2];
   inv[0][1] = m[2][1]*m[0][2] - m[0][1]*m[2][2];
@@ -31,11 +30,14 @@ void fdlib_math_invert3x3(float m[][3])
       + inv[0][1] * m[1][0] 
       + inv[0][2] * m[2][0];
 
-  det = 1.0f / det;
+  det = 1.0 / det;
 
-  for (i = 0; i < 3; i++)
-    for (j = 0; j < 3; j++)
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) 
+    {
       m[i][j] = inv[i][j] * det;
+    }
+  }
 
   return;
 }
@@ -43,11 +45,10 @@ void fdlib_math_invert3x3(float m[][3])
 __host__ __device__
 void fdlib_math_matmul3x3(float A[][3], float B[][3], float C[][3])
 {
-  int i, j, k;
-  for (i = 0; i < 3; i++)
-    for (j = 0; j < 3; j++){
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++){
       C[i][j] = 0.0;
-      for (k = 0; k < 3; k++)
+      for (int k = 0; k < 3; k++)
         C[i][j] += A[i][k] * B[k][j];
     }
 
@@ -75,9 +76,8 @@ void fdlib_math_cross_product(float *A, float *B, float *C)
 __host__ __device__
 float fdlib_math_dot_product(float *A, float *B)
 {
-  int i;
   float result = 0.0;
-  for (i = 0; i < 3; i++)
+  for (int i = 0; i < 3; i++)
     result += A[i] * B[i];
 
   return result;
@@ -106,13 +106,13 @@ float fdlib_math_dist_point2plane(float x0[3], float x1[3], float x2[3], float x
 __host__ __device__
 void fdlib_math_bubble_sort(float a[], int index[], int n)
 {
-  int i, j;float tmp;
+  float tmp;
 
-  for (i = 0; i < n; i++) index[i] = i;
+  for (int i = 0; i < n; i++) index[i] = i;
   int tmpi;
 
-  for (j = 0; j < n-1; j++)
-    for (i = 0; i < n-1-j; i++){
+  for (int j = 0; j < n-1; j++)
+    for (int i = 0; i < n-1-j; i++){
       if(a[i] > a[i+1]){
         tmp = a[i];
         a[i] = a[i+1];
@@ -127,13 +127,13 @@ void fdlib_math_bubble_sort(float a[], int index[], int n)
 __host__ __device__
 void fdlib_math_bubble_sort_int(int a[], int index[], int n)
 {
-  int i, j, tmp;
+  int tmp;
 
-  for (i = 0; i < n; i++) index[i] = i;
+  for (int i = 0; i < n; i++) index[i] = i;
   int tmpi;
 
-  for (j = 0; j < n-1; j++)
-    for (i = 0; i < n-1-j; i++){
+  for (int j = 0; j < n-1; j++)
+    for (int i = 0; i < n-1-j; i++){
       if(a[i] > a[i+1]){
         tmp = a[i];
         a[i] = a[i+1];

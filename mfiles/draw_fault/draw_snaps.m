@@ -31,7 +31,7 @@ y1 = y(k1:k2, j1:j2);
 z1 = z(k1:k2, j1:j2);
 
 figure;
-for nlayer = 100 : 100 : 3000
+for nlayer = 100 : 100 : 300
 % disp(it);
 [Vs1,t] = gather_fault(output_dir,nlayer,'Vs1',nproj,nprok);
 [Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);

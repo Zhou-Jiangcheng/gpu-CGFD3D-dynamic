@@ -98,17 +98,17 @@ drv_rk_curv_col_allstep(
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
   // GPU local pointer
-  float * w_cur_d;
-  float * w_pre_d;
-  float * w_rhs_d;
-  float * w_end_d;
-  float * w_tmp_d;
+  float *w_cur_d;
+  float *w_pre_d;
+  float *w_rhs_d;
+  float *w_end_d;
+  float *w_tmp_d;
 
-  float * f_cur_d;
-  float * f_pre_d;
-  float * f_rhs_d;
-  float * f_end_d;
-  float * f_tmp_d;
+  float *f_cur_d;
+  float *f_pre_d;
+  float *f_rhs_d;
+  float *f_end_d;
+  float *f_tmp_d;
 
   // get wavefield
   w_pre_d = wav_d.v5d + wav_d.siz_ilevel * 0; // previous level at n

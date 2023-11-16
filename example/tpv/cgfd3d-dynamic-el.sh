@@ -6,7 +6,7 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
@@ -42,11 +42,11 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : 2,
   "number_of_mpiprocs_z" : 2,
 
-  "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,181],
+  "dynamic_method" : 1,
+  "fault_grid" : [51,350,51,200],
 
   "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 3000,
+  "number_of_time_steps" : 300,
   "#time_window_length" : 4,
   "check_stability" : 1,
   "io_time_skip" : 1,
@@ -212,7 +212,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

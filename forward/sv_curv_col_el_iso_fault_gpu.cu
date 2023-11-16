@@ -221,16 +221,16 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
   float vecT3x[7], vecT3y[7], vecT3z[7];
   iptr_t = iy + iz * nj;
 
-  if (iy < nj && iz < nk && F.united[iptr_t] == 0) 
+  if (iy<nj && iz<nk && F.united[iptr_t] == 0) 
   { 
-    int km = nk - (iz+1); 
+    int km = nk - (iz+1);
     int n_free = km+3;
 
-    for (int i = i0-3; i <= i0+3; i++)
+    for (int i=i0-3; i<=i0+3; i++)
     {
-      int n = i0 - i; 
-      if(n==0) continue; // skip Split nodes
-      for (int l = -3; l <= 3; l++)
+      int n = i0 - i;
+      if(n == 0) continue; // skip Split nodes
+      for (int l=-3; l<=3; l++)
       {
         iptr = (i+l) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
         vecT1x[l+3] = jac3d[iptr]*(xi_x[iptr]*Txx[iptr] + xi_y[iptr]*Txy[iptr] + xi_z[iptr]*Txz[iptr]);
@@ -242,24 +242,24 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
         vecT2y[l+3] = jac3d[iptr]*(et_x[iptr]*Txy[iptr] + et_y[iptr]*Tyy[iptr] + et_z[iptr]*Tyz[iptr]);
         vecT2z[l+3] = jac3d[iptr]*(et_x[iptr]*Txz[iptr] + et_y[iptr]*Tyz[iptr] + et_z[iptr]*Tzz[iptr]);
 
-        iptr = i + (iy+nj1) *siz_iy + (iz+nk1+l) * siz_iz;
+        iptr = i + (iy+nj1) * siz_iy + (iz+nk1+l) * siz_iz;
         vecT3x[l+3] = jac3d[iptr]*(zt_x[iptr]*Txx[iptr] + zt_y[iptr]*Txy[iptr] + zt_z[iptr]*Txz[iptr]);
         vecT3y[l+3] = jac3d[iptr]*(zt_x[iptr]*Txy[iptr] + zt_y[iptr]*Tyy[iptr] + zt_z[iptr]*Tyz[iptr]);
         vecT3z[l+3] = jac3d[iptr]*(zt_x[iptr]*Txz[iptr] + zt_y[iptr]*Tyz[iptr] + zt_z[iptr]*Tzz[iptr]);
       }
 
-      iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_slice_yz; 
+      iptr_f = (iy+nj1) + (iz+nk1) * ny + 3 * siz_slice_yz;
       vecT1x[n+3] = f_T1x[iptr_f]; // fault T1x
       vecT1y[n+3] = f_T1y[iptr_f]; // fault T1y
       vecT1z[n+3] = f_T1z[iptr_f]; // fault T1z
 
-      //  TractionImg
-      if (n==2) { // i0-2
+      // TractionImg
+      if (n == 2) { // i0-2
         vecT1x[6] = 2.0*vecT1x[5] - vecT1x[4];
         vecT1y[6] = 2.0*vecT1y[5] - vecT1y[4];
         vecT1z[6] = 2.0*vecT1z[5] - vecT1z[4];
       }
-      if (n==1) { // i0-1
+      if (n == 1) { // i0-1
         vecT1x[5] = 2.0*vecT1x[4] - vecT1x[3];
         vecT1y[5] = 2.0*vecT1y[4] - vecT1y[3];
         vecT1z[5] = 2.0*vecT1z[4] - vecT1z[3];
@@ -267,7 +267,7 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
         vecT1y[6] = 2.0*vecT1y[4] - vecT1y[2];
         vecT1z[6] = 2.0*vecT1z[4] - vecT1z[2];
       }
-      if (n==-1) { // i0+1
+      if (n == -1) { // i0+1
         vecT1x[0] = 2.0*vecT1x[2] - vecT1x[4];
         vecT1y[0] = 2.0*vecT1y[2] - vecT1y[4];
         vecT1z[0] = 2.0*vecT1z[2] - vecT1z[4];
@@ -275,7 +275,7 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
         vecT1y[1] = 2.0*vecT1y[2] - vecT1y[3];
         vecT1z[1] = 2.0*vecT1z[2] - vecT1z[3];
       }
-      if (n==-2) { // i0+2
+      if (n == -2) { // i0+2
         vecT1x[0] = 2.0*vecT1x[1] - vecT1x[2];
         vecT1y[0] = 2.0*vecT1y[1] - vecT1y[2];
         vecT1z[0] = 2.0*vecT1z[1] - vecT1z[2];
@@ -286,7 +286,7 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
         vecT3x[n_free] = 0.0;
         vecT3y[n_free] = 0.0;
         vecT3z[n_free] = 0.0;
-        for (int l = n_free+1; l<7; l++){
+        for (int l=n_free+1; l<7; l++){
           vecT3x[l] = -vecT3x[2*n_free-l];
           vecT3y[l] = -vecT3y[2*n_free-l];
           vecT3z[l] = -vecT3z[2*n_free-l];
@@ -314,10 +314,10 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
     // update velocity at the fault plane
     // 0 for minus side on the fault
     // 1 for plus  side on the fault
-    for (int m = 0; m < 2; m++)
+    for (int m=0; m<2; m++)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny;
-      if(m==0){ // "-" side
+      if(m == 0){ // "-" side
         DxT1x =     a_0*f_T1x[iptr_f+3*siz_slice_yz] 
                   - a_1*f_T1x[iptr_f+2*siz_slice_yz] 
                   - a_2*f_T1x[iptr_f+1*siz_slice_yz] 
@@ -397,7 +397,7 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
         vecT3x[n_free] = 0.0;
         vecT3y[n_free] = 0.0;
         vecT3z[n_free] = 0.0;
-        for (int l = n_free+1; l<7; l++)
+        for (int l=n_free+1; l<7; l++)
         {
           vecT3x[l] = -vecT3x[2*n_free-l];
           vecT3y[l] = -vecT3y[2*n_free-l];
@@ -502,7 +502,7 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     //    -3    -2    -1    -0    +0    1     2     3     (offset from fault)
 
     // point A
-    iptr = (i0+3) + (iy+nj1) * siz_iy + (iz+nk1) *siz_iz;
+    iptr = (i0+3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     Vx_ptr = Vx + iptr;
     Vy_ptr = Vy + iptr;
     Vz_ptr = Vz + iptr;
@@ -511,7 +511,7 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     MACDRP_F(DxVz[7],Vz_ptr,1);
 
     // point B
-    iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) *siz_iz;
+    iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     Vx_ptr = Vx + iptr;
     Vy_ptr = Vy + iptr;
     Vz_ptr = Vz + iptr;
@@ -528,7 +528,7 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     MAC22_F(DxVy[5],Vy_ptr,1);
     MAC22_F(DxVz[5],Vz_ptr,1);
 
-    //fault split point D+ D-
+    // fault split point D+ D-
     if(F.rup_index_y[iptr_t] == 1)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
@@ -597,8 +597,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     }
 
     idx = ((iy+nj1) + (iz+nk1) * ny)*3*3;
-    for (int ii = 0; ii < 3; ii++){
-      for (int jj = 0; jj < 3; jj++){
+    for (int ii=0; ii<3; ii++){
+      for (int jj=0; jj<3; jj++){
         int ij = 3*ii + jj;
         matPlus2Min1[ii][jj] = FC.matPlus2Min1[idx + ij];
         matPlus2Min2[ii][jj] = FC.matPlus2Min2[idx + ij];
@@ -640,6 +640,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       DxVx[3] = out1[0] + out2[0] + out3[0] - out4[0] - out5[0];
       DxVy[3] = out1[1] + out2[1] + out3[1] - out4[1] - out5[1];
       DxVz[3] = out1[2] + out2[2] + out3[2] - out4[2] - out5[2];
+      //DxVx[3] = 1.0;
+      //DxVy[3] = 1.0;
+      //DxVz[3] = 1.0;
     }
     if(imethod == 2)
     {
@@ -669,7 +672,6 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       DxVx[4] = out1[0] - out2[0] - out3[0];
       DxVy[4] = out1[1] - out2[1] - out3[1];
       DxVz[4] = out1[2] - out2[2] - out3[2];
-
 
       // Minus side --------------------------------------------
       dyV1[0] = DyVx[3];
@@ -914,9 +916,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     } // isfree and km==1 or km==2
 
     // calculate f_hT2, f_hT3 on the Plus side 
-    vec1[0] = DxVx[4]; vec1[1] = DxVy[4]; vec1[2] = DxVz[4];
-    vec2[0] = DyVx[4]; vec2[1] = DyVy[4]; vec2[2] = DyVz[4];
-    vec3[0] = DzVx[4]; vec3[1] = DzVy[4]; vec3[2] = DzVz[4];
+    vec1[0] = DxVx[4]; vec2[0] = DyVx[4]; vec3[0] = DzVx[4];
+    vec1[1] = DxVy[4]; vec2[1] = DyVy[4]; vec3[1] = DzVy[4];
+    vec1[2] = DxVz[4]; vec2[2] = DyVz[4]; vec3[2] = DzVz[4];
 
     idx = ((iy+nj1) + (iz+nk1) * ny)*3*3;
     for (int ii = 0; ii < 3; ii++){
@@ -956,9 +958,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     f_hT3z[iptr_f] = vecg1[2] + vecg2[2] + vecg3[2];
 
     // calculate f_hT2, f_hT3 on the Minus side
-    vec1[0] = DxVx[3]; vec1[1] = DxVy[3]; vec1[2] = DxVz[3];
-    vec2[0] = DyVx[3]; vec2[1] = DyVy[3]; vec2[2] = DyVz[3];
-    vec3[0] = DzVx[3]; vec3[1] = DzVy[3]; vec3[2] = DzVz[3];
+    vec1[0] = DxVx[3]; vec2[0] = DyVx[3]; vec3[0] = DzVx[3];
+    vec1[1] = DxVy[3]; vec2[1] = DyVy[3]; vec3[1] = DzVy[3];
+    vec1[2] = DxVz[3]; vec2[2] = DyVz[3]; vec3[2] = DzVz[3];
 
     idx = ((iy+nj1) + (iz+nk1) * ny)*3*3;
     for (int ii = 0; ii < 3; ii++){
@@ -1007,17 +1009,17 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     // point F
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[0] = Vx[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vx[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vx[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_3[2] = f_Vx[iptr_f];
     VEC_24_F(DxVx[1], vec_3);
 
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[0] = Vy[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vy[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vy[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_3[2] = f_Vy[iptr_f];
     VEC_24_F(DxVy[1], vec_3);
 
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[0] = Vz[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vz[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_3[2] = f_Vz[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_3[2] = f_Vz[iptr_f];
     VEC_24_F(DxVz[1], vec_3);
 
     // point G
@@ -1025,21 +1027,21 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     iptr = (i0-3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vx[iptr];
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vx[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vx[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vx[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_5[4] = f_Vx[iptr_f];
     VEC_DRP_F(DxVx[0], vec_5);
 
     iptr = (i0-4) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[0] = Vy[iptr];
     iptr = (i0-3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vy[iptr];
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vy[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vy[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vy[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_5[4] = f_Vy[iptr_f];
     VEC_DRP_F(DxVy[0], vec_5);
 
     iptr = (i0-4) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[0] = Vz[iptr];
     iptr = (i0-3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vz[iptr];
     iptr = (i0-2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vz[iptr];
     iptr = (i0-1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vz[iptr];
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;       vec_5[4] = f_Vz[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;  vec_5[4] = f_Vz[iptr_f];
     VEC_DRP_F(DxVz[0], vec_5);
 
     for (int n = 0; n < 8 ; n++)
@@ -1627,9 +1629,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     } // isfree and km==1 or km==2
 
     // calculate f_hT2, f_hT3 on the Minus side
-    vec1[0] = DxVx[3]; vec1[1] = DxVy[3]; vec1[2] = DxVz[3];
-    vec2[0] = DyVx[3]; vec2[1] = DyVy[3]; vec2[2] = DyVz[3];
-    vec3[0] = DzVx[3]; vec3[1] = DzVy[3]; vec3[2] = DzVz[3];
+    vec1[0] = DxVx[3]; vec2[0] = DyVx[3]; vec3[0] = DzVx[3];
+    vec1[1] = DxVy[3]; vec2[1] = DyVy[3]; vec3[1] = DzVy[3];
+    vec1[2] = DxVz[3]; vec2[2] = DyVz[3]; vec3[2] = DzVz[3];
 
     idx = ((iy+nj1) + (iz+nk1) * ny)*3*3;
     for (int ii = 0; ii < 3; ii++){
@@ -1669,9 +1671,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     f_hT3z[iptr_f] = vecg1[2] + vecg2[2] + vecg3[2];
 
     // calculate f_hT2, f_hT3 on the Plus side 
-    vec1[0] = DxVx[4]; vec1[1] = DxVy[4]; vec1[2] = DxVz[4];
-    vec2[0] = DyVx[4]; vec2[1] = DyVy[4]; vec2[2] = DyVz[4];
-    vec3[0] = DzVx[4]; vec3[1] = DzVy[4]; vec3[2] = DzVz[4];
+    vec1[0] = DxVx[4]; vec2[0] = DyVx[4]; vec3[0] = DzVx[4];
+    vec1[1] = DxVy[4]; vec2[1] = DyVy[4]; vec3[1] = DzVy[4];
+    vec1[2] = DxVz[4]; vec2[2] = DyVz[4]; vec3[2] = DzVz[4];
 
     idx = ((iy+nj1) + (iz+nk1) * ny)*3*3;
     for (int ii = 0; ii < 3; ii++){
