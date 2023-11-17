@@ -6,8 +6,7 @@
 #include "gd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 #include <cuda_runtime.h>
 
 /*************************************************

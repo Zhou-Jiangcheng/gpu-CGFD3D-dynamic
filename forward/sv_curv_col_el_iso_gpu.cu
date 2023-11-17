@@ -167,7 +167,7 @@ sv_curv_col_el_iso_onestage(
 
   // free, abs, source in turn
   // free surface at z2
-  if (bdryfree_d.is_at_sides[2][1] == 1)
+  if (bdryfree_d.is_sides_free[2][1] == 1)
   {
     // tractiong
     {
@@ -206,7 +206,7 @@ sv_curv_col_el_iso_onestage(
   }
 
   // cfs-pml, loop face inside
-  if (bdrypml_d.is_enable == 1)
+  if (bdrypml_d.is_enable_pml == 1)
   {
     sv_curv_col_el_iso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                                   hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
@@ -779,7 +779,7 @@ sv_curv_col_el_iso_rhs_cfspml(
     for (int iside=0; iside<2; iside++)
     {
       // skip to next face if not cfspml
-      if (bdrypml.is_at_sides[idim][iside] == 0) continue;
+      if (bdrypml.is_sides_pml[idim][iside] == 0) continue;
 
       // get index into local var
       int abs_ni1 = bdrypml.ni1[idim][iside];
@@ -997,7 +997,7 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       // add contributions from free surface condition
       //  not consider timg because conflict with main cfspml,
       //     need to revise in the future if required
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdryfree.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;
@@ -1143,7 +1143,7 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
 
       // add contributions from free surface condition
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdryfree.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;

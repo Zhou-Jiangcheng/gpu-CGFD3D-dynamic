@@ -9,8 +9,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "fault_wav_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 #include "io_funcs.h"
 
 /*******************************************************************************
@@ -49,7 +48,7 @@ typedef struct
   // pml
   bdrypml_t *bdrypml;
   // exp
-  //bdryexp_t *bdryexp;
+  bdryexp_t *bdryexp;
   
   // io
   iorecv_t  *iorecv;

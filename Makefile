@@ -55,7 +55,7 @@ main_curv_col_el_3d: \
 		fault_wav_t.o fault_info.o \
 		transform.o trial_slipweakening.o \
 		gd_t.o md_t.o wav_t.o \
-		bdry_free.o bdry_pml.o io_funcs.o \
+		bdry_t.o io_funcs.o \
 		blk_t.o cuda_common.o \
 		drv_rk_curv_col.o \
 		sv_curv_col_el_iso_gpu.o \
@@ -102,9 +102,7 @@ fault_info.o: forward/fault_info.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 fault_wav_t.o: forward/fault_wav_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-bdry_pml.o: forward/bdry_pml.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-bdry_free.o: forward/bdry_free.cu
+bdry_t.o: forward/bdry_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 io_funcs.o: forward/io_funcs.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<

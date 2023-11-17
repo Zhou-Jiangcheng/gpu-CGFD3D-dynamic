@@ -27,6 +27,7 @@ blk_init(blk_t *blk,
   blk->wav        = (wav_t        *) malloc(sizeof(wav_t));
   blk->bdryfree   = (bdryfree_t   *) malloc(sizeof(bdryfree_t));
   blk->bdrypml    = (bdrypml_t    *) malloc(sizeof(bdrypml_t));
+  blk->bdryexp    = (bdryexp_t    *) malloc(sizeof(bdryexp_t));
   blk->iorecv     = (iorecv_t     *) malloc(sizeof(iorecv_t));
   blk->ioline     = (ioline_t     *) malloc(sizeof(ioline_t));
   blk->iofault    = (iofault_t    *) malloc(sizeof(iofault_t));

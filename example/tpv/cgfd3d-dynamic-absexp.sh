@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project1
+PROJDIR=`pwd`/../../project
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -35,7 +35,7 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 100,
+  "number_of_total_grid_points_x" : 200,
   "number_of_total_grid_points_y" : 400,
   "number_of_total_grid_points_z" : 200,
 
@@ -49,45 +49,35 @@ cat << ieof > $PAR_FILE
   "number_of_time_steps" : 3000,
   "#time_window_length" : 4,
   "check_stability" : 1,
-  "io_time_skip" : 1,
+  "io_time_skip" : 2,
 
   "boundary_x_left" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_x_right" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_front" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_back" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_z_bottom" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },

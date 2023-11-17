@@ -34,6 +34,7 @@ drv_rk_curv_col_allstep(
   par_t        *par,
   bdryfree_t   *bdryfree,
   bdrypml_t    *bdrypml,
+  bdryexp_t    *bdryexp,
   wav_t        *wav,
   mympi_t      *mympi,
   fault_coef_t *fault_coef,
@@ -76,24 +77,26 @@ drv_rk_curv_col_allstep(
   md_t         md_d;
   wav_t        wav_d;
   fd_device_t  fd_device_d;
-  bdryfree_t   bdryfree_d;
-  bdrypml_t    bdrypml_d;
   gd_metric_t  metric_d;
   fault_coef_t fault_coef_d;
   fault_t      fault_d;
   fault_wav_t  fault_wav_d;
+  bdryfree_t   bdryfree_d;
+  bdrypml_t    bdrypml_d;
+  bdryexp_t    bdryexp_d;
 
   // init device struct, and copy data from host to device
   init_gdcurv_device(gdcurv, &gdcurv_d);
   init_md_device(md, &md_d);
   init_fd_device(fd, &fd_device_d);
   init_metric_device(metric, &metric_d);
-  init_bdryfree_device(gdcurv, bdryfree, &bdryfree_d);
-  init_bdrypml_device(gdcurv, bdrypml, &bdrypml_d);
   init_wave_device(wav, &wav_d);
   init_fault_coef_device(gdcurv, fault_coef, &fault_coef_d);
   init_fault_device(gdcurv, fault, &fault_d);
   init_fault_wav_device(fault_wav, &fault_wav_d);
+  init_bdryfree_device(gdcurv, bdryfree, &bdryfree_d);
+  init_bdrypml_device(gdcurv, bdrypml, &bdrypml_d);
+  init_bdryexp_device(gdcurv, bdryexp, &bdryexp_d);
 
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
@@ -149,19 +152,22 @@ drv_rk_curv_col_allstep(
   int num_of_s_reqs = 8;
 
   // set pml for rk
-  for (int idim=0; idim<CONST_NDIM; idim++) {
-    for (int iside=0; iside<2; iside++) {
-      if (bdrypml_d.is_at_sides[idim][iside]==1) {
-        bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-        auxvar_d->pre = auxvar_d->var + auxvar_d->siz_ilevel * 0;
-        auxvar_d->tmp = auxvar_d->var + auxvar_d->siz_ilevel * 1;
-        auxvar_d->rhs = auxvar_d->var + auxvar_d->siz_ilevel * 2;
-        auxvar_d->end = auxvar_d->var + auxvar_d->siz_ilevel * 3;
+  if(bdrypml_d.is_enable_pml == 1)
+  {
+    for (int idim=0; idim<CONST_NDIM; idim++) {
+      for (int iside=0; iside<2; iside++) {
+        if (bdrypml_d.is_sides_pml[idim][iside]==1) {
+          bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+          auxvar_d->pre = auxvar_d->var + auxvar_d->siz_ilevel * 0;
+          auxvar_d->tmp = auxvar_d->var + auxvar_d->siz_ilevel * 1;
+          auxvar_d->rhs = auxvar_d->var + auxvar_d->siz_ilevel * 2;
+          auxvar_d->end = auxvar_d->var + auxvar_d->siz_ilevel * 3;
+        }
       }
     }
   }
 
-  int isfree = bdryfree_d.is_at_sides[CONST_NDIM-1][1];
+  int isfree = bdryfree_d.is_sides_free[CONST_NDIM-1][1];
   // alloc free surface PGV, PGA and PGD
   float *PG_d = NULL;
   float *PG   = NULL;
@@ -228,9 +234,12 @@ drv_rk_curv_col_allstep(
       if (istage==0) {
         w_cur_d = w_pre_d;
         f_cur_d = f_pre_d;
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].pre;
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].pre;
+            }
           }
         }
       }
@@ -238,9 +247,12 @@ drv_rk_curv_col_allstep(
       {
         w_cur_d = w_tmp_d;
         f_cur_d = f_tmp_d;
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].tmp;
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].tmp;
+            }
           }
         }
       }
@@ -331,15 +343,18 @@ drv_rk_curv_col_allstep(
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
         // pml_tmp
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdrypml_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -369,15 +384,18 @@ drv_rk_curv_col_allstep(
           fault_stress_update_first <<<grid, block>>> (nj, nk, coef, fault_d);
         }
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                          auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->pre, auxvar_d->rhs);
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdrypml_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                            auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -413,15 +431,18 @@ drv_rk_curv_col_allstep(
         blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gdcurv, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdrypml_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -451,15 +472,18 @@ drv_rk_curv_col_allstep(
           fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
         }
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update_end <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdrypml_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update_end <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -503,15 +527,18 @@ drv_rk_curv_col_allstep(
         blk_macdrp_pack_fault_mesg_gpu(f_end_d, fd, gdcurv, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml->is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update_end <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+        if(bdrypml_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdrypml->is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update_end <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -538,7 +565,11 @@ drv_rk_curv_col_allstep(
       if (myid==0 && verbose>10) fprintf(stdout,"-> check value nan\n");
         //wav_check_value(w_end);
     }
-    
+    //--------------------------------------------
+    if (bdryexp_d.is_enable_ablexp == 1) {
+      bdry_ablexp_apply(bdryexp_d, gdcurv, w_end_d, wav->ncmp);
+    }
+
     //--------------------------------------------
     // save results
     //--------------------------------------------
@@ -576,12 +607,15 @@ drv_rk_curv_col_allstep(
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;
     f_cur_d = f_pre_d; f_pre_d = f_end_d; f_end_d = f_cur_d;
 
-    for (int idim=0; idim<CONST_NDIM; idim++) {
-      for (int iside=0; iside<2; iside++) {
-        bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-        auxvar_d->cur = auxvar_d->pre;
-        auxvar_d->pre = auxvar_d->end;
-        auxvar_d->end = auxvar_d->cur;
+    if(bdrypml_d.is_enable_pml == 1)
+    {
+      for (int idim=0; idim<CONST_NDIM; idim++) {
+        for (int iside=0; iside<2; iside++) {
+          bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
+          auxvar_d->cur = auxvar_d->pre;
+          auxvar_d->pre = auxvar_d->end;
+          auxvar_d->end = auxvar_d->cur;
+        }
       }
     }
   } // time loop
@@ -606,6 +640,7 @@ drv_rk_curv_col_allstep(
   dealloc_fault_wav_device(fault_wav_d);
   dealloc_bdryfree_device(bdryfree_d);
   dealloc_bdrypml_device(bdrypml_d);
+  dealloc_bdryexp_device(bdryexp_d);
   dealloc_wave_device(wav_d);
 
   // close nc

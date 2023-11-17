@@ -8,7 +8,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "fault_wav_t.h"
-#include "bdry_free.h"
+#include "bdry_t.h"
 #include <cuda_runtime.h>
 
 int 

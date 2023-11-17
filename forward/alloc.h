@@ -8,8 +8,7 @@
 #include "fd_t.h"
 #include "md_t.h"
 #include "wav_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 
 int 
 init_gdcurv_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d);
@@ -37,6 +36,9 @@ init_bdryfree_device(gdcurv_t *gdcurv, bdryfree_t *bdryfree, bdryfree_t *bdryfre
 
 int
 init_bdrypml_device(gdcurv_t *gdcurv, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d);
+
+int 
+init_bdryexp_device(gdcurv_t *gdcurv, bdryexp_t *bdryexp, bdryexp_t *bdryexp_d);
 
 int 
 init_wave_device(wav_t *wav, wav_t *wav_d);
@@ -76,6 +78,9 @@ dealloc_bdryfree_device(bdryfree_t bdryfree_d);
 
 int 
 dealloc_bdrypml_device(bdrypml_t bdrypml_d);
+
+int
+dealloc_bdryexp_device(bdryexp_t bdryexp_d);
 
 int 
 dealloc_wave_device(wav_t wav_d);

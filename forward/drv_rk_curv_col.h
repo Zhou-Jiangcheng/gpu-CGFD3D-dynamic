@@ -8,8 +8,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "fault_wav_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 #include "io_funcs.h"
 
 /*************************************************
@@ -25,6 +24,7 @@ drv_rk_curv_col_allstep(
   par_t       *par,
   bdryfree_t  *bdryfree,
   bdrypml_t   *bdrypml,
+  bdryexp_t   *bdryexp,
   wav_t       *wav,
   mympi_t     *mympi,
   fault_coef_t *fault_coef,

@@ -98,6 +98,7 @@ int main(int argc, char** argv)
   wav_t           *wav           = blk->wav;
   bdryfree_t      *bdryfree      = blk->bdryfree;
   bdrypml_t       *bdrypml       = blk->bdrypml;
+  bdryexp_t       *bdryexp       = blk->bdryexp;
   iorecv_t        *iorecv        = blk->iorecv;
   ioline_t        *ioline        = blk->ioline;
   iofault_t       *iofault       = blk->iofault;
@@ -608,10 +609,10 @@ int main(int argc, char** argv)
   //-- absorbing boundary etc auxiliary variables
   //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
-  
   if (par->bdry_has_cfspml == 1)
   {
+    if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg pml boundary ...\n"); 
+  
     bdry_pml_set(gdcurv, wav, bdrypml,
                  mympi->neighid,
                  par->cfspml_is_sides,
@@ -622,6 +623,19 @@ int main(int argc, char** argv)
                  verbose);
   }
 
+  if (par->bdry_has_ablexp == 1)
+  {
+    if (myid==0 && verbose>0) fprintf(stdout,"setup sponge layer ...\n"); 
+
+    bdry_ablexp_set(gdcurv, wav, bdryexp,
+                    mympi->neighid,
+                    par->ablexp_is_sides,
+                    par->abs_num_of_layers,
+                    par->ablexp_velocity,
+                    dt,
+                    mympi->topoid,
+                    verbose);
+  }
   //-------------------------------------------------------------------------------
   //-- free surface preproc
   //-------------------------------------------------------------------------------
@@ -665,7 +679,7 @@ int main(int argc, char** argv)
   time_t t_start = time(NULL);
 
   drv_rk_curv_col_allstep(fd,gdcurv,gd_metric,md,par,
-                          bdryfree,bdrypml, wav, mympi,
+                          bdryfree,bdrypml,bdryexp,wav,mympi,
                           fault_coef,fault,fault_wav,
                           iorecv,ioline,iofault,ioslice,iosnap,
                           dt,nt_total,t0,
