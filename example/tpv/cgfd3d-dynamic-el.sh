@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project1
 PAR_FILE=${PROJDIR}/params.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -46,7 +46,7 @@ cat << ieof > $PAR_FILE
   "fault_grid" : [51,350,51,200],
 
   "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 300,
+  "number_of_time_steps" : 3000,
   "#time_window_length" : 4,
   "check_stability" : 1,
   "io_time_skip" : 1,

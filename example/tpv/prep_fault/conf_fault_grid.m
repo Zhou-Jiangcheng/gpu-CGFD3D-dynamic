@@ -17,7 +17,7 @@ x = zeros(nj, nk);
 y = zeros(nj, nk);
 z = zeros(nj, nk);
 
-theta = 1/4*pi;
+theta = 1/6*pi;
 for k = 1:nk
   for j = 1:nj
         x(j,k) = 0 + (k-nk)*dh*tan(theta);

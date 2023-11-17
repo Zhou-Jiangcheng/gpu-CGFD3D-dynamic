@@ -4,10 +4,10 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json'
-output_dir='../../project/output'
-% parfnm='../../project2/params.json'
-% output_dir='../../project2/output'
+% parfnm='../../project/params.json'
+% output_dir='../../project/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 par = loadjson(parfnm);
 nproi=1;
 nproj=par.number_of_mpiprocs_y;
