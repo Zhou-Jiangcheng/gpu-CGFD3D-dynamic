@@ -71,7 +71,7 @@ int
 md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type);
 
 int
-md_import(md_t *md, char *fname_coords, char *in_dir);
+md_import(gdcurv_t *gdcurv, md_t *md, char *fname_coords, char *in_dir);
 
 int
 md_export(gdcurv_t  *gdcurv,

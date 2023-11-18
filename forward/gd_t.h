@@ -134,11 +134,11 @@ gd_curv_metric_cal(gdcurv_t    *gdcurv,
                    gd_metric_t *metric);
 
 int
-gd_curv_exchange(gdcurv_t *gdcurv,
-                 float *g3d,
-                 int ncmp,
-                 int *neighid,
-                 MPI_Comm topocomm);
+gd_exchange(gdcurv_t *gdcurv,
+            float *g3d,
+            int ncmp,
+            int *neighid,
+            MPI_Comm topocomm);
 
 int 
 mirror_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
@@ -157,7 +157,7 @@ nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z,
                        char *in_grid_fault_nc, gdcurv_t *gdcurv);
 
 int
-gd_curv_metric_import(gd_metric_t *metric, char *fname_coords, char *import_dir);
+gd_curv_metric_import(gdcurv_t *gdcurv, gd_metric_t *metric, char *fname_coords, char *import_dir);
 
 int
 gd_curv_coord_import(gdcurv_t *gdcurv, char *fname_coords, char *import_dir);

@@ -160,7 +160,7 @@ int main(int argc, char** argv)
       if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
       gd_curv_gen_fault(gdcurv, par->fault_x_index, par->dh, par->fault_coord_nc);
       if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
-      gd_curv_exchange(gdcurv,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
+      gd_exchange(gdcurv,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -194,14 +194,16 @@ int main(int argc, char** argv)
       gd_curv_metric_cal(gdcurv, gd_metric);
 
       if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-      gd_curv_exchange(gdcurv,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
+      gd_exchange(gdcurv,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
     case PAR_METRIC_IMPORT : {
 
       if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-      gd_curv_metric_import(gd_metric, blk->output_fname_part, par->metric_import_dir);
+      gd_curv_metric_import(gdcurv, gd_metric, blk->output_fname_part, par->metric_import_dir);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      gd_exchange(gdcurv,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -260,7 +262,9 @@ int main(int argc, char** argv)
     case PAR_MEDIA_IMPORT : {
 
       if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
-      md_import(md, blk->output_fname_part, par->media_import_dir);
+      md_import(gdcurv, md, blk->output_fname_part, par->media_import_dir);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange media ...\n"); 
+      gd_exchange(gdcurv,md->v4d,md->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }

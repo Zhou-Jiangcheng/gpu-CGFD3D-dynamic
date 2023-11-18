@@ -227,30 +227,62 @@ md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type)
 //
 
 int
-md_import(md_t *md, char *fname_coords, char *in_dir)
+md_import(gdcurv_t *gdcurv, md_t *md, char *fname_coords, char *in_dir)
 {
   int ierr = 0;
-
-  char in_file[CONST_MAX_STRLEN];
-  
-  int ncid, varid;
-  
   // construct file name
+  char in_file[CONST_MAX_STRLEN];
   sprintf(in_file, "%s/media_%s.nc", in_dir, fname_coords);
+
+  int ni1 = gdcurv->ni1;
+  int nj1 = gdcurv->nj1;
+  int nk1 = gdcurv->nk1;
+  int ni2 = gdcurv->ni2;
+  int nj2 = gdcurv->nj2;
+  int nk2 = gdcurv->nk2;
+  int ni  = gdcurv->ni;
+  int nj  = gdcurv->nj;
+  int nk  = gdcurv->nk;
+  size_t  siz_iy = gdcurv->siz_iy;
+  size_t  siz_iz = gdcurv->siz_iz;
+  
+  size_t iptr, iptr1;
+  
+  float *var_in = (float *) malloc(sizeof(float)*ni*nj*nk);
+  size_t start[] = {0, 0, 0};
+  size_t count[] = {nk, nj, ni};
   
   // read in nc
+  int ncid;
+  int varid;
+  
   ierr = nc_open(in_file, NC_NOWRITE, &ncid); handle_nc_err(ierr);
   
-  for (int icmp=0; icmp < md->ncmp; icmp++) {
-      ierr = nc_inq_varid(ncid, md->cmp_name[icmp], &varid); handle_nc_err(ierr);
+  for (int ivar=0; ivar < md->ncmp; ivar++) 
+  {
+    ierr = nc_inq_varid(ncid, md->cmp_name[ivar], &varid); handle_nc_err(ierr);
   
-      ierr = nc_get_var_float(ncid,varid,md->v4d + md->cmp_pos[icmp]); handle_nc_err(ierr);
+    ierr = nc_get_var(ncid,varid,var_in); handle_nc_err(ierr);
+    float *ptr = md->v4d + md->cmp_pos[ivar];
+    for(int k=nk1; k<=nk2; k++) {
+      for(int j=nj1; j<=nj2; j++) {
+        for(int i=ni1; i<=ni2; i++)
+        {
+          iptr = i + j*siz_iy + k*siz_iz; 
+          iptr1 = (i-3) + (j-3)*ni + (k-3)*ni*nj; 
+          ptr[iptr] = var_in[iptr1];
+        }
+      }
+    }
   }
+  mirror_symmetry(gdcurv, md->v4d, md->ncmp);
   
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return ierr;
+  free(var_in);
+
+  return 0;
 }
 
 int
@@ -261,21 +293,27 @@ md_export(gdcurv_t *gdcurv,
 {
   int ierr = 0;
 
-  size_t *m3d_pos   = md->cmp_pos;
-  char  **m3d_name  = md->cmp_name;
   int  number_of_vars = md->ncmp;
-  int  nx = md->nx;
-  int  ny = md->ny;
-  int  nz = md->nz;
+  int  nx = gdcurv->nx;
+  int  ny = gdcurv->ny;
+  int  nz = gdcurv->nz;
   int  ni1 = gdcurv->ni1;
   int  nj1 = gdcurv->nj1;
   int  nk1 = gdcurv->nk1;
+  int  ni2 = gdcurv->ni2;
+  int  nj2 = gdcurv->nj2;
+  int  nk2 = gdcurv->nk2;
   int  ni  = gdcurv->ni;
   int  nj  = gdcurv->nj;
   int  nk  = gdcurv->nk;
   int  gni1 = gdcurv->ni1_to_glob_phys0;
   int  gnj1 = gdcurv->nj1_to_glob_phys0;
   int  gnk1 = gdcurv->nk1_to_glob_phys0;
+  size_t  siz_iy = gdcurv->siz_iy;
+  size_t  siz_iz = gdcurv->siz_iz;
+  size_t iptr, iptr1;
+
+  float *var_out = (float *) malloc(sizeof(float)*ni*nj*nk);
 
   // construct file name
   char ou_file[CONST_MAX_STRLEN];
@@ -289,20 +327,16 @@ md_export(gdcurv_t *gdcurv,
   ierr = nc_create(ou_file, NC_CLOBBER | NC_64BIT_OFFSET, &ncid); handle_nc_err(ierr);
 
   // define dimension
-  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);
-  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);
-  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);
+  ierr = nc_def_dim(ncid, "i", ni, &dimid[2]);
+  ierr = nc_def_dim(ncid, "j", nj, &dimid[1]);
+  ierr = nc_def_dim(ncid, "k", nk, &dimid[0]);
 
   // define vars
   for (int ivar=0; ivar<number_of_vars; ivar++) {
-    ierr = nc_def_var(ncid, m3d_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
+    ierr = nc_def_var(ncid, md->cmp_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
   }
 
-  // attribute: index in output snapshot, index w ghost in thread
-  int l_start[] = { ni1, nj1, nk1 };
-  nc_put_att_int(ncid,NC_GLOBAL,"local_index_of_first_physical_points",
-                   NC_INT,CONST_NDIM,l_start);
-
+  // attribute:
   int g_start[] = { gni1, gnj1, gnk1 };
   nc_put_att_int(ncid,NC_GLOBAL,"global_index_of_first_physical_points",
                    NC_INT,CONST_NDIM,g_start);
@@ -315,15 +349,29 @@ md_export(gdcurv_t *gdcurv,
   ierr = nc_enddef(ncid);
 
   // add vars
-  for (int ivar=0; ivar<number_of_vars; ivar++) {
-    float *ptr = md->v4d + m3d_pos[ivar];
-    ierr = nc_put_var_float(ncid, varid[ivar],ptr);
+  for (int ivar=0; ivar<number_of_vars; ivar++)
+  {
+    float *ptr = md->v4d + md->cmp_pos[ivar];
+    for(int k=nk1; k<=nk2; k++) {
+      for(int j=nj1; j<=nj2; j++) {
+        for(int i=ni1; i<=ni2; i++)
+        {
+          iptr = i + j*siz_iy + k*siz_iz; 
+          iptr1 = (i-3) + (j-3)*ni + (k-3)*ni*nj; 
+          var_out[iptr1] = ptr[iptr];
+        }
+      }
+    }
+    ierr = nc_put_var_float(ncid, varid[ivar], var_out);  handle_nc_err(ierr);
+    handle_nc_err(ierr);
   }
   
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
 
-  return ierr;
+  free(var_out);
+
+  return 0;
 }
 
 int
