@@ -1,38 +1,8 @@
-function mediainfo = locate_media(parfnm,varargin)
+function mediainfo = locate_media(parfnm,output_dir,subs,subc,subt)
 
 gtstart  = 1;
 gtcount  = -1;
 gtstride = 1;
-
-%-- flags --
-n=1;
-while n<=nargin-1
-    
-    if numel(varargin{n})==1 | ~isnumeric(varargin{n})
-        switch varargin{n}
-            case 'start'
-                gsubs=varargin{n+1}; n=n+1;
-                if length(gsubs)==4
-                    gtstart=gsubs(4);gsubs=gsubs(1:3);
-                end
-            case 'count'
-                gsubc=varargin{n+1}; n=n+1;
-                if length(gsubc)==4
-                    gtcount=gsubc(4);gsubc=gsubc(1:3);
-                end
-            case 'stride'
-                gsubt=varargin{n+1}; n=n+1;
-                if length(gsubt)==4
-                    gtstride=gsubt(4);gsubt=gsubt(1:3);
-                end
-            case 'mediadir'
-                media_dir=varargin{n+1}; n=n+1;
-        end
-    end
-    
-    n=n+1;
-    
-end
 
 % check parameter file exist
 if ~ exist(parfnm,'file')

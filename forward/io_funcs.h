@@ -66,7 +66,7 @@ typedef struct
   size_t siz_max_wrk;
 
   int num_of_fault;
-  int fault_local_indx;
+  int *fault_x_indx;
   char **fault_fname;
 } iofault_t;
 
@@ -123,10 +123,14 @@ typedef struct
 
 typedef struct
 {
-  int ncid; // only one fault slice
+  int num_of_fault;
+  int num_of_vars;
+
+  int *ncid;
   int *varid;
 }
 iofault_nc_t;
+
 typedef struct
 {
   int num_of_slice_x;
@@ -188,7 +192,8 @@ io_line_locate(gdcurv_t *gdcurv,
 int
 io_fault_locate(gdcurv_t *gdcurv, 
                 iofault_t *iofault,
-                int fault_i_global_indx,
+                int number_of_fault,
+                int *fault_x_index,
                 char *output_fname_part,
                 char *output_dir);
 

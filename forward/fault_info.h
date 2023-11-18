@@ -120,7 +120,7 @@ int
 fault_coef_cal(gdcurv_t *gdcurv, 
                gd_metric_t *metric, 
                md_t *md, 
-               int fault_i_global_index,
+               int *fault_x_index,
                fault_coef_t *FC);
 
 int

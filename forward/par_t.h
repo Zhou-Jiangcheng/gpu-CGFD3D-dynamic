@@ -95,9 +95,12 @@ typedef struct{
   int   bdry_has_free;
 
   int imethod;
-  // grid
-  int fault_i_global_index;
+
+  // grid and fault
+  int number_of_fault;
+  int *fault_x_index;
   int fault_grid[4];
+
   int grid_generation_itype;
   int is_export_grid;
   char grid_export_dir[PAR_MAX_STRLEN];

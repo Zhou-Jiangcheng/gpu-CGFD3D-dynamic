@@ -346,7 +346,6 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
-      par->fault_i_global_index = (int)(par->number_of_total_grid_points_x/2);
       par->grid_generation_itype = PAR_FAULT_PLANE;
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
@@ -356,6 +355,19 @@ par_read_from_str(const char *str, par_t *par)
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
         par->dh = thirditem->valueint;
+      }
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_x_index")) {
+        par->number_of_fault = cJSON_GetArraySize(thirditem);
+        if(par->number_of_fault != 1)
+        {
+          fprintf(stderr,"Error: use this method, only support has 1 fault\n");
+          MPI_Abort(MPI_COMM_WORLD,9);
+        }
+        par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
+        for (int i=0; i<par->number_of_fault; i++)
+        {
+          par->fault_x_index[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
+        }
       }
     }
     // 3D grid import
@@ -367,8 +379,13 @@ par_read_from_str(const char *str, par_t *par)
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
          sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
       }
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_i_global_index")) {
-        par->fault_i_global_index = thirditem->valueint;
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_x_index")) {
+        par->number_of_fault = cJSON_GetArraySize(thirditem);
+        par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
+        for (int i=0; i<par->number_of_fault; i++)
+        {
+          par->fault_x_index[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
+        }
       }
     }
   }

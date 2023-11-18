@@ -1,7 +1,5 @@
 function [V] = gather_fault_x_final_time(output_dir,varnm,nproj,nprok)
 
-
-
   for kp=0:nprok-1      
     for jp=0:nproj-1
       % snapshot data

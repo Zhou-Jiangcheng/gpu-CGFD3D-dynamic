@@ -148,7 +148,7 @@ geometric_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
 
 int
 gd_curv_gen_fault(gdcurv_t *gdcurv,
-                  int  fault_i_global_indx,
+                  int  *fault_x_index,
                   float dh,
                   char *in_grid_fault_nc);
 

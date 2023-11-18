@@ -84,7 +84,7 @@ int
 fault_coef_cal(gdcurv_t *gdcurv, 
                gd_metric_t *metric, 
                md_t *md,
-               int fault_i_global_index,
+               int *fault_x_index,
                fault_coef_t *FC)
 {
   int ny = gdcurv->ny;
@@ -95,7 +95,7 @@ fault_coef_cal(gdcurv_t *gdcurv,
   // x direction only has 1 mpi. 
   int npoint_z = gdcurv->npoint_z;
   int gnk1 = gdcurv->gnk1;
-  int i0 = fault_i_global_index + 3; //fault plane x index with ghost
+  int i0 = fault_x_index[0] + 3; //fault plane x index with ghost
   size_t iptr, iptr_f;
   float rho, mu, lam, lam2mu, jac;
   // point to each var

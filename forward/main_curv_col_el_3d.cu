@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     case PAR_FAULT_PLANE : {
 
       if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
-      gd_curv_gen_fault(gdcurv, par->fault_i_global_index, par->dh, par->fault_coord_nc);
+      gd_curv_gen_fault(gdcurv, par->fault_x_index, par->dh, par->fault_coord_nc);
       if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
       gd_curv_exchange(gdcurv,gdcurv->v4d,gdcurv->ncmp,mympi->neighid,mympi->topocomm);
 
@@ -538,7 +538,7 @@ int main(int argc, char** argv)
   //-------------------------------------------------------------------------------
 
   fault_coef_init(fault_coef, gdcurv); 
-  fault_coef_cal(gdcurv, gd_metric, md, par->fault_i_global_index, fault_coef);
+  fault_coef_cal(gdcurv, gd_metric, md, par->fault_x_index, fault_coef);
   fault_init(fault, gdcurv);
   fault_set(fault, fault_coef, gdcurv, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
   fault_wav_init(gdcurv, fault_wav, fd->num_rk_stages);
@@ -575,7 +575,8 @@ int main(int argc, char** argv)
   
   // fault slice
   io_fault_locate(gdcurv,iofault,
-                  par->fault_i_global_index, 
+                  par->number_of_fault, 
+                  par->fault_x_index, 
                   blk->output_fname_part,
                   blk->output_dir);
                   

@@ -52,7 +52,6 @@ drv_rk_curv_col_allstep(
   const int verbose)
 {
   int imethod = par->imethod;
-  int fault_i_global_index = par->fault_i_global_index;
   int io_time_skip = par->io_time_skip;
   int qc_check_nan_number_of_step = par->qc_check_nan_number_of_step;
 
@@ -66,7 +65,7 @@ drv_rk_curv_col_allstep(
   int nj = gdcurv->nj;
   int nk = gdcurv->nk;
   // fault x index with ghost
-  int i0 = fault_i_global_index + gdcurv->fdx_nghosts;
+  int i0 = par->fault_x_index[0] + gdcurv->fdx_nghosts;
   // mpi
   int myid = mympi->myid;
   int *topoid = mympi->topoid;

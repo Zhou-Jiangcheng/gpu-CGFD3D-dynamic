@@ -89,12 +89,13 @@ cat << ieof > $PAR_FILE
       "fault_plane" : {
         "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 100.0
+        "fault_inteval" : 100.0,
+        "fault_x_index" : [100.0 ]
       },
       "#grid_with_fault" : {
         "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_i_gobal_index" : 100.0
+        "fault_x_index" : [100.0 ]
       }
   },
   "is_export_grid" : 1,

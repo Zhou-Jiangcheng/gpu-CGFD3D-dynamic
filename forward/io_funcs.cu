@@ -390,29 +390,38 @@ io_line_locate(gdcurv_t *gdcurv,
 int
 io_fault_locate(gdcurv_t *gdcurv, 
                 iofault_t *iofault,
-                int fault_i_global_indx,
+                int number_of_fault,
+                int *fault_x_index,
                 char *output_fname_part,
                 char *output_dir)
 {
   int ierr = 0;
   iofault->siz_max_wrk = 0;
 
-  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(1,
-                                                            CONST_MAX_STRLEN,
-                                                            "fault_fname");
+  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(number_of_fault,
+                                   CONST_MAX_STRLEN,"fault_fname");
+
+  iofault->fault_x_indx = (int *) malloc(number_of_fault * sizeof(int));
+
   iofault->num_of_fault = 0;
 
-  if(gd_info_gindx_is_inner_i(fault_i_global_indx, gdcurv)==1)
+  for (int i=0; i<number_of_fault; i++)
   {
-    iofault->fault_local_indx = gd_info_ind_glphy2lcext_i(fault_i_global_indx, gdcurv);
-    sprintf(iofault->fault_fname[0],"%s/fault_i%d_%s.nc",
-              output_dir,fault_i_global_indx,output_fname_part);
+    int gi = fault_x_index[i];
+    if(gd_info_gindx_is_inner_i(gi, gdcurv)==1)
+    {
+      int islc = iofault->num_of_fault;
 
-    iofault->num_of_fault += 1;
+      iofault->fault_x_indx[islc] =  gd_info_ind_glphy2lcext_i(gi, gdcurv);
+      sprintf(iofault->fault_fname[islc],"%s/fault_i%d_%s.nc",
+                output_dir,gi,output_fname_part);
 
-    size_t slice_siz = gdcurv->nj * gdcurv->nk;
-    iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
-                           slice_siz : iofault->siz_max_wrk;
+      iofault->num_of_fault += 1;
+
+      size_t slice_siz = gdcurv->nj * gdcurv->nk;
+      iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
+                             slice_siz : iofault->siz_max_wrk;
+    }
   }
 
   return ierr;
@@ -673,50 +682,69 @@ io_fault_nc_create(iofault_t *iofault,
 {
   int ierr = 0;
   int num_of_fault = iofault->num_of_fault;
-  int num_of_var = 20;
-  iofault_nc->varid = (int *)malloc(num_of_fault * num_of_var * sizeof(int));
+
+  iofault_nc->num_of_fault = num_of_fault;
+  int num_of_vars  = 20;  // not a fixed number, dependent on output
+  iofault_nc->num_of_vars = num_of_vars;
+
+  // malloc vars
+  iofault_nc->ncid   = (int *)malloc(num_of_fault*sizeof(int));
+  iofault_nc->varid  = (int *)malloc(num_of_vars*num_of_fault*sizeof(int));
+
   int dimid[3];
-  if(num_of_fault == 1) 
+  for (int i=0; i<num_of_fault; i++)
   {
     // fault slice
-    ierr = nc_create(iofault->fault_fname[0], NC_CLOBBER, &(iofault_nc->ncid)); handle_nc_err(ierr);
-    ierr = nc_def_dim(iofault_nc->ncid, "time", NC_UNLIMITED, &dimid[0]);       handle_nc_err(ierr);     
-    ierr = nc_def_dim(iofault_nc->ncid, "k"   , nk          , &dimid[1]);       handle_nc_err(ierr);   
-    ierr = nc_def_dim(iofault_nc->ncid, "j"   , nj          , &dimid[2]);       handle_nc_err(ierr); 
+    ierr = nc_create(iofault->fault_fname[i], NC_CLOBBER, &(iofault_nc->ncid[i])); handle_nc_err(ierr);
+    ierr = nc_def_dim(iofault_nc->ncid[i], "time", NC_UNLIMITED, &dimid[0]);       handle_nc_err(ierr); 
+    ierr = nc_def_dim(iofault_nc->ncid[i], "k"   , nk          , &dimid[1]);       handle_nc_err(ierr);   
+    ierr = nc_def_dim(iofault_nc->ncid[i], "j"   , nj          , &dimid[2]);       handle_nc_err(ierr); 
 
     // define variables
-    ierr = nc_def_var(iofault_nc->ncid, "time",      NC_FLOAT, 1, dimid+0, &(iofault_nc->varid[0]));  
+    ierr = nc_def_var(iofault_nc->ncid[i], "time",      NC_FLOAT, 1, dimid+0, 
+                    &(iofault_nc->varid[0+i*num_of_vars]));  
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "init_t0",   NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[1]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
+                    &(iofault_nc->varid[1+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid, "peak_Vs",   NC_FLOAT, 2, dimid+1, &(iofault_nc->varid[2]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
+                    &(iofault_nc->varid[2+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid, "Tn" ,       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[3]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "Tn" ,       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[3+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "Ts1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[4]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "Ts1",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[4+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "Ts2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[5]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "Ts2",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[5+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "Vs",        NC_FLOAT, 3, dimid,   &(iofault_nc->varid[6]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs",        NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[6+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "Vs1",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[7])); 
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs1",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[7+i*num_of_vars])); 
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "Vs2",       NC_FLOAT, 3, dimid,   &(iofault_nc->varid[8]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs2",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[8+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "slip",      NC_FLOAT, 3, dimid,   &(iofault_nc->varid[9]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip",      NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[9+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid, "slip1",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[10]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip1",     NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[10+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid, "slip2",     NC_FLOAT, 3, dimid,   &(iofault_nc->varid[11]));
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip2",     NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[11+i*num_of_vars]));
     handle_nc_err(ierr);   
 
     // attribute: index info for plot
-    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
-                   NC_INT,1,&iofault->fault_local_indx);
-    nc_put_att_int(iofault_nc->ncid,NC_GLOBAL,"coords_of_mpi_topo",
+    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
+                   NC_INT,1,iofault->fault_x_indx+i);
+    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,3,topoid);
 
-    ierr = nc_enddef(iofault_nc->ncid); handle_nc_err(ierr);
+    ierr = nc_enddef(iofault_nc->ncid[i]); handle_nc_err(ierr);
   }
 
   return ierr;
@@ -944,42 +972,46 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 
   int   nj  = gdcurv->nj;
   int   nk  = gdcurv->nk;
+  size_t size = sizeof(float) * nj * nk; 
 
   size_t startp[] = { it, 0, 0 };
   size_t countp[] = { 1, nk, nj};
   size_t start_tdim = it;
+  int  num_of_vars = iofault_nc->num_of_vars;
 
-  nc_put_var1_float(iofault_nc->ncid, iofault_nc->varid[0],
-                      &start_tdim, &time);
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    nc_put_var1_float(iofault_nc->ncid[i], iofault_nc->varid[0+i*num_of_vars],
+                        &start_tdim, &time);
 
-  size_t size = sizeof(float) * nj * nk; 
 
-  CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[3], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[3+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[4], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[4+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[5], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[5+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[6], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[6+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[7], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[7+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[8], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[8+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[9], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[9+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[10], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[10+i*num_of_vars], startp, countp, buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
-  nc_put_vara_float(iofault_nc->ncid, iofault_nc->varid[11], startp, countp, buff);
+    CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[11+i*num_of_vars], startp, countp, buff);
+  }
 
   return ierr;
 }
@@ -994,14 +1026,17 @@ io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
 
   int nj  = gdcurv->nj ;
   int nk  = gdcurv->nk ;
-
   size_t size = sizeof(float) * nj * nk; 
+  int  num_of_vars = iofault_nc->num_of_vars;
 
-  CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
-  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[1], buff);
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
+    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[1+i*num_of_vars], buff);
 
-  CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
-  nc_put_var_float(iofault_nc->ncid, iofault_nc->varid[2], buff);
+    CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
+    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[2+i*num_of_vars], buff);
+  }
 
   return ierr;
 }
@@ -1477,9 +1512,12 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc)
 int
 io_fault_nc_close(iofault_nc_t *iofault_nc)
 {
-    nc_close(iofault_nc->ncid);
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    nc_close(iofault_nc->ncid[i]);
+  }
 
-    return 0;
+  return 0;
 }
 
 int

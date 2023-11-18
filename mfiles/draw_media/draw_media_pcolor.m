@@ -4,8 +4,8 @@ addmypath;
 % file and path name
 %media_type = 'ac_iso';
 media_type = 'el_iso';
-parfnm='../../project/params.json'
-output_dir='../../project/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 
 %media_type = 'el_vti';
 
@@ -29,19 +29,18 @@ clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
 
 % load media data
-mediainfo=locate_media(parfnm,'start',subs,'count',subc,'stride',subt,'mediadir',output_dir);
+mediainfo=locate_media(parfnm,output_dir,subs,subc,subt);
 % get coordinate data
-[x,y,z]=gather_coord(mediainfo,'coorddir',output_dir);
-nx=size(x,1);
-ny=size(x,2);
-nz=size(x,3);
-% coordinate unit
-str_unit='m';
+[x,y,z]=gather_coord(mediainfo,output_dir);
+
+%- set coord unit
 if flag_km
    x=x/1e3;
    y=y/1e3;
    z=z/1e3;
    str_unit='km';
+else
+   str_unit='m';
 end
 
 % load media data
