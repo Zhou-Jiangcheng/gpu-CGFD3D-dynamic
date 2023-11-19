@@ -4,25 +4,24 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json';
-output_dir='../../project1/output';
+parfnm='../../project/params.json';
+output_dir='../../project/output';
 
 % which slice to plot
-slicedir='x';
-sliceid=51;
+slicedir='z';
+sliceid=199;
 
 % which variable and time to plot
-varnm='Vx';
-ns=100;
-ne=800;
+varnm='Vz';
+ns=1000;
+ne=1000;
 nt=50;
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 scl_daspect =[1 1 1];
-clrmp       = 'parula';
+clrmp       = 'jetwr';
 taut=0.5;
 % ---------------------------------------------------------------------- %
 
@@ -41,50 +40,54 @@ set(hid,'BackingStore','on');
 for nlayer=ns:nt:ne
   % -------------------- slice x ---------------------- %
   if slicedir == 'x'
-    [V, X, Y, Z, t] = gather_slice_x(output_dir,nlayer,varnm,sliceid,nproj,nprok);
+    [v, x, y, z, t] = gather_slice_x(output_dir,nlayer,varnm,sliceid,nproj,nprok);
         
-    str_unit='m';
     if flag_km
-      X=X/1e3;
-      Y=Y/1e3;
-      Z=Z/1e3;
-      str_unit='km';
+       x=x/1e3;
+       y=y/1e3;
+       z=z/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
-        
-    pcolor(Y,Z,V);
-    xlabel(['Y axis (',str_unit,')']);
-    ylabel(['Z axis (',str_unit,')']);
+
+    pcolor(y,z,v);
+    xlabel(['y axis (',str_unit,')']);
+    ylabel(['z axis (',str_unit,')']);
   
   % -------------------- slice y ---------------------- %
   elseif slicedir == 'y'
-    [V, X, Y, Z, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid,nproi,nprok);
+    [v, x, y, z, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid,nproi,nprok);
       
-      str_unit='m';
-      if flag_km
-        X=X/1e3;
-        Y=Y/1e3;
-        Z=Z/1e3;
-        str_unit='km';
-      end
-      pcolor(X,Z,V);
-      xlabel(['X axis (',str_unit,')']);
-      ylabel(['Z axis (',str_unit,')']);
+    if flag_km
+       x=x/1e3;
+       y=y/1e3;
+       z=z/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
+    end
+
+      pcolor(x,z,v);
+      xlabel(['x axis (',str_unit,')']);
+      ylabel(['z axis (',str_unit,')']);
   
   % -------------------- slice z ---------------------- %
   else
-    [V, X, Y, Z, t] = gather_slice_z(output_dir,nlayer,varnm,sliceid,nproi,nproj);
+    [v, x, y, z, t] = gather_slice_z(output_dir,nlayer,varnm,sliceid,nproi,nproj);
       
-    str_unit='m';
     if flag_km
-      X=X/1e3;
-      Y=Y/1e3;
-      Z=Z/1e3;
-      str_unit='km';
+       x=x/1e3;
+       y=y/1e3;
+       z=z/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
 
-    pcolor(X,Y,V);
-    xlabel(['X axis (',str_unit,')']);
-    ylabel(['Y axis (',str_unit,')']);
+    pcolor(x,y,v);
+    xlabel(['x axis (',str_unit,')']);
+    ylabel(['y axis (',str_unit,')']);
       
   end
   

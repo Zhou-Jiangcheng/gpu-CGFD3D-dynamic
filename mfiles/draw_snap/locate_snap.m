@@ -1,38 +1,4 @@
-function snapinfo = locate_snap(parfnm,id,varargin)
-
-gtstart  = 1;
-gtcount  = -1;
-gtstride = 1;
-
-%-- flags --
-n=1;
-while n<=nargin-2
-    
-    if numel(varargin{n})==1 | ~isnumeric(varargin{n})
-        switch varargin{n}
-            case 'start'
-                gsubs=varargin{n+1}; n=n+1;
-                if length(gsubs)==4
-                    gtstart=gsubs(4);gsubs=gsubs(1:3);
-                end
-            case 'count'
-                gsubc=varargin{n+1}; n=n+1;
-                if length(gsubc)==4
-                    gtcount=gsubc(4);gsubc=gsubc(1:3);
-                end
-            case 'stride'
-                gsubt=varargin{n+1}; n=n+1;
-                if length(gsubt)==4
-                    gtstride=gsubt(4);gsubt=gsubt(1:3);
-                end
-            case 'snapdir'
-                snap_dir=varargin{n+1}; n=n+1;
-        end
-    end
-    
-    n=n+1;
-    
-end
+function snapinfo = locate_snap(parfnm,snap_dir,id,subs,subc,subt)
 
 % check parameter file exist
 if ~ exist(parfnm,'file')
@@ -41,7 +7,7 @@ end
 
 % read parameters file
 par=loadjson(parfnm);
-snap_subs=par.snapshot{id}.grid_index_start+1;
+snap_subs=par.snapshot{id}.grid_index_start;
 snap_subc=par.snapshot{id}.grid_index_count;
 snap_subt=par.snapshot{id}.grid_index_incre;
 snap_tinv=par.snapshot{id}.time_index_incre;
@@ -49,19 +15,19 @@ ngijk=[par.number_of_total_grid_points_x,...
        par.number_of_total_grid_points_y,...
        par.number_of_total_grid_points_z];
 
-% reset count=-1 to total number
-indx=find(snap_subc==-1);
-snap_subc(indx)=fix((ngijk(indx)-snap_subs(indx))./snap_subt(indx))+1;
-snap_sube=snap_subs+(snap_subc-1).*snap_subt;
+gsubs = subs;
+gsubt = subt;
+gsubc = subc;
 
-indx=find(gsubc==-1);
-gsubc(indx)=fix((snap_subc(indx)-gsubs(indx))./gsubt(indx))+1;
+% reset count=-1 to total number
+indx=find(subc==-1);
+gsubc(indx)=ceil((snap_subc(indx)-snap_subs(indx)));
 gsube=gsubs+(gsubc-1).*gsubt;
 
 % search the nc file headers to locate the threads/processors
 snapprefix=par.snapshot{id}.name;
 snaplist=dir([snap_dir,'/',snapprefix,'*.nc']);
-n=1;
+n=0;
 for i=1:length(snaplist)
     
     snapnm=[snap_dir,'/',snaplist(i).name];
@@ -81,13 +47,14 @@ for i=1:length(snaplist)
    if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
        length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
        length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
+       n=n+1;
+
        px(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'px' )+2 : ...
                                         strfind(snaplist(i).name,'_py')-1));
        py(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'py' )+2 : ...
                                         strfind(snaplist(i).name,'_pz')-1));
        pz(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'pz' )+2 : ...
                                         strfind(snaplist(i).name,'.nc')-1));
-       n=n+1;
     end
     
 end
@@ -134,20 +101,9 @@ for ip=1:length(px)
                           gzarray(k(1))-zs+1 ];
     snapinfo(nthd).subc=snapinfo(nthd).indxc;
     snapinfo(nthd).subt=gsubt;
-    
-    snapinfo(nthd).wsubs=double(nc_attget(snapnm,nc_global,'first_index_in_this_thread_with_ghosts'))...
-        +(snapinfo(nthd).subs-1).*snap_subt+1;
-    snapinfo(nthd).wsubc=snapinfo(nthd).indxc;
-    snapinfo(nthd).wsubt=snap_subt.*gsubt;
-    
     snapinfo(nthd).tinv=snap_tinv;
-    
     snapinfo(nthd).fnmprefix=snapprefix;
-    
-    snapinfo(nthd).ttriple=[gtstart,gtcount,gtstride];
-    
 end
-
 
 end
 

@@ -9,17 +9,16 @@ output_dir='../../project/output';
 
 % which metric profile to plot
 subs=[1,30,1];     % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subc=[-1,1,-1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % variable to plot
 % 'jac', 'xi_x', 'xi_y', 'xi_z', 'eta_x', 'eta_y', 'eta_z',
 % 'zeta_x', 'zeta_y', 'zeta_z'
-varnm='zeta_z';
+varnm='jac';
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 flag_clb    = 1;
 flag_title  = 1;
@@ -28,41 +27,29 @@ clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
 
 % locate metric data
-metricinfo=locate_metric(parfnm,'start',subs,'count',subc,'stride',subt,'metricdir',output_dir);
+metricinfo=locate_metric(parfnm,output_dir,subs,subc,subt);
 % get coordinate data
-[x,y,z]=gather_coord(metricinfo,'coorddir',output_dir);
-nx=size(x,1);
-ny=size(x,2);
-nz=size(x,3);
-% coordinate unit
-str_unit='m';
+[x,y,z]=gather_coord(metricinfo,output_dir);
+
+%- set coord unit
 if flag_km
    x=x/1e3;
    y=y/1e3;
    z=z/1e3;
    str_unit='km';
+else
+   str_unit='m';
 end
 
 % gather metric data
-v=gather_metric(metricinfo,varnm,'metricdir',output_dir);
+v=gather_metric(metricinfo,varnm,output_dir);
 
 % figure plot
 hid=figure;
 set(hid,'BackingStore','on');
 
 % metric show
-if flag_emlast
-    sid=surf(squeeze(permute(x,[2 1 3])), ...
-        squeeze(permute(y,[2 1 3])), ...
-        squeeze(permute(z,[2 1 3])), ...
-        squeeze(permute(v,[2 1 3])));
-else
-    sid=surf(flipdim(squeeze(permute(x,[2 1 3])),3), ...
-        flipdim(squeeze(permute(y,[2 1 3])),3), ...
-        flipdim(squeeze(permute(z,[2 1 3])),3), ...
-        flipdim(squeeze(permute(v,[2 1 3])),3));
-end
-
+surf(x,y,z,v);
 xlabel(['X axis (' str_unit ')']);
 ylabel(['Y axis (' str_unit ')']);
 zlabel(['Z axis (' str_unit ')']);

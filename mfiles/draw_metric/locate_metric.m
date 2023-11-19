@@ -1,38 +1,4 @@
-function metricinfo = locate_metric(parfnm,varargin)
-
-gtstart  = 1;
-gtcount  = -1;
-gtstride = 1;
-
-%-- flags --
-n=1;
-while n<=nargin-1
-    
-    if numel(varargin{n})==1 | ~isnumeric(varargin{n})
-        switch varargin{n}
-            case 'start'
-                gsubs=varargin{n+1}; n=n+1;
-                if length(gsubs)==4
-                    gtstart=gsubs(4);gsubs=gsubs(1:3);
-                end
-            case 'count'
-                gsubc=varargin{n+1}; n=n+1;
-                if length(gsubc)==4
-                    gtcount=gsubc(4);gsubc=gsubc(1:3);
-                end
-            case 'stride'
-                gsubt=varargin{n+1}; n=n+1;
-                if length(gsubt)==4
-                    gtstride=gsubt(4);gsubt=gsubt(1:3);
-                end
-            case 'metricdir'
-                metric_dir=varargin{n+1}; n=n+1;
-        end
-    end
-    
-    n=n+1;
-    
-end
+function metricinfo = locate_metric(parfnm,metric_dir,subs,subc,subt)
 
 % check parameter file exist
 if ~ exist(parfnm,'file')
@@ -41,27 +7,24 @@ end
 
 % read parameters file
 par=loadjson(parfnm);
-metric_subs=[1, 1, 1];
-metric_subc=[-1,-1,-1];
-metric_subt=[1, 1, 1];
-snap_tinv=1;
 ngijk=[par.number_of_total_grid_points_x,...
        par.number_of_total_grid_points_y,...
        par.number_of_total_grid_points_z];
 
-% reset count=-1 to total number
-indx=find(metric_subc==-1);
-metric_subc(indx)=fix((ngijk(indx)-metric_subs(indx))./metric_subt(indx))+1;
-snap_sube=metric_subs+(metric_subc-1).*metric_subt;
+gsubs = subs;
+gsubt = subt;
+gsubc = subc;
 
-indx=find(gsubc==-1);
-gsubc(indx)=fix((metric_subc(indx)-gsubs(indx))./gsubt(indx))+1;
+% reset count=-1 to total number
+indx=find(subc==-1);
+gsubc(indx)=ceil((ngijk(indx)-gsubs(indx)+1)./gsubt(indx));
+
 gsube=gsubs+(gsubc-1).*gsubt;
 
 % search the nc file headers to locate the threads/processors
 metricprefix='metric';
 metriclist=dir([metric_dir,'/',metricprefix,'*.nc']);
-n=1;
+n=0;
 for i=1:length(metriclist)
     
     metricnm=[metric_dir,'/',metriclist(i).name];
@@ -79,15 +42,16 @@ for i=1:length(metriclist)
    if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
        length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
        length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
+        n=n+1;
+
         px(n)=str2num(metriclist(i).name( strfind(metriclist(i).name,'px' )+2 : ...
                                          strfind(metriclist(i).name,'_py')-1));
         py(n)=str2num(metriclist(i).name( strfind(metriclist(i).name,'py' )+2 : ...
                                          strfind(metriclist(i).name,'_pz')-1));
         pz(n)=str2num(metriclist(i).name( strfind(metriclist(i).name,'pz' )+2 : ...
                                          strfind(metriclist(i).name,'.nc')-1));
-        n=n+1;
     end
-    
+
 end
 
 % retrieve the snapshot information
@@ -131,19 +95,8 @@ for ip=1:length(px)
     metricinfo(nthd).subc=metricinfo(nthd).indxc;
     metricinfo(nthd).subt=gsubt;
     
-    metricinfo(nthd).wsubs=double(nc_attget(metricnm,nc_global,'local_index_of_first_physical_points'))...
-        +(metricinfo(nthd).subs-1).*metric_subt+1;
-    metricinfo(nthd).wsubc=metricinfo(nthd).indxc;
-    metricinfo(nthd).wsubt=metric_subt.*gsubt;
-    
-    metricinfo(nthd).tinv=snap_tinv;
-    
     metricinfo(nthd).fnmprefix=metricprefix;
-    
-    metricinfo(nthd).ttriple=[gtstart,gtcount,gtstride];
-    
 end
-
 
 end
 

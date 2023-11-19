@@ -5,8 +5,8 @@ addmypath
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json';
-output_dir='../../project1/output';
+parfnm='../../project/params.json';
+output_dir='../../project/output';
 
 % which grid profile to plot
 subs=[1,100,1];    
@@ -15,7 +15,6 @@ subt=[1,1,1];
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 flag_title  = 1;
 scl_daspect = [1 1 1];

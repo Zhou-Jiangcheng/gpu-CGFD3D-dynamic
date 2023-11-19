@@ -36,8 +36,6 @@ scl_daspect = [1 1 1];
 clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
 
-
-
 % figure plot
 hid=figure;
 set(hid,'BackingStore','on');
@@ -45,37 +43,24 @@ set(hid,'BackingStore','on');
 for i=1:length(subs)
     
     % locate metric
-    metricinfo{i}=locate_metric(parfnm,'start',subs{i},'count',subc{i},'stride',subt{i},'metricdir',output_dir);
+    metricinfo{i}=locate_metric(parfnm,output_dir,subs{i},subc{i},subt{i});
     % get coordinate data
-    [x{i},y{i},z{i}]=gather_coord(metricinfo{i},'coorddir',output_dir);
-    nx{i}=size(x{i},1);
-    ny{i}=size(x{i},2);
-    nz{i}=size(x{i},3);
-    % coordinate unit
-    str_unit='m';
+    [x{i},y{i},z{i}]=gather_coord(metricinfo{i},output_dir);
+    %- set coord unit
     if flag_km
-        x{i}=x{i}/1e3;
-        y{i}=y{i}/1e3;
-        z{i}=z{i}/1e3;
-        str_unit='km';
+       x{i}=x{i}/1e3;
+       y{i}=y{i}/1e3;
+       z{i}=z{i}/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
     
     % gather metric data
-    v{i}=gather_metric(metricinfo{i},varnm,'metricdir',output_dir);
+    v{i}=gather_metric(metricinfo{i},varnm,output_dir);
     
     % metric show
-    if flag_emlast
-        sid{i}=surf(squeeze(permute(x{i},[2 1 3])), ...
-            squeeze(permute(y{i},[2 1 3])), ...
-            squeeze(permute(z{i},[2 1 3])), ...
-            squeeze(permute(v{i},[2 1 3])));
-    else
-        sid{i}=surf(flipdim(squeeze(permute(x{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(y{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(z{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(v{i},[2 1 3])),3));
-    end
-    
+    surf(x{i},y{i},z{i},v{i});
     hold on;
     
 end

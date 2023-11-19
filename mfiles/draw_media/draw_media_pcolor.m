@@ -10,8 +10,8 @@ output_dir='../../project1/output'
 %media_type = 'el_vti';
 
 % which media profile to plot
-subs=[1,1,50];      % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subs=[50,1,1];   % start from index '1'
+subc=[1,-1,-1];   % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % variable to plot
@@ -20,7 +20,6 @@ varnm='Vs';
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 flag_clb    = 1;
 flag_title  = 1;
@@ -74,42 +73,18 @@ hid=figure;
 set(hid,'BackingStore','on');
 
 % media show
-if nx==1
-   if flag_emlast
-      sid=pcolor((flipud(permute(squeeze(y),[2 1]))), ...
-                 (flipud(permute(squeeze(z),[2 1]))), ...
-                 (flipud(permute(squeeze(v),[2 1]))));
-   else
-      sid=pcolor(permute(squeeze(y),[2 1]), ...
-                 permute(squeeze(z),[2 1]), ...
-                 permute(squeeze(v),[2 1]));
-   end
+if subc(1) == 1
+   pcolor(y,z,v);
    xlabel(['Y axis (' str_unit ')']);
    ylabel(['Z axis (' str_unit ')']);
    
-elseif ny==1
-   if flag_emlast
-      sid=pcolor(flipud(permute(squeeze(x),[2 1])), ...
-                 flipud(permute(squeeze(z),[2 1])), ...
-                 flipud(permute(squeeze(v),[2 1])));
-   else
-      sid=pcolor(permute(squeeze(x),[2 1]), ...
-                 permute(squeeze(z),[2 1]), ...
-                 permute(squeeze(v),[2 1]));
-   end
+elseif subc(2) == 1
+   pcolor(x,z,v);
    xlabel(['X axis (' str_unit ')']);
    ylabel(['Z axis (' str_unit ')']);
    
-else
-   if flag_emlast
-      sid=pcolor(flipud(permute(squeeze(x),[2 1])), ...
-                 flipud(permute(squeeze(y),[2 1])), ...
-                 flipud(permute(squeeze(v),[2 1])));
-   else
-      sid=pcolor(permute(squeeze(x),[2 1]), ...
-                 permute(squeeze(y),[2 1]), ...
-                 permute(squeeze(v),[2 1]));
-   end
+elseif subc(3) == 1
+   pcolor(x,y,v);
    xlabel(['X axis (' str_unit ')']);
    ylabel(['Y axis (' str_unit ')']);
 end

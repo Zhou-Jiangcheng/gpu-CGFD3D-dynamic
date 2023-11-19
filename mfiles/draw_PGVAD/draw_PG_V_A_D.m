@@ -5,42 +5,43 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project2/params.json'
-output_dir='../../project2/output'
+parfnm='../../project1/params.json'
+output_dir='../../project1/output'
 PG_dir = output_dir;
+par=loadjson(parfnm);
+nz=par.number_of_total_grid_points_z;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.
-subs=[1,1,1];      % start from index '1'
+subs=[1,1,nz];      % start from index '1'
 subc=[-1,-1,1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
-scl_daspect =[1 1 1];
+scl_daspect = [1 1 1];
 clrmp       = 'parula';
 
 % variable to plot
-% 'PGV', 'PGVx', 'PGVy', 'PGVz', 'PGA', 'PGAx', 'PGAy','PGAz', 
-% 'PGD', 'PGDx', 'PGDy','PGDz'
+% 'PGV', 'PGVh', 'PGVx', 'PGVy', 'PGVz', 
+% 'PGA', 'PGAh', 'PGAx', 'PGAy', 'PGAz', 
+% 'PGD', 'PGDh', 'PGDx', 'PGDy', 'PGDz'
 varnm='PGVx';
 
 % ---------------------------------------------------------------------- %
 
 % load grid coordinate
-coordinfo=locate_coord(parfnm,'start',subs,'count',subc,'stride',subt,'coorddir',output_dir);
-[x,y,z]=gather_coord(coordinfo,'coorddir',output_dir);
-nx=size(x,1);
-ny=size(x,2);
-nz=size(x,3);
-% coordinate unit
-str_unit='m';
+coordinfo=locate_coord(parfnm,output_dir,subs,subc,subt);
+[x,y,z]=gather_coord(coordinfo,output_dir);
+
+%- set coord unit
 if flag_km
    x=x/1e3;
    y=y/1e3;
    z=z/1e3;
    str_unit='km';
+else
+   str_unit='m';
 end
 
 % readl all PG_V_A_D nc files
@@ -59,20 +60,17 @@ for i=1:length(PG_list)
     gstart = nc_attget(PG_nm,nc_global,'global_index_of_first_physical_points');
     gni1 = gstart(1)+1;
     gnj1 = gstart(2)+1;
-    subs1 = [3,3]; 
+    subs1 = [3,3]; % include 3 points ghost 
     subc1 = [nj,ni]; 
     subt1 = [1,1]; 
     fnm_PG = [PG_dir,'/',PG_prefix,'_px',num2str(px(i)),'_py',num2str(py(i)),'_pz',num2str(pz(i)),'.nc']
-    V(gnj1:gnj1+nj-1,gni1:gni1+ni-1)=nc_varget(fnm_PG,varnm,subs1,subc1,subt1);
+    v(gnj1:gnj1+nj-1,gni1:gni1+ni-1)=nc_varget(fnm_PG,varnm,subs1,subc1,subt1);
 end
-% transpose to (x,y)
-V = V';
-%%
 
 % figure plot
 hid=figure;
 set(hid,'BackingStore','on');
-pcolor(x,y,V);
+pcolor(x,y,v);
 xlabel(['X axis (',str_unit,')']);
 ylabel(['Y axis (',str_unit,')']);
 shading flat;

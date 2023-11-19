@@ -26,7 +26,6 @@ nt=50;
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 scl_daspect =[1 1 1];
 clrmp       = 'parula';
@@ -51,58 +50,62 @@ for nlayer=ns:nt:ne
     % -------------------- slice x ---------------------- %
     if slicedir{i} == 'x'
 
-    [V{i}, X{i}, Y{i}, Z{i}, t] = gather_slice_x(output_dir,nlayer,varnm,sliceid{i},nproj,nprok);
-    % unit
-    str_unit='m';
+    [v{i}, x{i}, y{i}, z{i}, t] = gather_slice_x(output_dir,nlayer,varnm,sliceid{i},nproj,nprok);
+
     if flag_km
-      X{i}=X{i}/1e3;
-      Y{i}=Y{i}/1e3;
-      Z{i}=Z{i}/1e3;
-      str_unit='km';
+       x{i}=x{i}/1e3;
+       y{i}=y{i}/1e3;
+       z{i}=z{i}/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
     
-    surf(X{i},Y{i},Z{i},V{i});
-    xlabel(['X axis (',str_unit,')']);
-    ylabel(['Y axis (',str_unit,')']);
-    zlabel(['Z axis (',str_unit,')']);
+    surf(x{i},y{i},z{i},v{i});
+    xlabel(['x axis (',str_unit,')']);
+    ylabel(['y axis (',str_unit,')']);
+    zlabel(['z axis (',str_unit,')']);
     view(45,15);
      
     % -------------------- slice y ---------------------- %
     elseif slicedir{i} == 'y'
           
-    [V{i}, X{i}, Y{i}, Z{i}, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid{i},nproi,nprok);
-    % unit
-    str_unit='m';
-    if flag_km
-      X{i}=X{i}/1e3;
-      Y{i}=Y{i}/1e3;
-      Z{i}=Z{i}/1e3;
-      str_unit='km';
-    end
+    [v{i}, x{i}, y{i}, z{i}, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid{i},nproi,nprok);
     
-    surf(X{i},Y{i},Z{i},V{i});
-    xlabel(['X axis (',str_unit,')']);
-    ylabel(['Y axis (',str_unit,')']);
-    zlabel(['Z axis (',str_unit,')']);
+    if flag_km
+       x{i}=x{i}/1e3;
+       y{i}=y{i}/1e3;
+       z{i}=z{i}/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
+    end
+
+    surf(x{i},y{i},z{i},v{i});
+    xlabel(['x axis (',str_unit,')']);
+    ylabel(['y axis (',str_unit,')']);
+    zlabel(['z axis (',str_unit,')']);
     view(45,15);
          
     % -------------------- slice z ---------------------- %
     else
 
-    [V{i}, X{i}, Y{i}, Z{i}, t] = gather_slice_z(output_dir,nlayer,varnm,sliceid{i},nproi,nproj);
+    [v{i}, x{i}, y{i}, z{i}, t] = gather_slice_z(output_dir,nlayer,varnm,sliceid{i},nproi,nproj);
             
-    str_unit='m';
     if flag_km
-      X{i}=X{i}/1e3;
-      Y{i}=Y{i}/1e3;
-      Z{i}=Z{i}/1e3;
-      str_unit='km';
+       x{i}=x{i}/1e3;
+       y{i}=y{i}/1e3;
+       z{i}=z{i}/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
+
     
-    surf(X{i},Y{i},Z{i},V{i});
-    xlabel(['X axis (',str_unit,')']);
-    ylabel(['Y axis (',str_unit,')']);
-    zlabel(['Z axis (',str_unit,')']);
+    surf(x{i},y{i},z{i},v{i});
+    xlabel(['x axis (',str_unit,')']);
+    ylabel(['y axis (',str_unit,')']);
+    zlabel(['z axis (',str_unit,')']);
     
     end
     

@@ -6,7 +6,7 @@ addmypath
 % file and path name
 %media_type = 'ac_iso';
 media_type = 'el_iso';
-parfnm='../../project/test.json'
+parfnm='../../project/params.json'
 output_dir='../../project/output'
 
 % media profiles to plot
@@ -29,15 +29,12 @@ varnm='Vp';
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 flag_clb    = 1;
 flag_title  = 1;
 scl_daspect =[1 1 1];
 clrmp       = 'parula';
 % ---------------------------------------------------------------------- %
-
-
 
 % figure plot
 hid=figure;
@@ -47,21 +44,18 @@ set(hid,'BackingStore','on');
 for i=1:length(subs)
     
     % locate media
-    mediainfo{i}=locate_media(parfnm,'start',subs{i},'count',subc{i},'stride',subt{i},'mediadir',output_dir);
+    mediainfo{i}=locate_media(parfnm,output_dir,subs{i},subc{i},subt{i});
     
     % get coordinate data
-    [x{i},y{i},z{i}]=gather_coord(mediainfo{i},'coorddir',output_dir);
-    nx{i}=size(x{i},1);
-    ny{i}=size(x{i},2);
-    nz{i}=size(x{i},3);
-    
-    % coordinate unit
-    str_unit='m';
+    [x{i},y{i},z{i}]=gather_coord(mediainfo{i},output_dir);
+    %- set coord unit
     if flag_km
-        x{i}=x{i}/1e3;
-        y{i}=y{i}/1e3;
-        z{i}=z{i}/1e3;
-        str_unit='km';
+       x{i}=x{i}/1e3;
+       y{i}=y{i}/1e3;
+       z{i}=z{i}/1e3;
+       str_unit='km';
+    else
+       str_unit='m';
     end
     
     % gather media
@@ -90,20 +84,8 @@ for i=1:length(subs)
     end
     
     % media show
-    if flag_emlast
-        sid{i}=surf(squeeze(permute(x{i},[2 1 3])), ...
-            squeeze(permute(y{i},[2 1 3])), ...
-            squeeze(permute(z{i},[2 1 3])), ...
-            squeeze(permute(v{i},[2 1 3])));
-    else
-        sid{i}=surf(flipdim(squeeze(permute(x{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(y{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(z{i},[2 1 3])),3), ...
-            flipdim(squeeze(permute(v{i},[2 1 3])),3));
-    end
-
+    surf(x{i},y{i},z{i},v{i});
     hold on;
-    
 end
 
 xlabel(['X axis (' str_unit ')']);

@@ -27,14 +27,13 @@ subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vz';
-ns=100;
-ne=100;
+ns=2000;
+ne=2000;
 nt=50;
 
 
 % figure control parameters
 flag_km     = 1;
-flag_emlast = 1;
 flag_print  = 0;
 savegif = 0;
 % scl_caxis=[-1.0 1.0];
@@ -45,19 +44,18 @@ taut=0.5;
 % ---------------------------------------------------------------------- %
 
 % load snapshot data
-snapinfo=locate_snap(parfnm,id,'start',subs,'count',subc,'stride',subt,'snapdir',output_dir);
+snapinfo=locate_snap(parfnm,output_dir,id,subs,subc,subt);
 % get coordinate data
-[x,y,z]=gather_coord(snapinfo,'coorddir',output_dir);
-nx=size(x,1);
-ny=size(x,2);
-nz=size(x,3);
-% coordinate unit
-str_unit='m';
+[x,y,z]=gather_coord(snapinfo,output_dir);
+
+%- set coord unit
 if flag_km
    x=x/1e3;
    y=y/1e3;
    z=z/1e3;
    str_unit='km';
+else
+   str_unit='m';
 end
 
 % figure plot
@@ -67,46 +65,22 @@ set(hid,'BackingStore','on');
 % snapshot show
 for nlayer=ns:nt:ne
     
-    [v,t]=gather_snap(snapinfo,nlayer,varnm,'snapdir',output_dir);
+    [v,t]=gather_snap(snapinfo,nlayer,varnm,output_dir);
     
     disp([ '  draw ' num2str(nlayer) 'th time step (t=' num2str(t) ')']);
     
-    if nx==1
-        if flag_emlast
-            sid=pcolor((flipud(permute(squeeze(y),[2 1]))), ...
-                (flipud(permute(squeeze(z),[2 1]))), ...
-                (flipud(permute(squeeze(v),[2 1]))));
-        else
-            sid=pcolor((permute(squeeze(y),[2 1])), ...
-                (permute(squeeze(z),[2 1])), ...
-                (permute(squeeze(v),[2 1])));
-        end
+    if subc(1) == 1
+        pcolor(y,z,v);
         xlabel(['Y axis (' str_unit ')']);
         ylabel(['Z axis (' str_unit ')']);
         
-    elseif ny==1
-        if flag_emlast
-            sid=pcolor((flipud(permute(squeeze(x),[2 1]))), ...
-                (flipud(permute(squeeze(z),[2 1]))), ...
-                (flipud(permute(squeeze(v),[2 1]))));
-        else
-            sid=pcolor((permute(squeeze(x),[2 1])), ...
-                (permute(squeeze(z),[2 1])), ...
-                (permute(squeeze(v),[2 1])));
-        end
+    elseif subc(2) == 1
+        pcolor(x,z,v);
         xlabel(['X axis (' str_unit ')']);
         ylabel(['Z axis (' str_unit ')']);
         
     else
-        if flag_emlast
-            sid=pcolor((flipud(permute(squeeze(x),[2 1]))), ...
-                (flipud(permute(squeeze(y),[2 1]))), ...
-                (flipud(permute(squeeze(v),[2 1]))));
-        else
-            sid=pcolor((permute(squeeze(x),[2 1])), ...
-                (permute(squeeze(y),[2 1])), ...
-                (permute(squeeze(v),[2 1])));
-        end
+        pcolor(x,y,v);
         xlabel(['X axis (' str_unit ')']);
         ylabel(['Y axis (' str_unit ')']);
     end

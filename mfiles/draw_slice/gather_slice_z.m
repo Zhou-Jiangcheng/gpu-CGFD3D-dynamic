@@ -24,18 +24,19 @@ function [V, X, Y, Z, t] = gather_slice_z(output_dir,nlayer,varnm,sliceid,nproi,
       kp=str2num(slicenm( strfind(slicenm,'pz')+2 : strfind(slicenm,'.nc')-1 ));
       coordnm=['coord','_px',num2str(ip),'_py',num2str(jp),'_pz',num2str(kp),'.nc'];
       coordnm_dir=[output_dir,'/',coordnm];
-      idwithghost=double(nc_attget(slicenm_dir,nc_global,'k_index_with_ghosts_in_this_thread'));
       coorddimstruct=nc_getdiminfo(coordnm_dir,'j');
       slicedimstruct=nc_getdiminfo(slicenm_dir,'j');
       ghostp=(coorddimstruct.Length-slicedimstruct.Length)/2;
+      % delete 3 ghost points
+      k_index=double(nc_attget(slicenm_dir,nc_global,'k_index_with_ghosts_in_this_thread')) - 3;
       if ip==0
-        XX=squeeze(nc_varget(coordnm_dir,'x',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
-        YY=squeeze(nc_varget(coordnm_dir,'y',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
-        ZZ=squeeze(nc_varget(coordnm_dir,'z',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        XX=squeeze(nc_varget(coordnm_dir,'x',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        YY=squeeze(nc_varget(coordnm_dir,'y',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        ZZ=squeeze(nc_varget(coordnm_dir,'z',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
       else
-        XX0=squeeze(nc_varget(coordnm_dir,'x',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
-        YY0=squeeze(nc_varget(coordnm_dir,'y',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
-        ZZ0=squeeze(nc_varget(coordnm_dir,'z',[idwithghost,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        XX0=squeeze(nc_varget(coordnm_dir,'x',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        YY0=squeeze(nc_varget(coordnm_dir,'y',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
+        ZZ0=squeeze(nc_varget(coordnm_dir,'z',[k_index,ghostp,ghostp],[1,pnj,pni],[1,1,1]));
         XX=horzcat(XX,XX0);
         YY=horzcat(YY,YY0);
         ZZ=horzcat(ZZ,ZZ0);

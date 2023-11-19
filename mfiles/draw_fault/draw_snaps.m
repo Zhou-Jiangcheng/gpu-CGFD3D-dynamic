@@ -5,10 +5,12 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-% parfnm='../../project/params.json'
-% output_dir='../../project/output'
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project/params.json'
+output_dir='../../project/output'
+% parfnm='../../project1/params.json'
+% output_dir='../../project1/output'
+
+fault_index = 50;
 
 par = loadjson(parfnm);
 nproi=1;
@@ -22,7 +24,7 @@ k2 = par.fault_grid(4);
 savegif = 0;
 filename = ['Vs-ts-l-7.44.gif'];
 nt = fault_num_time(output_dir);
-[x,y,z] = gather_fault_coord(output_dir,nproj,nprok);
+[x,y,z] = gather_fault_coord(output_dir,fault_index,nproj,nprok);
 
 x = x * 1e-3;
 y = y * 1e-3;

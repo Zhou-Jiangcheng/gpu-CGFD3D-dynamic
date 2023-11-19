@@ -1,8 +1,4 @@
-function mediainfo = locate_media(parfnm,output_dir,subs,subc,subt)
-
-gtstart  = 1;
-gtcount  = -1;
-gtstride = 1;
+function mediainfo = locate_media(parfnm,media_dir,subs,subc,subt)
 
 % check parameter file exist
 if ~ exist(parfnm,'file')
@@ -11,27 +7,24 @@ end
 
 % read parameters file
 par=loadjson(parfnm);
-media_subs=[1, 1, 1];
-media_subc=[-1,-1,-1];
-media_subt=[1, 1, 1];
-snap_tinv=1;
 ngijk=[par.number_of_total_grid_points_x,...
        par.number_of_total_grid_points_y,...
        par.number_of_total_grid_points_z];
 
-% reset count=-1 to total number
-indx=find(media_subc==-1);
-media_subc(indx)=fix((ngijk(indx)-media_subs(indx))./media_subt(indx))+1;
-snap_sube=media_subs+(media_subc-1).*media_subt;
+gsubs = subs;
+gsubt = subt;
+gsubc = subc;
 
-indx=find(gsubc==-1);
-gsubc(indx)=fix((media_subc(indx)-gsubs(indx))./gsubt(indx))+1;
+% reset count=-1 to total number
+indx=find(subc==-1);
+gsubc(indx)=ceil((ngijk(indx)-gsubs(indx)+1)./gsubt(indx));
+
 gsube=gsubs+(gsubc-1).*gsubt;
 
 % search the nc file headers to locate the threads/processors
 mediaprefix='media';
 medialist=dir([media_dir,'/',mediaprefix,'*.nc']);
-n=1;
+n=0;
 for i=1:length(medialist)
     
     medianm=[media_dir,'/',medialist(i).name];
@@ -49,6 +42,7 @@ for i=1:length(medialist)
     if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
         length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
         length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0 )
+        n=n+1;
     
         px(n)=str2num(medialist(i).name( strfind(medialist(i).name,'px' )+2 : ...
                                          strfind(medialist(i).name,'_py')-1));
@@ -56,12 +50,10 @@ for i=1:length(medialist)
                                          strfind(medialist(i).name,'_pz')-1));
         pz(n)=str2num(medialist(i).name( strfind(medialist(i).name,'pz' )+2 : ...
                                          strfind(medialist(i).name,'.nc')-1));
-        n=n+1;
     end
     
 end
 
-% retrieve the snapshot information
 nthd=0;
 for ip=1:length(px)
     
@@ -102,19 +94,8 @@ for ip=1:length(px)
     mediainfo(nthd).subc=mediainfo(nthd).indxc;
     mediainfo(nthd).subt=gsubt;
     
-    mediainfo(nthd).wsubs=double(nc_attget(medianm,nc_global,'local_index_of_first_physical_points'))...
-        +(mediainfo(nthd).subs-1).*media_subt+1;
-    mediainfo(nthd).wsubc=mediainfo(nthd).indxc;
-    mediainfo(nthd).wsubt=media_subt.*gsubt;
-    
-    mediainfo(nthd).tinv=snap_tinv;
-    
     mediainfo(nthd).fnmprefix=mediaprefix;
-    
-    mediainfo(nthd).ttriple=[gtstart,gtcount,gtstride];
-    
 end
-
 
 end
 
