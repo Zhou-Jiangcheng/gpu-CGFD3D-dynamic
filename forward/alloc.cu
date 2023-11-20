@@ -5,6 +5,14 @@
 #include "alloc.h"
 #include "cuda_common.h"
 
+// only copy grid info
+int init_gdinfo_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d)
+{
+  memcpy(gdcurv_d,gdcurv,sizeof(gdcurv_t));
+
+  return 0;
+}
+
 int init_gdcurv_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d)
 {
   size_t siz_icmp = gdcurv->siz_icmp;
@@ -559,6 +567,19 @@ int dealloc_gdcurv_device(gdcurv_t gdcurv_d)
   CUDACHECK(cudaFree(gdcurv_d.cell_ymax)); 
   CUDACHECK(cudaFree(gdcurv_d.cell_zmin)); 
   CUDACHECK(cudaFree(gdcurv_d.cell_zmax)); 
+  CUDACHECK(cudaFree(gdcurv_d.tile_istart));
+  CUDACHECK(cudaFree(gdcurv_d.tile_iend));  
+  CUDACHECK(cudaFree(gdcurv_d.tile_jstart));
+  CUDACHECK(cudaFree(gdcurv_d.tile_jend));  
+  CUDACHECK(cudaFree(gdcurv_d.tile_kstart));
+  CUDACHECK(cudaFree(gdcurv_d.tile_kend));  
+  CUDACHECK(cudaFree(gdcurv_d.tile_xmin));
+  CUDACHECK(cudaFree(gdcurv_d.tile_xmax));
+  CUDACHECK(cudaFree(gdcurv_d.tile_ymin));
+  CUDACHECK(cudaFree(gdcurv_d.tile_ymax));
+  CUDACHECK(cudaFree(gdcurv_d.tile_zmin));
+  CUDACHECK(cudaFree(gdcurv_d.tile_zmax));  
+
   return 0;
 }
 

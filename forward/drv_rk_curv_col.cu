@@ -85,7 +85,7 @@ drv_rk_curv_col_allstep(
   bdryexp_t    bdryexp_d;
 
   // init device struct, and copy data from host to device
-  init_gdcurv_device(gdcurv, &gdcurv_d);
+  init_gdinfo_device(gdcurv, &gdcurv_d);
   init_md_device(md, &md_d);
   init_fd_device(fd, &fd_device_d);
   init_metric_device(metric, &metric_d);

@@ -10,6 +10,8 @@
 #include "wav_t.h"
 #include "bdry_t.h"
 
+int init_gdinfo_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d);
+
 int 
 init_gdcurv_device(gdcurv_t *gdcurv, gdcurv_t *gdcurv_d);
 
