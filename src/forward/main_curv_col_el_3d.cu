@@ -25,28 +25,6 @@ int main(int argc, char** argv)
   char *par_fname;
   char err_message[CONST_MAX_STRLEN];
 
-  // get commond-line argument
-  // argc checking
-  if (argc < 4) {
-    fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <verbose> <gpu_id_start>\n");
-    MPI_Finalize();
-    exit(1);
-  }
-
-  par_fname = argv[1];
-
-  if (argc >= 4) {
-    verbose = atoi(argv[2]); // verbose number
-    fprintf(stdout,"verbose=%d\n", verbose); fflush(stdout);
-    gpu_id_start = atoi(argv[3]); // gpu_id_start number
-    fprintf(stdout,"gpu_id_start=%d\n",gpu_id_start); fflush(stdout);
-  }
-
-  //-------------------------------------------------------------------------------
-  // initial gpu device before start MPI
-  //-------------------------------------------------------------------------------
-  setDeviceBeforeInit(gpu_id_start);
-
   //-------------------------------------------------------------------------------
   // start MPI and read par
   //-------------------------------------------------------------------------------
@@ -59,16 +37,39 @@ int main(int argc, char** argv)
   MPI_Comm_rank(comm, &myid);
   MPI_Comm_size(comm, &mpi_size);
 
+  // get commond-line argument
   if (myid==0) 
   {
-    // bcast verbose to all nodes
+    // argc checking
+    if (argc < 4) {
+      fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <opt: verbose>\n");
+      MPI_Finalize();
+      exit(1);
+    }
+
+    par_fname = argv[1];
+
+    if (argc >= 4) {
+      verbose = atoi(argv[2]); // verbose number
+      fprintf(stdout,"verbose=%d\n", verbose); fflush(stdout);
+      gpu_id_start = atoi(argv[3]); // gpu_id_start number
+      fprintf(stdout,"gpu_id_start=%d\n",gpu_id_start ); fflush(stdout);
+    }
     MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
+    MPI_Bcast(&gpu_id_start, 1, MPI_INT, 0, comm);
   }
   else
   {
     // get verbose from id 0
     MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
+    MPI_Bcast(&gpu_id_start, 1, MPI_INT, 0, comm);
   }
+
+  //-------------------------------------------------------------------------------
+  // initial gpu device after start MPI
+  //-------------------------------------------------------------------------------
+  setDeviceBeforeInit(gpu_id_start);
+
 
   if (myid==0 && verbose>0) fprintf(stdout,"comm=%d, size=%d\n", comm, mpi_size); 
   if (myid==0 && verbose>0) fprintf(stdout,"par file =  %s\n", par_fname); 
