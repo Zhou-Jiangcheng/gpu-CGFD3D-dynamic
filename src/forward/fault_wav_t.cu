@@ -12,15 +12,15 @@
 #include "fault_wav_t.h"
 
 int 
-fault_wav_init(gdcurv_t *gdcurv,
+fault_wav_init(gd_t *gd,
                fault_wav_t *FW,
                int number_of_levels)
 {
   int ierr = 0;
-  int ny = gdcurv->ny;
-  int nz = gdcurv->nz;
-  FW->ny   = gdcurv->ny;
-  FW->nz   = gdcurv->nz;
+  int ny = gd->ny;
+  int nz = gd->nz;
+  FW->ny   = gd->ny;
+  FW->nz   = gd->nz;
   FW->ncmp = 9;
   FW->nlevel = number_of_levels;
   FW->siz_slice_yz = ny * nz;
@@ -136,15 +136,15 @@ fault_wav_init(gdcurv_t *gdcurv,
 
 int 
 fault_var_update(float *f_end_d, int it, float dt,  
-                 gdcurv_t gdcurv_d, fault_t F, 
+                 gd_t gd_d, fault_t F, 
                  fault_coef_t FC, fault_wav_t FW)
 {
-  int nj  = gdcurv_d.nj;
-  int nj1 = gdcurv_d.nj1;
-  int nk  = gdcurv_d.nk;
-  int nk1 = gdcurv_d.nk1;
-  int ny  = gdcurv_d.ny;
-  size_t siz_slice_yz  = gdcurv_d.siz_slice_yz;
+  int nj  = gd_d.nj;
+  int nj1 = gd_d.nj1;
+  int nk  = gd_d.nk;
+  int nk1 = gd_d.nk1;
+  int ny  = gd_d.ny;
+  size_t siz_slice_yz  = gd_d.siz_slice_yz;
   float *f_Vx = f_end_d + FW.Vx_pos; 
   float *f_Vy = f_end_d + FW.Vy_pos; 
   float *f_Vz = f_end_d + FW.Vz_pos; 
@@ -253,7 +253,7 @@ fault_stress_update(int nj, int nk, float coef, fault_t F)
 }
 
 __global__ void
-fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars, 
+fault_wav_update(gd_t gd_d, int num_of_vars, 
                  float coef, fault_t F,
                  float *w_update, float *w_input1, float *w_input2)
 {
@@ -261,12 +261,12 @@ fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars,
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
 
-  int nj = gdcurv_d.nj;
-  int nk = gdcurv_d.nk;
-  int nj1 = gdcurv_d.nj1;
-  int nk1 = gdcurv_d.nk1;
-  int ny = gdcurv_d.ny;
-  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
+  int nj = gd_d.nj;
+  int nk = gd_d.nk;
+  int nj1 = gd_d.nj1;
+  int nk1 = gd_d.nk1;
+  int ny = gd_d.ny;
+  size_t siz_slice_yz = gd_d.siz_slice_yz;
 
   size_t iptr_t = iy+iz*nj;
   size_t iptr_f;
@@ -278,7 +278,7 @@ fault_wav_update(gdcurv_t gdcurv_d, int num_of_vars,
 }
 
 __global__ void
-fault_wav_update_end(gdcurv_t gdcurv_d, int num_of_vars, 
+fault_wav_update_end(gd_t gd_d, int num_of_vars, 
                      float coef, fault_t F,
                      float *w_update, float *w_input2)
 {
@@ -286,12 +286,12 @@ fault_wav_update_end(gdcurv_t gdcurv_d, int num_of_vars,
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
       
-  int nj = gdcurv_d.nj;
-  int nk = gdcurv_d.nk;
-  int nj1 = gdcurv_d.nj1;
-  int nk1 = gdcurv_d.nk1;
-  int ny = gdcurv_d.ny;
-  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
+  int nj = gd_d.nj;
+  int nk = gd_d.nk;
+  int nj1 = gd_d.nj1;
+  int nk1 = gd_d.nk1;
+  int ny = gd_d.ny;
+  size_t siz_slice_yz = gd_d.siz_slice_yz;
 
   size_t iptr_t = iy+iz*nj;
   size_t iptr_f;

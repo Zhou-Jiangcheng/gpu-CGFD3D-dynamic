@@ -21,7 +21,7 @@ sv_curv_col_el_iso_fault_onestage(
                      fault_wav_t FW,
                      fault_t F,
                      fault_coef_t FC,
-                     gdcurv_t  gdcurv_d,
+                     gd_t  gd_d,
                      gd_metric_t metric_d,
                      md_t md_d,
                      bdryfree_t bdryfree_d,
@@ -79,15 +79,15 @@ sv_curv_col_el_iso_fault_onestage(
   float *f_hT1y = FW.hT1y;
   float *f_hT1z = FW.hT1z;
 
-  int nj1 = gdcurv_d.nj1;
-  int nk1 = gdcurv_d.nk1;
-  int nj  = gdcurv_d.nj;
-  int nk  = gdcurv_d.nk;
-  int ny  = gdcurv_d.ny;
+  int nj1 = gd_d.nj1;
+  int nk1 = gd_d.nk1;
+  int nj  = gd_d.nj;
+  int nk  = gd_d.nk;
+  int ny  = gd_d.ny;
 
-  size_t siz_iy = gdcurv_d.siz_iy;
-  size_t siz_iz = gdcurv_d.siz_iz;
-  size_t siz_slice_yz = gdcurv_d.siz_slice_yz;
+  size_t siz_iy = gd_d.siz_iy;
+  size_t siz_iz = gd_d.siz_iz;
+  size_t siz_slice_yz = gd_d.siz_slice_yz;
 
   float *xi_x  = metric_d.xi_x;
   float *xi_y  = metric_d.xi_y;

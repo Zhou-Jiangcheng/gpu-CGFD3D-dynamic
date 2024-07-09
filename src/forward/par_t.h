@@ -12,8 +12,8 @@
 #define PAR_MAX_STRLEN 1000
 #define PAR_TYPE_STRLEN 50
 
-#define PAR_FAULT_PLANE  1
-#define PAR_GRID_WITH_FAULT  2
+#define FAULT_PLANE  1
+#define GRID_IMPORT  2
 
 #define PAR_METRIC_CALCULATE 1
 #define PAR_METRIC_IMPORT    2
@@ -106,7 +106,7 @@ typedef struct{
   char grid_export_dir[PAR_MAX_STRLEN];
 
   char fault_coord_nc[PAR_MAX_STRLEN];
-  char grid_coord_nc[PAR_MAX_STRLEN];
+  char grid_import_dir[PAR_MAX_STRLEN];
   char init_stress_nc[PAR_MAX_STRLEN];
   float dh;
 

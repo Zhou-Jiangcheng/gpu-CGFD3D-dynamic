@@ -20,6 +20,10 @@ typedef struct {
   int nj1, nj2;
   int nk1, nk2;
 
+  int total_point_x;
+  int total_point_y;
+  int total_point_z;
+
   int npoint_ghosts;
   int fdx_nghosts;
   int fdy_nghosts;
@@ -31,13 +35,6 @@ typedef struct {
   // global index
   int gni1, gnj1, gnk1; // global index, do not accout ghost point
   int gni2, gnj2, gnk2; // global index
-  // new naming
-  int ni1_to_glob_phys0;
-  int nj1_to_glob_phys0;
-  int nk1_to_glob_phys0;
-  int ni2_to_glob_phys0;
-  int nj2_to_glob_phys0;
-  int nk2_to_glob_phys0;
 
   int ncmp;
   float *v4d; // allocated var
@@ -92,7 +89,7 @@ typedef struct {
   char  **cmp_name;
   // curvilinear coord name,
   char **index_name;
-} gdcurv_t;
+} gd_t;
 
 //  for metric
 typedef struct {
@@ -124,60 +121,60 @@ typedef struct {
  *************************************************/
 
 int 
-gd_curv_init(gdcurv_t *gdcurv);
+gd_curv_init(gd_t *gd);
 
 int 
-gd_curv_metric_init(gdcurv_t    *gdcurv,
+gd_curv_metric_init(gd_t    *gd,
                     gd_metric_t *metric);
 int
-gd_curv_metric_cal(gdcurv_t    *gdcurv,
+gd_curv_metric_cal(gd_t    *gd,
                    gd_metric_t *metric);
 
 int
-gd_exchange(gdcurv_t *gdcurv,
+gd_exchange(gd_t *gd,
             float *g3d,
             int ncmp,
             int *neighid,
             MPI_Comm topocomm);
 
 int 
-mirror_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
+mirror_symmetry(gd_t *gd, float *v4d, int ncmp);
 
 int
-geometric_symmetry(gdcurv_t *gdcurv, float *v4d, int ncmp);
+geometric_symmetry(gd_t *gd, float *v4d, int ncmp);
 
 int
-gd_curv_gen_fault(gdcurv_t *gdcurv,
+gd_curv_gen_fault(gd_t *gd,
                   int  *fault_x_index,
                   float dh,
                   char *in_grid_fault_nc);
 
 int
 nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z, 
-                       char *in_grid_fault_nc, gdcurv_t *gdcurv);
+                       char *in_grid_fault_nc, gd_t *gd);
 
 int
-gd_curv_metric_import(gdcurv_t *gdcurv, gd_metric_t *metric, char *fname_coords, char *import_dir);
+gd_curv_metric_import(gd_t *gd, gd_metric_t *metric, char *fname_coords, char *import_dir);
 
 int
-gd_curv_coord_import(gdcurv_t *gdcurv, char *fname_coords, char *import_dir);
+gd_curv_coord_import(gd_t *gd, char *fname_coords, char *import_dir);
 
 int
-gd_curv_coord_export(gdcurv_t *gdcurv,
+gd_curv_coord_export(gd_t *gd,
                      char *fname_coords,
                      char *output_dir);
 
 int
-gd_curv_metric_export(gdcurv_t    *gdcurv,
+gd_curv_metric_export(gd_t    *gd,
                       gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 
 int
-gd_curv_set_minmax(gdcurv_t *gdcurv);
+gd_curv_set_minmax(gd_t *gd);
 
 int
-gd_curv_coord_to_glob_indx(gdcurv_t *gdcurv,
+gd_curv_coord_to_glob_indx(gd_t *gd,
                            float sx,
                            float sy,
                            float sz,
@@ -186,7 +183,7 @@ gd_curv_coord_to_glob_indx(gdcurv_t *gdcurv,
                            int   *ou_si, int *ou_sj, int *ou_sk,
                            float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
 __device__ int
-gd_curv_coord_to_glob_indx_gpu(gdcurv_t *gdcurv,
+gd_curv_coord_to_glob_indx_gpu(gd_t *gd,
                                float sx,
                                float sy,
                                float sz,
@@ -197,13 +194,13 @@ gd_curv_coord_to_glob_indx_gpu(gdcurv_t *gdcurv,
 
 
 __host__ __device__ int
-gd_curv_coord_to_local_indx(gdcurv_t *gdcurv,
+gd_curv_coord_to_local_indx(gd_t *gd,
                             float sx, float sy, float sz,
                             int *si, int *sj, int *sk,
                             float *sx_inc, float *sy_inc, float *sz_inc);
 
 __host__ __device__
-int gd_curv_depth_to_axis(gdcurv_t *gdcurv,
+int gd_curv_depth_to_axis(gd_t *gd,
                           float sx,
                           float sy,
                           float *sz,
@@ -253,13 +250,13 @@ gd_curv_coord2index_rdinterp(float sx, float sy, float sz,
                              float *sk_curv);
 
 float
-gd_coord_get_x(gdcurv_t *gdcurv, int i, int j, int k);
+gd_coord_get_x(gd_t *gd, int i, int j, int k);
 
 float
-gd_coord_get_y(gdcurv_t *gdcurv, int i, int j, int k);
+gd_coord_get_y(gd_t *gd, int i, int j, int k);
 
 float
-gd_coord_get_z(gdcurv_t *gdcurv, int i, int j, int k);
+gd_coord_get_z(gd_t *gd, int i, int j, int k);
 
 __host__ __device__
 int isPointInHexahedron_c(float px,  float py,  float pz,
@@ -272,7 +269,7 @@ __host__ __device__
 int face_normal(float (*hexa2d)[3], float *normal_unit);
 
 int
-gd_info_set(gdcurv_t *const gdcurv,
+gd_info_set(gd_t *const gd,
             const mympi_t *const mympi,
             const int number_of_total_grid_points_x,
             const int number_of_total_grid_points_y,
@@ -283,39 +280,39 @@ gd_info_set(gdcurv_t *const gdcurv,
             const int fdz_nghosts,
             const int verbose);
 int
-gd_info_lindx_is_inner(int i, int j, int k, gdcurv_t *gdcurv);
+gd_info_lindx_is_inner(int i, int j, int k, gd_t *gd);
 
 int
-gd_info_gindx_is_inner(int gi, int gj, int gk, gdcurv_t *gdcurv);
+gd_info_gindx_is_inner(int gi, int gj, int gk, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_i(int gi, gdcurv_t *gdcurv);
+gd_info_gindx_is_inner_i(int gi, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_j(int gj, gdcurv_t *gdcurv);
+gd_info_gindx_is_inner_j(int gj, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_k(int gk, gdcurv_t *gdcurv);
+gd_info_gindx_is_inner_k(int gk, gd_t *gd);
 
 int
-gd_info_ind_glphy2lcext_i(int gi, gdcurv_t *gdcurv);
+gd_info_indx_glphy2lcext_i(int gi, gd_t *gd);
 
 int
-gd_info_ind_glphy2lcext_j(int gj, gdcurv_t *gdcurv);
+gd_info_indx_glphy2lcext_j(int gj, gd_t *gd);
 
 int
-gd_info_ind_glphy2lcext_k(int gk, gdcurv_t *gdcurv);
+gd_info_indx_glphy2lcext_k(int gk, gd_t *gd);
 
 __host__ __device__ int
-gd_info_ind_lcext2glphy_i(int i, gdcurv_t *gdcurv);
+gd_info_indx_lcext2glphy_i(int i, gd_t *gd);
 
 __host__ __device__ int
-gd_info_ind_lcext2glphy_j(int j, gdcurv_t *gdcurv);
+gd_info_indx_lcext2glphy_j(int j, gd_t *gd);
 
 __host__ __device__ int
-gd_info_ind_lcext2glphy_k(int k, gdcurv_t *gdcurv);
+gd_info_indx_lcext2glphy_k(int k, gd_t *gd);
 
 int
-gd_info_print(gdcurv_t *gdcurv);
+gd_info_print(gd_t *gd);
 
 #endif

@@ -14,13 +14,13 @@
 #include "md_t.h"
 
 int
-md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type)
+md_init(gd_t *gd, md_t *md, int media_type, int visco_type)
 {
   int ierr = 0;
 
-  md->nx   = gdcurv->nx;
-  md->ny   = gdcurv->ny;
-  md->nz   = gdcurv->nz;
+  md->nx   = gd->nx;
+  md->ny   = gd->ny;
+  md->nz   = gd->nz;
 
   md->siz_iy   = md->nx;
   md->siz_iz  = md->nx * md->ny;
@@ -227,24 +227,24 @@ md_init(gdcurv_t *gdcurv, md_t *md, int media_type, int visco_type)
 //
 
 int
-md_import(gdcurv_t *gdcurv, md_t *md, char *fname_coords, char *in_dir)
+md_import(gd_t *gd, md_t *md, char *fname_coords, char *in_dir)
 {
   int ierr = 0;
   // construct file name
   char in_file[CONST_MAX_STRLEN];
   sprintf(in_file, "%s/media_%s.nc", in_dir, fname_coords);
 
-  int ni1 = gdcurv->ni1;
-  int nj1 = gdcurv->nj1;
-  int nk1 = gdcurv->nk1;
-  int ni2 = gdcurv->ni2;
-  int nj2 = gdcurv->nj2;
-  int nk2 = gdcurv->nk2;
-  int ni  = gdcurv->ni;
-  int nj  = gdcurv->nj;
-  int nk  = gdcurv->nk;
-  size_t  siz_iy = gdcurv->siz_iy;
-  size_t  siz_iz = gdcurv->siz_iz;
+  int ni1 = gd->ni1;
+  int nj1 = gd->nj1;
+  int nk1 = gd->nk1;
+  int ni2 = gd->ni2;
+  int nj2 = gd->nj2;
+  int nk2 = gd->nk2;
+  int ni  = gd->ni;
+  int nj  = gd->nj;
+  int nk  = gd->nk;
+  size_t  siz_iy = gd->siz_iy;
+  size_t  siz_iz = gd->siz_iz;
   
   size_t iptr, iptr1;
   
@@ -275,7 +275,7 @@ md_import(gdcurv_t *gdcurv, md_t *md, char *fname_coords, char *in_dir)
       }
     }
   }
-  mirror_symmetry(gdcurv, md->v4d, md->ncmp);
+  mirror_symmetry(gd, md->v4d, md->ncmp);
   
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
@@ -286,7 +286,7 @@ md_import(gdcurv_t *gdcurv, md_t *md, char *fname_coords, char *in_dir)
 }
 
 int
-md_export(gdcurv_t *gdcurv,
+md_export(gd_t *gd,
           md_t *md,
           char *fname_coords,
           char *output_dir)
@@ -294,23 +294,23 @@ md_export(gdcurv_t *gdcurv,
   int ierr = 0;
 
   int  number_of_vars = md->ncmp;
-  int  nx = gdcurv->nx;
-  int  ny = gdcurv->ny;
-  int  nz = gdcurv->nz;
-  int  ni1 = gdcurv->ni1;
-  int  nj1 = gdcurv->nj1;
-  int  nk1 = gdcurv->nk1;
-  int  ni2 = gdcurv->ni2;
-  int  nj2 = gdcurv->nj2;
-  int  nk2 = gdcurv->nk2;
-  int  ni  = gdcurv->ni;
-  int  nj  = gdcurv->nj;
-  int  nk  = gdcurv->nk;
-  int  gni1 = gdcurv->ni1_to_glob_phys0;
-  int  gnj1 = gdcurv->nj1_to_glob_phys0;
-  int  gnk1 = gdcurv->nk1_to_glob_phys0;
-  size_t  siz_iy = gdcurv->siz_iy;
-  size_t  siz_iz = gdcurv->siz_iz;
+  int  nx = gd->nx;
+  int  ny = gd->ny;
+  int  nz = gd->nz;
+  int  ni1 = gd->ni1;
+  int  nj1 = gd->nj1;
+  int  nk1 = gd->nk1;
+  int  ni2 = gd->ni2;
+  int  nj2 = gd->nj2;
+  int  nk2 = gd->nk2;
+  int  ni  = gd->ni;
+  int  nj  = gd->nj;
+  int  nk  = gd->nk;
+  int  gni1 = gd->gni1;
+  int  gnj1 = gd->gnj1;
+  int  gnk1 = gd->gnk1;
+  size_t  siz_iy = gd->siz_iy;
+  size_t  siz_iz = gd->siz_iz;
   size_t iptr, iptr1;
 
   float *var_out = (float *) malloc(sizeof(float)*ni*nj*nk);

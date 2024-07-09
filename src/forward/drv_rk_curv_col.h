@@ -18,7 +18,7 @@
 int
 drv_rk_curv_col_allstep(
   fd_t        *fd,
-  gdcurv_t    *gdcurv,
+  gd_t    *gd,
   gd_metric_t *metric,
   md_t        *md,
   par_t       *par,

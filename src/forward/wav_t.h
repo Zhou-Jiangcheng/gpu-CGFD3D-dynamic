@@ -84,7 +84,7 @@ struct var5d_t
  *************************************************/
 
 int 
-wav_init(gdcurv_t *gdcurv,
+wav_init(gd_t *gd,
          wav_t *V,
          int number_of_levels);
 
@@ -92,7 +92,7 @@ int
 wav_check_value(float *w, wav_t *wav);
 
 __global__ void
-PG_calcu_gpu(float *w_end, float *w_pre, gdcurv_t gdcurv, float *PG_d, float *Dis_accu, float dt);
+PG_calcu_gpu(float *w_end, float *w_pre, gd_t gd, float *PG_d, float *Dis_accu, float dt);
 
 __global__ void
 wav_update(size_t size, float coef, float *w_update, float *w_input1, float *w_input2);

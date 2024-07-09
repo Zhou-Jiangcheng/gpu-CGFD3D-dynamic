@@ -21,7 +21,7 @@ blk_init(blk_t *blk,
   // alloc struct vars
   blk->fd         = (fd_t         *) malloc(sizeof(fd_t));
   blk->mympi      = (mympi_t      *) malloc(sizeof(mympi_t));
-  blk->gdcurv     = (gdcurv_t     *) malloc(sizeof(gdcurv_t));
+  blk->gd     = (gd_t     *) malloc(sizeof(gd_t));
   blk->gd_metric  = (gd_metric_t  *) malloc(sizeof(gd_metric_t));
   blk->md         = (md_t         *) malloc(sizeof(md_t));
   blk->wav        = (wav_t        *) malloc(sizeof(wav_t));
@@ -273,25 +273,25 @@ blk_macdrp_mesg_init(mympi_t *mympi,
 int 
 blk_macdrp_pack_mesg_gpu(float * w_cur,
                          fd_t *fd,
-                         gdcurv_t *gdcurv, 
+                         gd_t *gd, 
                          mympi_t *mympi, 
                          int ipair_mpi,
                          int istage_mpi,
                          int num_of_vars,
                          int myid)
 {
-  int ni1 = gdcurv->ni1;
-  int ni2 = gdcurv->ni2;
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  size_t siz_iy  = gdcurv->siz_iy;
-  size_t siz_iz  = gdcurv->siz_iz;
-  size_t siz_icmp = gdcurv->siz_icmp;
-  int ni = gdcurv->ni;
-  int nj = gdcurv->nj;
-  int nk = gdcurv->nk;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  size_t siz_iy  = gd->siz_iy;
+  size_t siz_iz  = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
+  int ni = gd->ni;
+  int nj = gd->nj;
+  int nk = gd->nk;
 
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -448,26 +448,26 @@ blk_macdrp_pack_mesg_z2(
 int 
 blk_macdrp_unpack_mesg_gpu(float *w_cur, 
                            fd_t *fd,
-                           gdcurv_t *gdcurv,
+                           gd_t *gd,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
                            int num_of_vars,
                            int *neighid)
 {
-  int ni1 = gdcurv->ni1;
-  int ni2 = gdcurv->ni2;
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  size_t siz_iy  = gdcurv->siz_iy;
-  size_t siz_iz  = gdcurv->siz_iz;
-  size_t siz_icmp = gdcurv->siz_icmp;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  size_t siz_iy  = gd->siz_iy;
+  size_t siz_iz  = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
-  int ni = gdcurv->ni;
-  int nj = gdcurv->nj;
-  int nk = gdcurv->nk;
+  int ni = gd->ni;
+  int nj = gd->nj;
+  int nk = gd->nk;
   
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -637,21 +637,21 @@ blk_macdrp_unpack_mesg_z2(
 int 
 blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
                                fd_t *fd,
-                               gdcurv_t *gdcurv, 
+                               gd_t *gd, 
                                mympi_t *mympi, 
                                int ipair_mpi,
                                int istage_mpi,
                                int num_of_vars_fault,
                                int myid)
 {
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  int nj = gdcurv->nj;
-  int nk = gdcurv->nk;
-  int ny = gdcurv->ny;
-  size_t siz_slice_yz = gdcurv->siz_slice_yz;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nj = gd->nj;
+  int nk = gd->nk;
+  int ny = gd->ny;
+  size_t siz_slice_yz = gd->siz_slice_yz;
 
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -808,21 +808,21 @@ blk_macdrp_pack_fault_mesg_z2(
 int 
 blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur, 
                                  fd_t *fd,
-                                 gdcurv_t *gdcurv,
+                                 gd_t *gd,
                                  mympi_t *mympi, 
                                  int ipair_mpi,
                                  int istage_mpi,
                                  int num_of_vars_fault,
                                  int *neighid)
 {
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  int nj = gdcurv->nj;
-  int nk = gdcurv->nk;
-  int ny = gdcurv->ny;
-  size_t siz_slice_yz = gdcurv->siz_slice_yz;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nj = gd->nj;
+  int nk = gd->nk;
+  int ny = gd->ny;
+  size_t siz_slice_yz = gd->siz_slice_yz;
   
   fd_op_t *fdy_op = fd->pair_fdy_op[ipair_mpi][istage_mpi];
   fd_op_t *fdz_op = fd->pair_fdz_op[ipair_mpi][istage_mpi];
@@ -981,7 +981,7 @@ blk_macdrp_unpack_fault_mesg_z2(
  *********************************************************************/
 
 int
-blk_dt_esti_curv(gdcurv_t *gdcurv, md_t *md,
+blk_dt_esti_curv(gd_t *gd, md_t *md,
     float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
     int *dtmaxi, int *dtmaxj, int *dtmaxk)
 {
@@ -990,17 +990,17 @@ blk_dt_esti_curv(gdcurv_t *gdcurv, md_t *md,
   float dtmax_local = 1.0e10;
   float Vp;
 
-  float *x3d = gdcurv->x3d;
-  float *y3d = gdcurv->y3d;
-  float *z3d = gdcurv->z3d;
+  float *x3d = gd->x3d;
+  float *y3d = gd->y3d;
+  float *z3d = gd->z3d;
 
-  for (int k = gdcurv->nk1; k <= gdcurv->nk2; k++)
+  for (int k = gd->nk1; k <= gd->nk2; k++)
   {
-    for (int j = gdcurv->nj1; j <= gdcurv->nj2; j++)
+    for (int j = gd->nj1; j <= gd->nj2; j++)
     {
-      for (int i = gdcurv->ni1; i <= gdcurv->ni2; i++)
+      for (int i = gd->ni1; i <= gd->ni2; i++)
       {
-        size_t iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
+        size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
           Vp = sqrt( (md->lambda[iptr] + 2.0 * md->mu[iptr]) / md->rho[iptr] );
@@ -1025,12 +1025,12 @@ blk_dt_esti_curv(gdcurv_t *gdcurv, md_t *md,
               if (ii != 0 && jj !=0 && kk != 0)
               {
                 float p1[] = { x3d[iptr-ii], y3d[iptr-ii], z3d[iptr-ii] };
-                float p2[] = { x3d[iptr-jj*gdcurv->siz_iy],
-                               y3d[iptr-jj*gdcurv->siz_iy],
-                               z3d[iptr-jj*gdcurv->siz_iy] };
-                float p3[] = { x3d[iptr-kk*gdcurv->siz_iz],
-                               y3d[iptr-kk*gdcurv->siz_iz],
-                               z3d[iptr-kk*gdcurv->siz_iz] };
+                float p2[] = { x3d[iptr-jj*gd->siz_iy],
+                               y3d[iptr-jj*gd->siz_iy],
+                               z3d[iptr-jj*gd->siz_iy] };
+                float p3[] = { x3d[iptr-kk*gd->siz_iz],
+                               y3d[iptr-kk*gd->siz_iz],
+                               z3d[iptr-kk*gd->siz_iz] };
 
                 float L = fdlib_math_dist_point2plane(p0, p1, p2, p3);
 
@@ -1068,9 +1068,10 @@ blk_keep_three_digi(float dt)
   char str[40];
   float dt_2;
 
-  sprintf(str, "%4.3e", dt);
+  sprintf(str, "%9.7e", dt);
 
-  str[4] = '0';
+  for (int i = 3; i < 9; i++)
+    str[i] = '0';
 
   sscanf(str, "%f", &dt_2);
   

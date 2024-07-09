@@ -21,10 +21,10 @@ theta = 0/4*pi;
 for k = 1:nk
   for j = 1:nj
         x(j,k) = 0 + (k-nk)*dh*tan(theta);
-        y(j,k) = (j-1-nj/2)*dh;
-%         y(j,k) = (j-1)*dh;
+%         y(j,k) = (j-1-nj/2)*dh;
+        y(j,k) = (j-1)*dh;
         z(j,k) = (k-nk)*dh;
-    end
+  end
 end
 if 0
 for j = 1:nj

@@ -24,7 +24,7 @@ sv_curv_col_el_iso_fault_onestage(
                     fault_wav_t FW,
                     fault_t F,
                     fault_coef_t FC,
-                    gdcurv_t  gdcurv_d,
+                    gd_t  gd_d,
                     gd_metric_t metric_d,
                     md_t md_d,
                     bdryfree_t bdryfree_d,

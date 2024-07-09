@@ -114,10 +114,10 @@ typedef struct
 
 int
 fault_coef_init(fault_coef_t *FC,
-                gdcurv_t *gdcurv);
+                gd_t *gd);
 
 int 
-fault_coef_cal(gdcurv_t *gdcurv, 
+fault_coef_cal(gd_t *gd, 
                gd_metric_t *metric, 
                md_t *md, 
                int *fault_x_index,
@@ -125,19 +125,19 @@ fault_coef_cal(gdcurv_t *gdcurv,
 
 int
 fault_init(fault_t *F,
-           gdcurv_t *gdcurv);
+           gd_t *gd);
 
 int
 fault_set(fault_t *F,
           fault_coef_t *FC,
-          gdcurv_t *gdcurv,
+          gd_t *gd,
           int bdry_has_free,
           int *fault_grid,
           char *init_stress_nc);
 
 int 
 nc_read_init_stress(fault_t *F, 
-                    gdcurv_t *gdcurv, 
+                    gd_t *gd, 
                     char *init_stress_nc);
 
 #endif

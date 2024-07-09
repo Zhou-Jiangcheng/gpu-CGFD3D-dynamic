@@ -31,7 +31,7 @@ typedef struct
   mympi_t *mympi;
   
   // coordnate: x3d, y3d, z3d
-  gdcurv_t *gdcurv;
+  gd_t *gd;
 
   // grid metrics: jac, xi_x, etc
   gd_metric_t *gd_metric;
@@ -117,7 +117,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
 int
 blk_macdrp_pack_mesg_gpu(float *w_cur,
                          fd_t *fd,
-                         gdcurv_t *gdcurv,
+                         gd_t *gd,
                          mympi_t *mpmpi,
                          int ipair_mpi,
                          int istage_mpi,
@@ -147,7 +147,7 @@ blk_macdrp_pack_mesg_z2(
 int 
 blk_macdrp_unpack_mesg_gpu(float *w_cur, 
                            fd_t *fd,
-                           gdcurv_t *gdcurv,
+                           gd_t *gd,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
@@ -177,7 +177,7 @@ blk_macdrp_unpack_mesg_z2(
 int 
 blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
                                fd_t *fd,
-                               gdcurv_t *gdcurv, 
+                               gd_t *gd, 
                                mympi_t *mympi, 
                                int ipair_mpi,
                                int istage_mpi,
@@ -207,7 +207,7 @@ blk_macdrp_pack_fault_mesg_z2(
 int 
 blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur, 
                                  fd_t *fd,
-                                 gdcurv_t *gdcurv,
+                                 gd_t *gd,
                                  mympi_t *mympi, 
                                  int ipair_mpi,
                                  int istage_mpi,
@@ -238,7 +238,7 @@ int
 blk_print(blk_t *blk);
 
 int
-blk_dt_esti_curv(gdcurv_t *gdcurv, md_t *md,
+blk_dt_esti_curv(gd_t *gd, md_t *md,
     float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
     int *dtmaxi, int *dtmaxj, int *dtmaxk);
 

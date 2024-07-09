@@ -16,13 +16,13 @@ CPPFLAGS := -O3 -std=c++11 $(CPPFLAGS)
 
 CFLAGS_CUDA   := -O3 -arch=$(SMCODE) -std=c++11 -w -rdc=true
 CFLAGS_CUDA += -I$(CUDAHOME)/include -I$(MPIHOME)/include
-CFLAGS_CUDA += -I$(NETCDF)/include -I./src/lib/ -I./src/media/ 
-CFLAGS_CUDA += -I./src/forward/ -I./src/dynamic/ 
+CFLAGS_CUDA += -I$(NETCDF)/include -I./src/lib/ -I./src/media/ -I./src/forward/
 
 #- dynamic
 LDFLAGS := -L$(NETCDF)/lib -lnetcdf -L$(CUDAHOME)/lib64 -lcudart -L$(MPIHOME)/lib -lmpi
 LDFLAGS += -lm -arch=$(SMCODE)
 
+skeldirs := obj
 DIR_OBJ  := ./obj
 #-------------------------------------------------------------------------------
 # target
@@ -56,20 +56,23 @@ OBJS := $(addprefix $(DIR_OBJ)/,$(OBJS))
 
 vpath  %.cu .
 vpath  %.cpp .
-main_curv_col_el_3d: $(OBJS)
+
+all: skel main
+skel:
+	@mkdir -p $(skeldirs)
+
+main: $(OBJS)
 	$(GC) -o $@ $^ $(LDFLAGS) 
 
 $(DIR_OBJ)/%.o : src/media/%.cpp
-	${CXX} -c -o $@ $(CPPFLAGS) $<
+	${CXX} $(CPPFLAGS) -c $^ -o $@ 
 $(DIR_OBJ)/%.o : src/lib/%.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
+	${GC} $(CFLAGS_CUDA) -c $^ -o $@
 $(DIR_OBJ)/%.o : src/forward/%.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-$(DIR_OBJ)/%.o : src/dynamic/%.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
+	${GC} $(CFLAGS_CUDA) -c $^ -o $@
 
 cleanexe:
-	rm -f main_curv_col_el_3d
+	rm -f main
 cleanobj:
 	rm -f $(DIR_OBJ)/*.o
 cleanall: cleanexe cleanobj

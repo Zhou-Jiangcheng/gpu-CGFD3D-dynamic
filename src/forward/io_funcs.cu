@@ -27,7 +27,7 @@
  * read in station list file and locate station
  */
 int
-io_recv_read_locate(gdcurv_t      *gdcurv,
+io_recv_read_locate(gd_t      *gd,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
@@ -40,13 +40,22 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
   FILE *fp;
   char line[500];
 
+  iorecv->total_number = 0;
   if (!(fp = fopen (in_filenm, "rt")))
 	{
-	    fprintf (stdout, "Cannot open input file %s\n", in_filenm);
-	    fflush (stdout);
-	    return(1);
+    
+    fprintf(stdout,"#########         ########\n");
+    fprintf(stdout,"######### Warning ########\n");
+    fprintf(stdout,"#########         ########\n");
+    fprintf(stdout,"Cannot open input station file %s\n", in_filenm);
+    
+	  fflush (stdout);
+	  return 0;
 	}
 
+  int total_point_x = gd->total_point_x;
+  int total_point_y = gd->total_point_y;
+  int total_point_z = gd->total_point_z;
   // number of station
   int num_recv;
 
@@ -64,7 +73,7 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
   int nr_this = 0; // in this thread
   int recv_by_coords = 0;
 
-  int *flag_indx = (int *) malloc(sizeof(int) * num_recv);
+  int *flag_coord = (int *) malloc(sizeof(int) * num_recv);
   int *flag_depth = (int *) malloc(sizeof(int) * num_recv);
 
   float *all_coords = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
@@ -78,23 +87,18 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
 
     // get values
     sscanf(line, "%s %d %d %g %g %g", 
-              recvone[ir].name, &flag_indx[ir], &flag_depth[ir], &all_coords[3*ir+0], &all_coords[3*ir+1], &all_coords[3*ir+2]);
+              recvone[ir].name, &flag_coord[ir], &flag_depth[ir], &all_coords[3*ir+0], &all_coords[3*ir+1], &all_coords[3*ir+2]);
 
-    if(flag_indx[ir] == 0)
+    if(flag_coord[ir] == 1)
     {
       recv_by_coords += 1;
-    }
-    if(num_of_mpiprocs_z >= 2 && flag_indx[ir] == 0 && flag_depth[ir] == 1)
-    {
-      fprintf(stderr,"station not yet implement z axis depth to physical coord with z axis mpi >= 2\n");
-      fflush(stderr); exit(1);
     }
 
   }
   // by axis
   // computation is big, use GPU 
 
-  int *flag_indx_d = NULL; 
+  int *flag_coord_d = NULL; 
   int *flag_depth_d = NULL;
   
   int *all_index_tmp = NULL;
@@ -109,30 +113,30 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
     //computational is big, use GPU
     fprintf(stdout,"recv has physical coords, maybe computational big, use GPU\n");
     fprintf(stdout,"recv_by_coords is %d\n",recv_by_coords);
-    gdcurv_t gdcurv_d;
-    init_gdcurv_device(gdcurv,&gdcurv_d);
+    gd_t gd_d;
+    init_gd_device(gd,&gd_d);
 
     all_index_tmp  = (int *)   malloc(sizeof(int) * CONST_NDIM * num_recv);
     all_inc_tmp    = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
 
-    flag_indx_d  = (int *)    cuda_malloc(sizeof(int)*num_recv);
+    flag_coord_d  = (int *)    cuda_malloc(sizeof(int)*num_recv);
     flag_depth_d  = (int *)   cuda_malloc(sizeof(int)*num_recv);
     all_coords_d = (float *) cuda_malloc(sizeof(float)*num_recv*CONST_NDIM);
     all_index_d  = (int *)   cuda_malloc(sizeof(int)*num_recv*CONST_NDIM);
     all_inc_d    = (float *) cuda_malloc(sizeof(float)*num_recv*CONST_NDIM);
-    CUDACHECK(cudaMemcpy(flag_indx_d,flag_indx,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(flag_coord_d,flag_coord,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(flag_depth_d,flag_depth,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(all_coords_d,all_coords,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyHostToDevice));
 
     dim3 block(256);
     dim3 grid;
     grid.x = (num_recv+block.x-1) / block.x;
-    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gdcurv_d, 
-                         flag_indx_d, flag_depth_d, comm, myid);
+    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gd_d, 
+                         flag_coord_d, flag_depth_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     grid.x = (num_recv+block.x-1) / block.x;
     recv_coords_to_glob_indx<<<grid, block>>> (all_coords_d, all_index_d, 
-                              all_inc_d, num_recv, gdcurv_d, flag_indx_d, comm, myid);
+                              all_inc_d, num_recv, gd_d, flag_coord_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     CUDACHECK(cudaMemcpy(all_coords,all_coords_d,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
     CUDACHECK(cudaMemcpy(all_index_tmp,all_index_d,sizeof(int)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
@@ -144,8 +148,8 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
     MPI_Allreduce(all_index_tmp, all_index, num_recv*CONST_NDIM, MPI_INT, MPI_MAX, comm);
     MPI_Allreduce(all_inc_tmp, all_inc, num_recv*CONST_NDIM, MPI_FLOAT, MPI_SUM, comm);
     //free temp pointer
-    dealloc_gdcurv_device(gdcurv_d);
-    CUDACHECK(cudaFree(flag_indx_d));
+    dealloc_gd_device(gd_d);
+    CUDACHECK(cudaFree(flag_coord_d));
     CUDACHECK(cudaFree(flag_depth_d));
     CUDACHECK(cudaFree(all_coords_d));
     CUDACHECK(cudaFree(all_index_d));
@@ -159,7 +163,7 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
     // conver minus shift to plus to use linear interp with all grid in this thread
     //    there may be problem if the receiver is located just bewteen two mpi block
     //    we should exchange data first then before save receiver waveform
-    if(flag_indx[ir] == 0)
+    if(flag_coord[ir] == 1)
     {
       if (all_inc[3*ir+0] < 0.0) {
         all_inc[3*ir+0] = 1.0 +all_inc[3*ir+0];
@@ -176,11 +180,11 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
     }
 
     // by grid index
-    if (flag_indx[ir] == 1)
+    if (flag_coord[ir] == 0)
     {
       // if sz is relative to surface, convert to normal index
       if (flag_depth[ir] == 1) {
-        all_coords[3*ir+2] = gdcurv->gnk2 - all_coords[3*ir+2];
+        all_coords[3*ir+2] = gd->gnk2 - all_coords[3*ir+2];
       }
 
       // do not take nearest value, but use smaller value
@@ -190,6 +194,19 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
       all_inc[3*ir+0] = all_coords[3*ir+0] - all_index[3*ir+0] ;
       all_inc[3*ir+1] = all_coords[3*ir+1] - all_index[3*ir+1] ;
       all_inc[3*ir+2] = all_coords[3*ir+2] - all_index[3*ir+2] ;
+      // check recv index whether outside
+      if(all_index[3*ir+0]<0 || all_index[3*ir+0] > total_point_x)
+      {
+        all_index[3*ir+0] = -1000;
+      }
+      if(all_index[3*ir+1]<0 || all_index[3*ir+1] > total_point_y)
+      {
+        all_index[3*ir+1] = -1000;
+      }
+      if(all_index[3*ir+2]<0 || all_index[3*ir+2] > total_point_z)
+      {
+        all_index[3*ir+2] = -1000;
+      }
     }
     int ix = all_index[3*ir+0];
     int iy = all_index[3*ir+1];
@@ -202,19 +219,19 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
     float rx = all_coords[3*ir+0];
     float ry = all_coords[3*ir+1];
     float rz = all_coords[3*ir+2];
-    if (gd_info_gindx_is_inner(ix,iy,iz,gdcurv) == 1)
+    if (gd_info_gindx_is_inner(ix,iy,iz,gd) == 1)
     {
       // convert to local index w ghost
-      int i_local = gd_info_ind_glphy2lcext_i(ix,gdcurv);
-      int j_local = gd_info_ind_glphy2lcext_j(iy,gdcurv);
-      int k_local = gd_info_ind_glphy2lcext_k(iz,gdcurv);
+      int i_local = gd_info_indx_glphy2lcext_i(ix,gd);
+      int j_local = gd_info_indx_glphy2lcext_j(iy,gd);
+      int k_local = gd_info_indx_glphy2lcext_k(iz,gd);
 
       // get coord
-      if (flag_indx[ir] == 1)
+      if (flag_coord[ir] == 0)
       {
-        rx = gd_coord_get_x(gdcurv,i_local,j_local,k_local);
-        ry = gd_coord_get_y(gdcurv,i_local,j_local,k_local);
-        rz = gd_coord_get_z(gdcurv,i_local,j_local,k_local);
+        rx = gd_coord_get_x(gd,i_local,j_local,k_local);
+        ry = gd_coord_get_y(gd,i_local,j_local,k_local);
+        rz = gd_coord_get_z(gd,i_local,j_local,k_local);
       }
 
       int ptr_this = nr_this * CONST_NDIM;
@@ -234,19 +251,33 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
       this_recv->dj = ry_inc;
       this_recv->dk = rz_inc;
 
-      this_recv->indx1d[0] = i_local   + j_local     * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
-      this_recv->indx1d[1] = i_local+1 + j_local     * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
-      this_recv->indx1d[2] = i_local   + (j_local+1) * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
-      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gdcurv->siz_iy + k_local * gdcurv->siz_iz;
-      this_recv->indx1d[4] = i_local   + j_local     * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
-      this_recv->indx1d[5] = i_local+1 + j_local     * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
-      this_recv->indx1d[6] = i_local   + (j_local+1) * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
-      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gdcurv->siz_iy + (k_local+1) * gdcurv->siz_iz;
+      this_recv->indx1d[0] = i_local   + j_local     * gd->siz_iy + k_local * gd->siz_iz;
+      this_recv->indx1d[1] = i_local+1 + j_local     * gd->siz_iy + k_local * gd->siz_iz;
+      this_recv->indx1d[2] = i_local   + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
+      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
+      this_recv->indx1d[4] = i_local   + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
+      this_recv->indx1d[5] = i_local+1 + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
+      this_recv->indx1d[6] = i_local   + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
+      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
 
       //fprintf(stdout,"== ir_this=%d,name=%s,i=%d,j=%d,k=%d\n",
       //      nr_this,sta_name[nr_this],i_local,j_local,k_local); fflush(stdout);
 
       nr_this += 1;
+    }
+  }
+  if(myid==0)
+  {
+    for (ir=0; ir<num_recv; ir++)
+    {
+      if(all_index[3*ir+0] == -1000 || all_index[3*ir+1] == -1000 || 
+         all_index[3*ir+2] == -1000)
+      {
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"######### Warning ########\n");
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"recv_number[%d] physical coordinates are outside calculation area !\n",ir);
+      }
     }
   }
 
@@ -266,13 +297,13 @@ io_recv_read_locate(gdcurv_t      *gdcurv,
   free(all_index);
   free(all_inc);
   free(all_coords);
-  free(flag_indx);
+  free(flag_coord);
   free(flag_depth);
   return 0;
 }
 
 int
-io_line_locate(gdcurv_t *gdcurv,
+io_line_locate(gd_t *gd,
                ioline_t *ioline,
                int    num_of_vars,
                int    nt_total,
@@ -306,7 +337,7 @@ io_line_locate(gdcurv_t *gdcurv,
       int gk = receiver_line_index_start[n*CONST_NDIM+2] 
                  + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdcurv) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gd) == 1)
       {
         nr += 1;
       }
@@ -364,20 +395,20 @@ io_line_locate(gdcurv_t *gdcurv,
       int gj = receiver_line_index_start[n*CONST_NDIM+1] + ipt * receiver_line_index_incre[n*CONST_NDIM+1];
       int gk = receiver_line_index_start[n*CONST_NDIM+2] + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdcurv) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gd) == 1)
       {
-        int i = gd_info_ind_glphy2lcext_i(gi,gdcurv);
-        int j = gd_info_ind_glphy2lcext_j(gj,gdcurv);
-        int k = gd_info_ind_glphy2lcext_k(gk,gdcurv);
+        int i = gd_info_indx_glphy2lcext_i(gi,gd);
+        int j = gd_info_indx_glphy2lcext_j(gj,gd);
+        int k = gd_info_indx_glphy2lcext_k(gk,gd);
 
-        int iptr = i + j * gdcurv->siz_iy + k * gdcurv->siz_iz;
+        int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
 
         ioline->recv_seq [m][ir] = ipt;
         ioline->recv_iptr[m][ir] = iptr;
 
-        ioline->recv_x[m][ir] = gd_coord_get_x(gdcurv,i,j,k);
-        ioline->recv_y[m][ir] = gd_coord_get_y(gdcurv,i,j,k);
-        ioline->recv_z[m][ir] = gd_coord_get_z(gdcurv,i,j,k);
+        ioline->recv_x[m][ir] = gd_coord_get_x(gd,i,j,k);
+        ioline->recv_y[m][ir] = gd_coord_get_y(gd,i,j,k);
+        ioline->recv_z[m][ir] = gd_coord_get_z(gd,i,j,k);
 
         ir += 1;
       }
@@ -387,48 +418,9 @@ io_line_locate(gdcurv_t *gdcurv,
   return ierr;
 }
 
-int
-io_fault_locate(gdcurv_t *gdcurv, 
-                iofault_t *iofault,
-                int number_of_fault,
-                int *fault_x_index,
-                char *output_fname_part,
-                char *output_dir)
-{
-  int ierr = 0;
-  iofault->siz_max_wrk = 0;
-
-  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(number_of_fault,
-                                   CONST_MAX_STRLEN,"fault_fname");
-
-  iofault->fault_x_indx = (int *) malloc(number_of_fault * sizeof(int));
-
-  iofault->num_of_fault = 0;
-
-  for (int i=0; i<number_of_fault; i++)
-  {
-    int gi = fault_x_index[i];
-    if(gd_info_gindx_is_inner_i(gi, gdcurv)==1)
-    {
-      int islc = iofault->num_of_fault;
-
-      iofault->fault_x_indx[islc] =  gd_info_ind_glphy2lcext_i(gi, gdcurv);
-      sprintf(iofault->fault_fname[islc],"%s/fault_i%d_%s.nc",
-                output_dir,gi,output_fname_part);
-
-      iofault->num_of_fault += 1;
-
-      size_t slice_siz = gdcurv->nj * gdcurv->nk;
-      iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
-                             slice_siz : iofault->siz_max_wrk;
-    }
-  }
-
-  return ierr;
-}
 
 int
-io_slice_locate(gdcurv_t  *gdcurv,
+io_slice_locate(gd_t  *gd,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
                 int  number_of_slice_y,
@@ -471,17 +463,17 @@ io_slice_locate(gdcurv_t  *gdcurv,
   for (int n=0; n < number_of_slice_x; n++)
   {
     int gi = slice_x_index[n];
-    if (gd_info_gindx_is_inner_i(gi, gdcurv)==1)
+    if (gd_info_gindx_is_inner_i(gi, gd)==1)
     {
       int islc = ioslice->num_of_slice_x;
 
-      ioslice->slice_x_indx[islc]  = gd_info_ind_glphy2lcext_i(gi, gdcurv);
+      ioslice->slice_x_indx[islc]  = gd_info_indx_glphy2lcext_i(gi, gd);
       sprintf(ioslice->slice_x_fname[islc],"%s/slicex_i%d_%s.nc",
                 output_dir,gi,output_fname_part);
 
       ioslice->num_of_slice_x += 1;
 
-      size_t slice_siz = gdcurv->nj * gdcurv->nk;
+      size_t slice_siz = gd->nj * gd->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -491,17 +483,17 @@ io_slice_locate(gdcurv_t  *gdcurv,
   for (int n=0; n < number_of_slice_y; n++)
   {
     int gj = slice_y_index[n];
-    if (gd_info_gindx_is_inner_j(gj, gdcurv)==1)
+    if (gd_info_gindx_is_inner_j(gj, gd)==1)
     {
       int islc = ioslice->num_of_slice_y;
 
-      ioslice->slice_y_indx[islc]  = gd_info_ind_glphy2lcext_j(gj, gdcurv);
+      ioslice->slice_y_indx[islc]  = gd_info_indx_glphy2lcext_j(gj, gd);
       sprintf(ioslice->slice_y_fname[islc],"%s/slicey_j%d_%s.nc",
                 output_dir,gj,output_fname_part);
 
       ioslice->num_of_slice_y += 1;
 
-      size_t slice_siz = gdcurv->ni * gdcurv->nk;
+      size_t slice_siz = gd->ni * gd->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -511,240 +503,20 @@ io_slice_locate(gdcurv_t  *gdcurv,
   for (int n=0; n < number_of_slice_z; n++)
   {
     int gk = slice_z_index[n];
-    if (gd_info_gindx_is_inner_k(gk, gdcurv)==1)
+    if (gd_info_gindx_is_inner_k(gk, gd)==1)
     {
       int islc = ioslice->num_of_slice_z;
 
-      ioslice->slice_z_indx[islc]  = gd_info_ind_glphy2lcext_k(gk, gdcurv);
+      ioslice->slice_z_indx[islc]  = gd_info_indx_glphy2lcext_k(gk, gd);
       sprintf(ioslice->slice_z_fname[islc],"%s/slicez_k%d_%s.nc",
                 output_dir,gk,output_fname_part);
 
       ioslice->num_of_slice_z += 1;
 
-      size_t slice_siz = gdcurv->ni * gdcurv->nj;
+      size_t slice_siz = gd->ni * gd->nj;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
-  }
-
-  return ierr;
-}
-
-int
-io_snapshot_locate(gdcurv_t *gdcurv,
-                   iosnap_t *iosnap,
-                    int  number_of_snapshot,
-                    char **snapshot_name,
-                    int *snapshot_index_start,
-                    int *snapshot_index_count,
-                    int *snapshot_index_incre,
-                    int *snapshot_time_start,
-                    int *snapshot_time_incre,
-                    int *snapshot_save_velocity,
-                    int *snapshot_save_stress,
-                    int *snapshot_save_strain,
-                    char *output_fname_part,
-                    char *output_dir)
-{
-  // malloc to max, num of snap will not be large
-  if (number_of_snapshot > 0)
-  {
-    iosnap->fname = (char **) fdlib_mem_malloc_2l_char(number_of_snapshot,
-                                    CONST_MAX_STRLEN,"snap_fname");
-    iosnap->i1 = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->j1 = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->k1 = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->ni = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->nj = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->nk = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->di = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->dj = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->dk = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->it1 = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->dit = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->out_vel    = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->out_stress = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->out_strain = (int *) malloc(number_of_snapshot * sizeof(int));
-
-    iosnap->i1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->j1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
-    iosnap->k1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
-  }
-
-  // init
-
-  iosnap->siz_max_wrk = 0;
-
-  int isnap = 0;
-
-  for (int n=0; n < number_of_snapshot; n++)
-  {
-    int iptr0 = n*CONST_NDIM;
-
-    // scan output k-index in this proc
-    int gk1 = -1; int ngk =  0; int k_in_nc = 0;
-    for (int n3=0; n3<snapshot_index_count[iptr0+2]; n3++)
-    {
-      int gk = snapshot_index_start[iptr0+2] + n3 * snapshot_index_incre[iptr0+2];
-      if (gd_info_gindx_is_inner_k(gk,gdcurv) == 1)
-      {
-        if (gk1 == -1) {
-          gk1 = gk;
-          k_in_nc = n3;
-        }
-        ngk++;
-      }
-      if (gk > gdcurv->gnk2) break; // no need to larger k
-    }
-
-    // scan output j-index in this proc
-    int gj1 = -1; int ngj =  0; int j_in_nc = 0;
-    for (int n2=0; n2<snapshot_index_count[iptr0+1]; n2++)
-    {
-      int gj = snapshot_index_start[iptr0+1] + n2 * snapshot_index_incre[iptr0+1];
-      if (gd_info_gindx_is_inner_j(gj,gdcurv) == 1)
-      {
-        if (gj1 == -1) {
-          gj1 = gj;
-          j_in_nc = n2;
-        }
-        ngj++;
-      }
-      if (gj > gdcurv->gnj2) break;
-    }
-
-    // scan output i-index in this proc
-    int gi1 = -1; int ngi =  0; int i_in_nc = 0;
-    for (int n1=0; n1<snapshot_index_count[iptr0+0]; n1++)
-    {
-      int gi = snapshot_index_start[iptr0+0] + n1 * snapshot_index_incre[iptr0+0];
-      if (gd_info_gindx_is_inner_i(gi,gdcurv) == 1)
-      {
-        if (gi1 == -1) {
-          gi1 = gi;
-          i_in_nc = n1;
-        }
-        ngi++;
-      }
-      if (gi > gdcurv->gni2) break;
-    }
-
-    // if in this proc
-    if (ngi>0 && ngj>0 && ngk>0)
-    {
-      iosnap->i1[isnap]  = gd_info_ind_glphy2lcext_i(gi1, gdcurv);
-      iosnap->j1[isnap]  = gd_info_ind_glphy2lcext_j(gj1, gdcurv);
-      iosnap->k1[isnap]  = gd_info_ind_glphy2lcext_k(gk1, gdcurv);
-      iosnap->ni[isnap]  = ngi;
-      iosnap->nj[isnap]  = ngj;
-      iosnap->nk[isnap]  = ngk;
-      iosnap->di[isnap]  = snapshot_index_incre[iptr0+0];
-      iosnap->dj[isnap]  = snapshot_index_incre[iptr0+1];
-      iosnap->dk[isnap]  = snapshot_index_incre[iptr0+2];
-
-      iosnap->it1[isnap]  = snapshot_time_start[n];
-      iosnap->dit[isnap]  = snapshot_time_incre[n];
-
-      iosnap->out_vel   [isnap] = snapshot_save_velocity[n];
-      iosnap->out_stress[isnap] = snapshot_save_stress[n];
-      iosnap->out_strain[isnap] = snapshot_save_strain[n];
-
-      iosnap->i1_to_glob[isnap] = i_in_nc;
-      iosnap->j1_to_glob[isnap] = j_in_nc;
-      iosnap->k1_to_glob[isnap] = k_in_nc;
-
-      sprintf(iosnap->fname[isnap],"%s/%s_%s.nc",output_dir,
-                                                 snapshot_name[n],
-                                                 output_fname_part);
-
-      // for max wrk
-      size_t snap_siz =  ngi * ngj * ngk;
-      iosnap->siz_max_wrk = snap_siz > iosnap->siz_max_wrk ? 
-                            snap_siz : iosnap->siz_max_wrk;
-
-      isnap += 1;
-    } // if in this
-  } // loop all snap
-
-  iosnap->num_of_snap = isnap;
-
-  return 0;
-}
-
-/*
- * combine init and creat to reduce funcs call
- */
-
-int
-io_fault_nc_create(iofault_t *iofault, 
-                   int ni, int nj, int nk,
-                   int *topoid, iofault_nc_t *iofault_nc)
-{
-  int ierr = 0;
-  int num_of_fault = iofault->num_of_fault;
-
-  iofault_nc->num_of_fault = num_of_fault;
-  int num_of_vars  = 20;  // not a fixed number, dependent on output
-  iofault_nc->num_of_vars = num_of_vars;
-
-  // malloc vars
-  iofault_nc->ncid   = (int *)malloc(num_of_fault*sizeof(int));
-  iofault_nc->varid  = (int *)malloc(num_of_vars*num_of_fault*sizeof(int));
-
-  int dimid[3];
-  for (int i=0; i<num_of_fault; i++)
-  {
-    // fault slice
-    ierr = nc_create(iofault->fault_fname[i], NC_CLOBBER, &(iofault_nc->ncid[i])); handle_nc_err(ierr);
-    ierr = nc_def_dim(iofault_nc->ncid[i], "time", NC_UNLIMITED, &dimid[0]);       handle_nc_err(ierr); 
-    ierr = nc_def_dim(iofault_nc->ncid[i], "k"   , nk          , &dimid[1]);       handle_nc_err(ierr);   
-    ierr = nc_def_dim(iofault_nc->ncid[i], "j"   , nj          , &dimid[2]);       handle_nc_err(ierr); 
-
-    // define variables
-    ierr = nc_def_var(iofault_nc->ncid[i], "time",      NC_FLOAT, 1, dimid+0, 
-                    &(iofault_nc->varid[0+i*num_of_vars]));  
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
-                    &(iofault_nc->varid[1+i*num_of_vars]));
-    handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
-                    &(iofault_nc->varid[2+i*num_of_vars]));
-    handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "Tn" ,       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[3+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "Ts1",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[4+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "Ts2",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[5+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "Vs",        NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[6+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "Vs1",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[7+i*num_of_vars])); 
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "Vs2",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[8+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip",      NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[9+i*num_of_vars]));
-    handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip1",     NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[10+i*num_of_vars]));
-    handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip2",     NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[11+i*num_of_vars]));
-    handle_nc_err(ierr);   
-
-    // attribute: index info for plot
-    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
-                   NC_INT,1,iofault->fault_x_indx+i);
-    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,3,topoid);
-
-    ierr = nc_enddef(iofault_nc->ncid[i]); handle_nc_err(ierr);
   }
 
   return ierr;
@@ -864,187 +636,9 @@ io_slice_nc_create(ioslice_t *ioslice,
 }
 
 int
-io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
-{
-  int ierr = 0;
-
-  int num_of_snap = iosnap->num_of_snap;
-  char **snap_fname = iosnap->fname;
-
-  iosnap_nc->num_of_snap = num_of_snap;
-  iosnap_nc->ncid = (int *)malloc(num_of_snap*sizeof(int));
-  iosnap_nc->timeid = (int *)malloc(num_of_snap*sizeof(int));
-
-  iosnap_nc->varid_V = (int *)malloc(num_of_snap*CONST_NDIM*sizeof(int));
-  iosnap_nc->varid_T = (int *)malloc(num_of_snap*CONST_NDIM_2*sizeof(int));
-  iosnap_nc->varid_E = (int *)malloc(num_of_snap*CONST_NDIM_2*sizeof(int));
-
-  // will be used in put step
-  iosnap_nc->cur_it = (int *)malloc(num_of_snap*sizeof(int));
-  for (int n=0; n<num_of_snap; n++) {
-    iosnap_nc->cur_it[n] = 0;
-  }
-
-  int *ncid   = iosnap_nc->ncid;
-  int *timeid = iosnap_nc->timeid;
-  int *varid_V = iosnap_nc->varid_V;
-  int *varid_T = iosnap_nc->varid_T;
-  int *varid_E = iosnap_nc->varid_E;
-
-  for (int n=0; n<num_of_snap; n++)
-  {
-    int dimid[4];
-    int snap_i1  = iosnap->i1[n];
-    int snap_j1  = iosnap->j1[n];
-    int snap_k1  = iosnap->k1[n];
-    int snap_ni  = iosnap->ni[n];
-    int snap_nj  = iosnap->nj[n];
-    int snap_nk  = iosnap->nk[n];
-    int snap_di  = iosnap->di[n];
-    int snap_dj  = iosnap->dj[n];
-    int snap_dk  = iosnap->dk[n];
-
-    int snap_out_V = iosnap->out_vel[n];
-    int snap_out_T = iosnap->out_stress[n];
-    int snap_out_E = iosnap->out_strain[n];
-
-    ierr = nc_create(snap_fname[n], NC_CLOBBER, &ncid[n]);       handle_nc_err(ierr);
-    ierr = nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0]); handle_nc_err(ierr);
-    ierr = nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1]);    handle_nc_err(ierr);
-    ierr = nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2]);    handle_nc_err(ierr);
-    ierr = nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3]);    handle_nc_err(ierr);
-    // time var
-    ierr = nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n]); handle_nc_err(ierr);
-    // other vars
-    if (snap_out_V==1) {
-       ierr = nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2]); handle_nc_err(ierr);
-    }
-    if (snap_out_T==1) {
-       ierr = nc_def_var(ncid[n],"Txx",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+0]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Tyy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+1]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Tzz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+2]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Txz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+3]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Tyz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+4]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Txy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+5]); handle_nc_err(ierr);
-    }
-    if (snap_out_E==1) {
-       ierr = nc_def_var(ncid[n],"Exx",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+0]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Eyy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+1]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Ezz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+2]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Exz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+3]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Eyz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+4]); handle_nc_err(ierr);
-       ierr = nc_def_var(ncid[n],"Exy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+5]); handle_nc_err(ierr);
-    }
-    // attribute: index in output snapshot, index w ghost in thread
-    int g_start[] = { iosnap->i1_to_glob[n],
-                      iosnap->j1_to_glob[n],
-                      iosnap->k1_to_glob[n] };
-    nc_put_att_int(ncid[n],NC_GLOBAL,"first_index_to_snapshot_output",
-                   NC_INT,CONST_NDIM,g_start);
-
-    int l_start[] = { snap_i1, snap_j1, snap_k1 };
-    nc_put_att_int(ncid[n],NC_GLOBAL,"first_index_in_this_thread_with_ghosts",
-                   NC_INT,CONST_NDIM,l_start);
-
-    int l_count[] = { snap_di, snap_dj, snap_dk };
-    nc_put_att_int(ncid[n],NC_GLOBAL,"index_stride_in_this_thread",
-                   NC_INT,CONST_NDIM,l_count);
-    nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,3,topoid);
-
-    ierr = nc_enddef(ncid[n]); handle_nc_err(ierr);
-  } // loop snap
-
-  return ierr;
-}
-
-int
-io_fault_nc_put(iofault_nc_t *iofault_nc,
-                gdcurv_t     *gdcurv,
-                fault_t  F,
-                float *buff,
-                int   it,
-                float time)
-{
-  int ierr = 0;
-
-  int   nj  = gdcurv->nj;
-  int   nk  = gdcurv->nk;
-  size_t size = sizeof(float) * nj * nk; 
-
-  size_t startp[] = { it, 0, 0 };
-  size_t countp[] = { 1, nk, nj};
-  size_t start_tdim = it;
-  int  num_of_vars = iofault_nc->num_of_vars;
-
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
-  {
-    nc_put_var1_float(iofault_nc->ncid[i], iofault_nc->varid[0+i*num_of_vars],
-                        &start_tdim, &time);
-
-
-    CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[3+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[4+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[5+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[6+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[7+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[8+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[9+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[10+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[11+i*num_of_vars], startp, countp, buff);
-  }
-
-  return ierr;
-}
-
-int
-io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
-                      gdcurv_t     *gdcurv,
-                      fault_t  F,
-                      float *buff)
-{
-  int ierr = 0;
-
-  int nj  = gdcurv->nj ;
-  int nk  = gdcurv->nk ;
-  size_t size = sizeof(float) * nj * nk; 
-  int  num_of_vars = iofault_nc->num_of_vars;
-
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
-  {
-    CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
-    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[1+i*num_of_vars], buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
-    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[2+i*num_of_vars], buff);
-  }
-
-  return ierr;
-}
-
-int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
-                gdcurv_t     *gdcurv,
+                gd_t     *gd,
                 float *w_end_d,
                 float *buff,
                 int   it,
@@ -1054,18 +648,18 @@ io_slice_nc_put(ioslice_t    *ioslice,
 {
   int ierr = 0;
 
-  int ni1 = gdcurv->ni1;
-  int ni2 = gdcurv->ni2;
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  int ni  = gdcurv->ni ;
-  int nj  = gdcurv->nj ;
-  int nk  = gdcurv->nk ;
-  size_t siz_iy = gdcurv->siz_iy;
-  size_t siz_iz = gdcurv->siz_iz;
-  size_t siz_icmp = gdcurv->siz_icmp;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int ni  = gd->ni ;
+  int nj  = gd->nj ;
+  int nk  = gd->nk ;
+  size_t siz_iy = gd->siz_iy;
+  size_t siz_iz = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
 
@@ -1164,6 +758,253 @@ io_slice_nc_put(ioslice_t    *ioslice,
   return ierr;
 }
 
+int
+io_snapshot_locate(gd_t *gd,
+                   iosnap_t *iosnap,
+                    int  number_of_snapshot,
+                    char **snapshot_name,
+                    int *snapshot_index_start,
+                    int *snapshot_index_count,
+                    int *snapshot_index_incre,
+                    int *snapshot_time_start,
+                    int *snapshot_time_incre,
+                    int *snapshot_save_velocity,
+                    int *snapshot_save_stress,
+                    int *snapshot_save_strain,
+                    char *output_fname_part,
+                    char *output_dir)
+{
+  // malloc to max, num of snap will not be large
+  if (number_of_snapshot > 0)
+  {
+    iosnap->fname = (char **) fdlib_mem_malloc_2l_char(number_of_snapshot,
+                                    CONST_MAX_STRLEN,"snap_fname");
+    iosnap->i1 = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->j1 = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->k1 = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->ni = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->nj = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->nk = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->di = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->dj = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->dk = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->it1 = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->dit = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->out_vel    = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->out_stress = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->out_strain = (int *) malloc(number_of_snapshot * sizeof(int));
+
+    iosnap->i1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->j1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
+    iosnap->k1_to_glob = (int *) malloc(number_of_snapshot * sizeof(int));
+  }
+
+  // init
+
+  iosnap->siz_max_wrk = 0;
+
+  int isnap = 0;
+
+  for (int n=0; n < number_of_snapshot; n++)
+  {
+    int iptr0 = n*CONST_NDIM;
+
+    // scan output k-index in this proc
+    int gk1 = -1; int ngk =  0; int k_in_nc = 0;
+    for (int n3=0; n3<snapshot_index_count[iptr0+2]; n3++)
+    {
+      int gk = snapshot_index_start[iptr0+2] + n3 * snapshot_index_incre[iptr0+2];
+      if (gd_info_gindx_is_inner_k(gk,gd) == 1)
+      {
+        if (gk1 == -1) {
+          gk1 = gk;
+          k_in_nc = n3;
+        }
+        ngk++;
+      }
+      if (gk > gd->gnk2) break; // no need to larger k
+    }
+
+    // scan output j-index in this proc
+    int gj1 = -1; int ngj =  0; int j_in_nc = 0;
+    for (int n2=0; n2<snapshot_index_count[iptr0+1]; n2++)
+    {
+      int gj = snapshot_index_start[iptr0+1] + n2 * snapshot_index_incre[iptr0+1];
+      if (gd_info_gindx_is_inner_j(gj,gd) == 1)
+      {
+        if (gj1 == -1) {
+          gj1 = gj;
+          j_in_nc = n2;
+        }
+        ngj++;
+      }
+      if (gj > gd->gnj2) break;
+    }
+
+    // scan output i-index in this proc
+    int gi1 = -1; int ngi =  0; int i_in_nc = 0;
+    for (int n1=0; n1<snapshot_index_count[iptr0+0]; n1++)
+    {
+      int gi = snapshot_index_start[iptr0+0] + n1 * snapshot_index_incre[iptr0+0];
+      if (gd_info_gindx_is_inner_i(gi,gd) == 1)
+      {
+        if (gi1 == -1) {
+          gi1 = gi;
+          i_in_nc = n1;
+        }
+        ngi++;
+      }
+      if (gi > gd->gni2) break;
+    }
+
+    // if in this proc
+    if (ngi>0 && ngj>0 && ngk>0)
+    {
+      iosnap->i1[isnap]  = gd_info_indx_glphy2lcext_i(gi1, gd);
+      iosnap->j1[isnap]  = gd_info_indx_glphy2lcext_j(gj1, gd);
+      iosnap->k1[isnap]  = gd_info_indx_glphy2lcext_k(gk1, gd);
+      iosnap->ni[isnap]  = ngi;
+      iosnap->nj[isnap]  = ngj;
+      iosnap->nk[isnap]  = ngk;
+      iosnap->di[isnap]  = snapshot_index_incre[iptr0+0];
+      iosnap->dj[isnap]  = snapshot_index_incre[iptr0+1];
+      iosnap->dk[isnap]  = snapshot_index_incre[iptr0+2];
+
+      iosnap->it1[isnap]  = snapshot_time_start[n];
+      iosnap->dit[isnap]  = snapshot_time_incre[n];
+
+      iosnap->out_vel   [isnap] = snapshot_save_velocity[n];
+      iosnap->out_stress[isnap] = snapshot_save_stress[n];
+      iosnap->out_strain[isnap] = snapshot_save_strain[n];
+
+      iosnap->i1_to_glob[isnap] = i_in_nc;
+      iosnap->j1_to_glob[isnap] = j_in_nc;
+      iosnap->k1_to_glob[isnap] = k_in_nc;
+
+      sprintf(iosnap->fname[isnap],"%s/%s_%s.nc",output_dir,
+                                                 snapshot_name[n],
+                                                 output_fname_part);
+
+      // for max wrk
+      size_t snap_siz =  ngi * ngj * ngk;
+      iosnap->siz_max_wrk = snap_siz > iosnap->siz_max_wrk ? 
+                            snap_siz : iosnap->siz_max_wrk;
+
+      isnap += 1;
+    } // if in this
+  } // loop all snap
+
+  iosnap->num_of_snap = isnap;
+
+  return 0;
+}
+
+/*
+ * combine init and creat to reduce funcs call
+ */
+
+
+
+int
+io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
+{
+  int ierr = 0;
+
+  int num_of_snap = iosnap->num_of_snap;
+  char **snap_fname = iosnap->fname;
+
+  iosnap_nc->num_of_snap = num_of_snap;
+  iosnap_nc->ncid = (int *)malloc(num_of_snap*sizeof(int));
+  iosnap_nc->timeid = (int *)malloc(num_of_snap*sizeof(int));
+
+  iosnap_nc->varid_V = (int *)malloc(num_of_snap*CONST_NDIM*sizeof(int));
+  iosnap_nc->varid_T = (int *)malloc(num_of_snap*CONST_NDIM_2*sizeof(int));
+  iosnap_nc->varid_E = (int *)malloc(num_of_snap*CONST_NDIM_2*sizeof(int));
+
+  // will be used in put step
+  iosnap_nc->cur_it = (int *)malloc(num_of_snap*sizeof(int));
+  for (int n=0; n<num_of_snap; n++) {
+    iosnap_nc->cur_it[n] = 0;
+  }
+
+  int *ncid   = iosnap_nc->ncid;
+  int *timeid = iosnap_nc->timeid;
+  int *varid_V = iosnap_nc->varid_V;
+  int *varid_T = iosnap_nc->varid_T;
+  int *varid_E = iosnap_nc->varid_E;
+
+  for (int n=0; n<num_of_snap; n++)
+  {
+    int dimid[4];
+    int snap_i1  = iosnap->i1[n];
+    int snap_j1  = iosnap->j1[n];
+    int snap_k1  = iosnap->k1[n];
+    int snap_ni  = iosnap->ni[n];
+    int snap_nj  = iosnap->nj[n];
+    int snap_nk  = iosnap->nk[n];
+    int snap_di  = iosnap->di[n];
+    int snap_dj  = iosnap->dj[n];
+    int snap_dk  = iosnap->dk[n];
+
+    int snap_out_V = iosnap->out_vel[n];
+    int snap_out_T = iosnap->out_stress[n];
+    int snap_out_E = iosnap->out_strain[n];
+
+    ierr = nc_create(snap_fname[n], NC_CLOBBER, &ncid[n]);       handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0]); handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1]);    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2]);    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3]);    handle_nc_err(ierr);
+    // time var
+    ierr = nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n]); handle_nc_err(ierr);
+    // other vars
+    if (snap_out_V==1) {
+       ierr = nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2]); handle_nc_err(ierr);
+    }
+    if (snap_out_T==1) {
+       ierr = nc_def_var(ncid[n],"Txx",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+0]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tyy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+1]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tzz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+2]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Txz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+3]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tyz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+4]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Txy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+5]); handle_nc_err(ierr);
+    }
+    if (snap_out_E==1) {
+       ierr = nc_def_var(ncid[n],"Exx",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+0]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Eyy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+1]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Ezz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+2]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Exz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+3]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Eyz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+4]); handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Exy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+5]); handle_nc_err(ierr);
+    }
+    // attribute: index in output snapshot, index w ghost in thread
+    int g_start[] = { iosnap->i1_to_glob[n],
+                      iosnap->j1_to_glob[n],
+                      iosnap->k1_to_glob[n] };
+    nc_put_att_int(ncid[n],NC_GLOBAL,"first_index_to_snapshot_output",
+                   NC_INT,CONST_NDIM,g_start);
+
+    int l_start[] = { snap_i1, snap_j1, snap_k1 };
+    nc_put_att_int(ncid[n],NC_GLOBAL,"first_index_in_this_thread_with_ghosts",
+                   NC_INT,CONST_NDIM,l_start);
+
+    int l_count[] = { snap_di, snap_dj, snap_dk };
+    nc_put_att_int(ncid[n],NC_GLOBAL,"index_stride_in_this_thread",
+                   NC_INT,CONST_NDIM,l_count);
+    nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
+                   NC_INT,3,topoid);
+
+    ierr = nc_enddef(ncid[n]); handle_nc_err(ierr);
+  } // loop snap
+
+  return ierr;
+}
+
+
+
+
 /*
  * 
  */
@@ -1171,7 +1012,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
 int
 io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdcurv_t    *gdcurv,
+               gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
                float *w_end_d,
@@ -1186,9 +1027,9 @@ io_snap_nc_put(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_iy = gdcurv->siz_iy;
-  size_t siz_iz = gdcurv->siz_iz;
-  size_t siz_icmp = gdcurv->siz_icmp;
+  size_t siz_iy = gd->siz_iy;
+  size_t siz_iz = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1509,16 +1350,6 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc)
   return 0;
 }
 
-int
-io_fault_nc_close(iofault_nc_t *iofault_nc)
-{
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
-  {
-    nc_close(iofault_nc->ncid[i]);
-  }
-
-  return 0;
-}
 
 int
 io_recv_keep(iorecv_t *iorecv, float *w_end_d, 
@@ -1597,7 +1428,7 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
 }
 
 __global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gdcurv_t gdcurv_d, 
+recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
                    int *flag_indx, int *flag_depth, MPI_Comm comm, int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
@@ -1607,14 +1438,14 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdcurv_t gdcurv_d,
     float sy = all_coords_d[3*ix+1];
     if(flag_indx[ix] == 0 && flag_depth[ix] == 1)
     {
-      gd_curv_depth_to_axis(&gdcurv_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
+      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
     }
   }
 }
 
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gdcurv_t gdcurv_d, 
+                         float *all_inc_d, int num_recv, gd_t gd_d, 
                          int *flag_indx, MPI_Comm comm, int myid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1630,7 +1461,7 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
     if(flag_indx[ix] == 0)
     {
 
-      gd_curv_coord_to_glob_indx_gpu(&gdcurv_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
+      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
       // keep index to avoid duplicat run
       all_index_d[3*ix+0] = ri_glob;
       all_index_d[3*ix+1] = rj_glob;
@@ -1962,17 +1793,17 @@ iorecv_print(iorecv_t *iorecv)
 }
 
 int
-PG_slice_output(float *PG, gdcurv_t *gdcurv, char *output_dir, char *frame_coords, int *topoid)
+PG_slice_output(float *PG, gd_t *gd, char *output_dir, char *frame_coords, int *topoid)
 {
   // output one time z slice
   // used for PGV PGA and PGD
   // cmp is PGV PGA PGD, component x, y, z
-  int nx = gdcurv->nx; 
-  int ny = gdcurv->ny;
-  int ni = gdcurv->ni; 
-  int nj = gdcurv->nj;
-  int gni1 = gdcurv->gni1; 
-  int gnj1 = gdcurv->gnj1; 
+  int nx = gd->nx; 
+  int ny = gd->ny;
+  int ni = gd->ni; 
+  int nj = gd->nj;
+  int gni1 = gd->gni1; 
+  int gnj1 = gd->gnj1; 
   char PG_cmp[CONST_NDIM_5][CONST_MAX_STRLEN] = {"PGV","PGVh","PGVx","PGVy","PGVz",
                                                  "PGA","PGAh","PGAx","PGAy","PGAz",
                                                  "PGD","PGDh","PGDx","PGDy","PGDz"}; 
@@ -2044,4 +1875,210 @@ io_get_nextline(FILE *fp, char *str, int length)
   //fprintf(stdout," --return: %s\n", str);
 
   return ierr;
+}
+int
+io_fault_locate(gd_t *gd, 
+                iofault_t *iofault,
+                int number_of_fault,
+                int *fault_x_index,
+                char *output_fname_part,
+                char *output_dir)
+{
+  int ierr = 0;
+  iofault->siz_max_wrk = 0;
+
+  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(number_of_fault,
+                                   CONST_MAX_STRLEN,"fault_fname");
+
+  iofault->fault_x_indx = (int *) malloc(number_of_fault * sizeof(int));
+
+  iofault->num_of_fault = 0;
+
+  for (int i=0; i<number_of_fault; i++)
+  {
+    int gi = fault_x_index[i];
+    if(gd_info_gindx_is_inner_i(gi, gd)==1)
+    {
+      int islc = iofault->num_of_fault;
+
+      iofault->fault_x_indx[islc] =  gd_info_indx_glphy2lcext_i(gi, gd);
+      sprintf(iofault->fault_fname[islc],"%s/fault_i%d_%s.nc",
+                output_dir,gi,output_fname_part);
+
+      iofault->num_of_fault += 1;
+
+      size_t slice_siz = gd->nj * gd->nk;
+      iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
+                             slice_siz : iofault->siz_max_wrk;
+    }
+  }
+
+  return ierr;
+}
+
+int
+io_fault_nc_create(iofault_t *iofault, 
+                   int ni, int nj, int nk,
+                   int *topoid, iofault_nc_t *iofault_nc)
+{
+  int ierr = 0;
+  int num_of_fault = iofault->num_of_fault;
+
+  iofault_nc->num_of_fault = num_of_fault;
+  int num_of_vars  = 20;  // not a fixed number, dependent on output
+  iofault_nc->num_of_vars = num_of_vars;
+
+  // malloc vars
+  iofault_nc->ncid   = (int *)malloc(num_of_fault*sizeof(int));
+  iofault_nc->varid  = (int *)malloc(num_of_vars*num_of_fault*sizeof(int));
+
+  int dimid[3];
+  for (int i=0; i<num_of_fault; i++)
+  {
+    // fault slice
+    ierr = nc_create(iofault->fault_fname[i], NC_CLOBBER, &(iofault_nc->ncid[i])); handle_nc_err(ierr);
+    ierr = nc_def_dim(iofault_nc->ncid[i], "time", NC_UNLIMITED, &dimid[0]);       handle_nc_err(ierr); 
+    ierr = nc_def_dim(iofault_nc->ncid[i], "k"   , nk          , &dimid[1]);       handle_nc_err(ierr);   
+    ierr = nc_def_dim(iofault_nc->ncid[i], "j"   , nj          , &dimid[2]);       handle_nc_err(ierr); 
+
+    // define variables
+    ierr = nc_def_var(iofault_nc->ncid[i], "time",      NC_FLOAT, 1, dimid+0, 
+                    &(iofault_nc->varid[0+i*num_of_vars]));  
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
+                    &(iofault_nc->varid[1+i*num_of_vars]));
+    handle_nc_err(ierr);   
+    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
+                    &(iofault_nc->varid[2+i*num_of_vars]));
+    handle_nc_err(ierr);   
+    ierr = nc_def_var(iofault_nc->ncid[i], "Tn" ,       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[3+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "Ts1",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[4+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "Ts2",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[5+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs",        NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[6+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs1",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[7+i*num_of_vars])); 
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "Vs2",       NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[8+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip",      NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[9+i*num_of_vars]));
+    handle_nc_err(ierr);
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip1",     NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[10+i*num_of_vars]));
+    handle_nc_err(ierr);   
+    ierr = nc_def_var(iofault_nc->ncid[i], "slip2",     NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[11+i*num_of_vars]));
+    handle_nc_err(ierr);   
+
+    // attribute: index info for plot
+    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
+                   NC_INT,1,iofault->fault_x_indx+i);
+    nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"coords_of_mpi_topo",
+                   NC_INT,3,topoid);
+
+    ierr = nc_enddef(iofault_nc->ncid[i]); handle_nc_err(ierr);
+  }
+
+  return ierr;
+}
+
+int
+io_fault_nc_put(iofault_nc_t *iofault_nc,
+                gd_t     *gd,
+                fault_t  F,
+                float *buff,
+                int   it,
+                float time)
+{
+  int ierr = 0;
+
+  int   nj  = gd->nj;
+  int   nk  = gd->nk;
+  size_t size = sizeof(float) * nj * nk; 
+
+  size_t startp[] = { it, 0, 0 };
+  size_t countp[] = { 1, nk, nj};
+  size_t start_tdim = it;
+  int  num_of_vars = iofault_nc->num_of_vars;
+
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    nc_put_var1_float(iofault_nc->ncid[i], iofault_nc->varid[0+i*num_of_vars],
+                        &start_tdim, &time);
+
+
+    CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[3+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[4+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[5+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[6+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[7+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[8+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[9+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[10+i*num_of_vars], startp, countp, buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[11+i*num_of_vars], startp, countp, buff);
+  }
+
+  return ierr;
+}
+
+int
+io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
+                      gd_t     *gd,
+                      fault_t  F,
+                      float *buff)
+{
+  int ierr = 0;
+
+  int nj  = gd->nj ;
+  int nk  = gd->nk ;
+  size_t size = sizeof(float) * nj * nk; 
+  int  num_of_vars = iofault_nc->num_of_vars;
+
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
+    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[1+i*num_of_vars], buff);
+
+    CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
+    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[2+i*num_of_vars], buff);
+  }
+
+  return ierr;
+}
+
+int
+io_fault_nc_close(iofault_nc_t *iofault_nc)
+{
+  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  {
+    nc_close(iofault_nc->ncid[i]);
+  }
+
+  return 0;
 }

@@ -6,10 +6,11 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
+EXEC_WAVE=`pwd`/../../dynamic3d
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
@@ -31,23 +32,37 @@ mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
 #----------------------------------------------------------------------
+#----------------------------------------------------------------------
+#-- grid and mpi configurations
+#----------------------------------------------------------------------
+
+#-- total x grid points
+NX=100
+#-- total y grid points
+NY=400
+#-- total z grid points
+NZ=200
+#-- total ympi procs
+NPROCS_Y=2
+#-- total z mpi procs
+NPROCS_Z=2
 #-- create main conf
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 100,
-  "number_of_total_grid_points_y" : 400,
-  "number_of_total_grid_points_z" : 200,
+  "number_of_total_grid_points_x" : ${NX},
+  "number_of_total_grid_points_y" : ${NY},
+  "number_of_total_grid_points_z" : ${NZ},
 
-  "number_of_mpiprocs_y" : 2,
-  "number_of_mpiprocs_z" : 2,
+  "number_of_mpiprocs_y" : $NPROCS_Y,
+  "number_of_mpiprocs_z" : $NPROCS_Z,
 
   "dynamic_method" : 1,
-  "fault_grid" : [51,350,51,200],
+  "fault_grid" : [51,350,51,400],
 
   "size_of_time_step" : 0.005,
   "number_of_time_steps" : 3000,
-  "#time_window_length" : 4,
+  "#time_window_length" : 15,
   "check_stability" : 1,
   "io_time_skip" : 2,
 
@@ -102,8 +117,8 @@ cat << ieof > $PAR_FILE
         "fault_inteval" : 100.0,
         "fault_x_index" : [ 50 ]
       },
-      "#grid_with_fault" : {
-        "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
+      "#grid_import" : {
+        "import_dir" : "${INPUTDIR}/prep_fault",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
         "fault_x_index" : [100 ]
       }
@@ -151,7 +166,7 @@ cat << ieof > $PAR_FILE
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "in_station_file" : "$INPUTDIR/prep_station/station.list",
+  "in_station_file" : "$INPUTDIR/station.list",
 
   "#receiver_line" : [
     {
@@ -174,11 +189,11 @@ cat << ieof > $PAR_FILE
       "z_index" : [ 199 ]
   },
 
-  "#snapshot" : [
+  "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 199 ],
-      "grid_index_count" : [ 100,400, 1 ],
+      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
@@ -234,4 +249,4 @@ fi
 
 date
 
-# vim:ft=conf:ts=4:sw=4:nu:et:ai:
+# vim:ts=4:sw=4:nu:et:ai:

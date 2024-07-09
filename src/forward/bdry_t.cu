@@ -22,7 +22,7 @@
  */
 
 int
-bdry_free_set(gdcurv_t    *gdcurv,
+bdry_free_set(gd_t    *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
@@ -30,7 +30,7 @@ bdry_free_set(gdcurv_t    *gdcurv,
 {
   int ierr = 0;
 
-  size_t siz_iz  = gdcurv->siz_iz;
+  size_t siz_iz  = gd->siz_iz;
 
   // default disable
   bdryfree->is_enable_free = 0;
@@ -78,7 +78,7 @@ bdry_free_set(gdcurv_t    *gdcurv,
  * set up abs_coefs for cfs-pml
  */
 void
-bdry_pml_set(gdcurv_t *gdcurv,
+bdry_pml_set(gd_t *gd,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -89,17 +89,17 @@ bdry_pml_set(gdcurv_t *gdcurv,
              float in_velocity[][2], //
              int verbose)
 {
-  int ni1 = gdcurv->ni1;
-  int ni2 = gdcurv->ni2;
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  int nx  = gdcurv->nx ;
-  int ny  = gdcurv->ny ;
-  int nz  = gdcurv->nz ;
-  int siz_iy = gdcurv->siz_iy;
-  int siz_iz = gdcurv->siz_iz;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nx  = gd->nx ;
+  int ny  = gd->ny ;
+  int nz  = gd->nz ;
+  int siz_iy = gd->siz_iy;
+  int siz_iz = gd->siz_iz;
 
   // default disable
   bdrypml->is_enable_pml = 0;
@@ -190,7 +190,7 @@ bdry_pml_set(gdcurv_t *gdcurv,
 
       // esti L0 and dh
       float L0, dh;
-      bdry_cal_abl_len_dh(gdcurv,bdrypml->ni1[idim][iside],
+      bdry_cal_abl_len_dh(gd,bdrypml->ni1[idim][iside],
                                  bdrypml->ni2[idim][iside],
                                  bdrypml->nj1[idim][iside],
                                  bdrypml->nj2[idim][iside],
@@ -329,7 +329,7 @@ bdry_pml_cal_b(float x, float L, float bmax)
 //---------------------------------------------
 //esti L and dh along idim damping layers
 int
-bdry_cal_abl_len_dh(gdcurv_t *gdcurv, 
+bdry_cal_abl_len_dh(gd_t *gd, 
                     int abs_ni1, int abs_ni2,
                     int abs_nj1, int abs_nj2,
                     int abs_nk1, int abs_nk2,
@@ -338,12 +338,12 @@ bdry_cal_abl_len_dh(gdcurv_t *gdcurv,
 {
   int ierr = 0;
 
-  int siz_iy  = gdcurv->siz_iy;
-  int siz_iz = gdcurv->siz_iz;
+  int siz_iy  = gd->siz_iy;
+  int siz_iz = gd->siz_iz;
 
-  float *x3d = gdcurv->x3d;
-  float *y3d = gdcurv->y3d;
-  float *z3d = gdcurv->z3d;
+  float *x3d = gd->x3d;
+  float *y3d = gd->y3d;
+  float *z3d = gd->z3d;
 
   double L  = 0.0;
   double dh = 0.0;
@@ -453,7 +453,7 @@ bdry_cal_abl_len_dh(gdcurv_t *gdcurv,
  */
 
 int
-bdry_ablexp_set(gdcurv_t *gdcurv,
+bdry_ablexp_set(gd_t *gd,
                 wav_t *wav,
                 bdryexp_t *bdryexp,
                 int   *neighid, 
@@ -465,20 +465,20 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
                 int verbose)
 {
   int ierr = 0;
-  int ni1 = gdcurv->ni1;
-  int ni2 = gdcurv->ni2;
-  int nj1 = gdcurv->nj1;
-  int nj2 = gdcurv->nj2;
-  int nk1 = gdcurv->nk1;
-  int nk2 = gdcurv->nk2;
-  int ni  = gdcurv->ni ;
-  int nj  = gdcurv->nj ;
-  int nk  = gdcurv->nk ;
-  int nx  = gdcurv->nx ;
-  int ny  = gdcurv->ny ;
-  int nz  = gdcurv->nz ;
-  int siz_iy = gdcurv->siz_iy;
-  int siz_iz = gdcurv->siz_iz;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int ni  = gd->ni ;
+  int nj  = gd->nj ;
+  int nk  = gd->nk ;
+  int nx  = gd->nx ;
+  int ny  = gd->ny ;
+  int nz  = gd->nz ;
+  int siz_iy = gd->siz_iy;
+  int siz_iz = gd->siz_iz;
   int abs_number[CONST_NDIM][2];
   int n;
 
@@ -548,7 +548,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
 
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -577,7 +577,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
 
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -613,7 +613,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
      D[n].enable = 1;
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -646,7 +646,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
      D[n].enable = 1;
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -679,7 +679,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
      D[n].enable = 1;
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -712,7 +712,7 @@ bdry_ablexp_set(gdcurv_t *gdcurv,
      D[n].enable = 1;
      // esti L0 and dh
      float L0, dh;
-     bdry_cal_abl_len_dh(gdcurv,D[n].ni1,
+     bdry_cal_abl_len_dh(gd,D[n].ni1,
                                 D[n].ni2,
                                 D[n].nj1,
                                 D[n].nj2,
@@ -753,15 +753,15 @@ bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh)
 }
 
 int
-bdry_ablexp_apply(bdryexp_t bdryexp, gdcurv_t *gdcurv, float *w_end, int ncmp)
+bdry_ablexp_apply(bdryexp_t bdryexp, gd_t *gd, float *w_end, int ncmp)
 {
   float *Ex = bdryexp.ablexp_Ex;
   float *Ey = bdryexp.ablexp_Ey;
   float *Ez = bdryexp.ablexp_Ez;
 
-  size_t siz_iy   = gdcurv->siz_iy;
-  size_t siz_iz   = gdcurv->siz_iz;
-  size_t siz_icmp = gdcurv->siz_icmp;
+  size_t siz_iy   = gd->siz_iy;
+  size_t siz_iz   = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
   bdry_block_t *D = bdryexp.bdry_blk;
 

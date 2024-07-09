@@ -346,7 +346,7 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
-      par->grid_generation_itype = PAR_FAULT_PLANE;
+      par->grid_generation_itype = FAULT_PLANE;
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
          sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
       }
@@ -371,10 +371,10 @@ par_read_from_str(const char *str, par_t *par)
       }
     }
     // 3D grid import
-    if (subitem = cJSON_GetObjectItem(item, "grid_with_fault")) {
-      par->grid_generation_itype = PAR_GRID_WITH_FAULT;
-      if (thirditem = cJSON_GetObjectItem(subitem, "grid_file")) {
-         sprintf(par->grid_coord_nc, "%s", thirditem->valuestring);
+    if (subitem = cJSON_GetObjectItem(item, "grid_import")) {
+      par->grid_generation_itype = GRID_IMPORT;
+      if (thirditem = cJSON_GetObjectItem(subitem, "grid_dir")) {
+         sprintf(par->grid_import_dir, "%s", thirditem->valuestring);
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
          sprintf(par->init_stress_nc, "%s", thirditem->valuestring);

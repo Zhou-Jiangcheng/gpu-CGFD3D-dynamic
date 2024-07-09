@@ -168,7 +168,7 @@ iosnap_nc_t;
  * function prototype
  *************************************************/
 int
-io_recv_read_locate(gdcurv_t *gdcurv,
+io_recv_read_locate(gd_t *gd,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
@@ -179,7 +179,7 @@ io_recv_read_locate(gdcurv_t *gdcurv,
                     int       verbose);
 
 int
-io_line_locate(gdcurv_t *gdcurv,
+io_line_locate(gd_t *gd,
                ioline_t *ioline,
                int    num_of_vars,
                int    nt_total,
@@ -190,7 +190,7 @@ io_line_locate(gdcurv_t *gdcurv,
                char **receiver_line_name);
 
 int
-io_fault_locate(gdcurv_t *gdcurv, 
+io_fault_locate(gd_t *gd, 
                 iofault_t *iofault,
                 int number_of_fault,
                 int *fault_x_index,
@@ -198,7 +198,7 @@ io_fault_locate(gdcurv_t *gdcurv,
                 char *output_dir);
 
 int
-io_slice_locate(gdcurv_t  *gdcurv,
+io_slice_locate(gd_t  *gd,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
                 int  number_of_slice_y,
@@ -210,7 +210,7 @@ io_slice_locate(gdcurv_t  *gdcurv,
                 char *output_dir);
 
 int
-io_snapshot_locate(gdcurv_t *gdcurv,
+io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,
                     char **snapshot_name,
@@ -241,7 +241,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
 
 int
 io_fault_nc_put(iofault_nc_t *iofault_nc,
-                gdcurv_t     *gdcurv,
+                gd_t     *gd,
                 fault_t  F,
                 float *buff,
                 int   it,
@@ -249,14 +249,14 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 
 int
 io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
-                      gdcurv_t     *gdcurv,
+                      gd_t     *gd,
                       fault_t  F,
                       float *buff);
 
 int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
-                gdcurv_t     *gdcurv,
+                gd_t     *gd,
                 float *w4d,
                 float *buff,
                 int   it,
@@ -267,7 +267,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
 int
 io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdcurv_t    *gdcurv,
+               gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
                float *w4d,
@@ -348,13 +348,13 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
              float *buff, int it, int ncmp, size_t siz_icmp);
 
 __global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gdcurv_t gdcurv_d, 
+recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
                    int *flag_indx, int *flag_depth, 
                    MPI_Comm comm, int myid);
 
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gdcurv_t gdcurv_d, 
+                         float *all_inc_d, int num_recv, gd_t gd_d, 
                          int *flag_indx, MPI_Comm comm, int myid);
 
 //use trilinear interpolation 
@@ -422,7 +422,7 @@ int
 iorecv_print(iorecv_t *iorecv);
 
 int
-PG_slice_output(float *PG,  gdcurv_t *gdcurv, char *output_dir, char *frame_coords, int* topoid);
+PG_slice_output(float *PG,  gd_t *gd, char *output_dir, char *frame_coords, int* topoid);
 
 int
 io_get_nextline(FILE *fp, char *str, int length);

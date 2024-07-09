@@ -16,7 +16,7 @@ trial_slipweakening_onestage(
                   int i0,
                   int isfree,
                   float dt,
-                  gdcurv_t gdcurv_d,
+                  gd_t gd_d,
                   gd_metric_t metric_d,
                   wav_t wav_d,
                   fault_wav_t FW,

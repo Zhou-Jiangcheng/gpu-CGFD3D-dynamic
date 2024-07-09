@@ -167,7 +167,7 @@ float
 bdry_pml_cal_b(float x, float L, float bmax);
 
 void
-bdry_pml_set(gdcurv_t *gdcurv,
+bdry_pml_set(gd_t *gd,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -186,7 +186,7 @@ bdry_pml_auxvar_init(int nx, int ny, int nz,
                      const int verbose);
 
 int
-bdry_cal_abl_len_dh(gdcurv_t *gdcurv, 
+bdry_cal_abl_len_dh(gd_t *gd, 
                     int abs_ni1, int abs_ni2,
                     int abs_nj1, int abs_nj2,
                     int abs_nk1, int abs_nk2,
@@ -194,14 +194,14 @@ bdry_cal_abl_len_dh(gdcurv_t *gdcurv,
                     float *avg_L, float *avg_dh);
 
 int
-bdry_free_set(gdcurv_t    *gdcurv,
+bdry_free_set(gd_t    *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
               const int verbose);
 
 int
-bdry_ablexp_set(gdcurv_t *gdcurv,
+bdry_ablexp_set(gd_t *gd,
                 wav_t *wav,
                 bdryexp_t *bdryexp,
                 int   *neighid, 
@@ -216,7 +216,7 @@ float
 bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh);
 
 int
-bdry_ablexp_apply(bdryexp_t bdryexp, gdcurv_t *gdcurv, float *w_end, int ncmp);
+bdry_ablexp_apply(bdryexp_t bdryexp, gd_t *gd, float *w_end, int ncmp);
 
 __global__ 
 void
