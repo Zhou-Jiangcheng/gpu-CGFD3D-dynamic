@@ -1,16 +1,14 @@
-% close all
+close all
 clc;
 clear;
 addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-% parfnm='../../project/params.json'
-% output_dir='../../project/output'
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project/test.json'
+output_dir='../../project/output'
 
-fault_index = 100;
+id=1;
 
 par = loadjson(parfnm);
 nproi=1;
@@ -20,11 +18,11 @@ j1 = par.fault_grid(1);
 j2 = par.fault_grid(2);
 k1 = par.fault_grid(3);
 k2 = par.fault_grid(4);
-
+fault_index = par.grid_generation_method.fault_x_index;
 savegif = 0;
 filename = ['Vs-ts-l-7.44.gif'];
 nt = fault_num_time(output_dir);
-[x,y,z] = gather_fault_coord(output_dir,fault_index,nproj,nprok);
+[x,y,z] = gather_fault_coord(output_dir,fault_index(id),nproj,nprok);
 
 x = x * 1e-3;
 y = y * 1e-3;
@@ -35,7 +33,7 @@ y1 = y(k1:k2, j1:j2);
 z1 = z(k1:k2, j1:j2);
 
 figure;
-for nlayer = 100 : 50 : 1500
+for nlayer = 1000 : 50 : 1000
 % disp(it);
 [Vs1,t] = gather_fault(output_dir,nlayer,'Vs1',nproj,nprok);
 [Vs2,t] = gather_fault(output_dir,nlayer,'Vs2',nproj,nprok);

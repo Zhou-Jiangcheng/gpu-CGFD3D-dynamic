@@ -19,11 +19,6 @@
 #include "alloc.h"
 
 /*
- * export to a single file
- */
-
-
-/*
  * read in station list file and locate station
  */
 int
@@ -639,12 +634,10 @@ int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
                 gd_t     *gd,
-                float *w_end_d,
+                float *w_pre_d,
                 float *buff,
                 int   it,
-                float time,
-                int   i1_cmp,
-                int   i2_cmp)
+                float time)
 {
   int ierr = 0;
 
@@ -681,9 +674,9 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_pre_d + ivar * siz_icmp;
       io_slice_pack_buff_x<<<grid, block>>>(i,nj,nk,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -711,9 +704,9 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_pre_d + ivar * siz_icmp;
       io_slice_pack_buff_y<<<grid, block>>>(j,ni,nk,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -742,9 +735,9 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars; ivar++)
     {
-      float *var = w_end_d + ivar * siz_icmp;
+      float *var = w_pre_d + ivar * siz_icmp;
       io_slice_pack_buff_z<<<grid, block>>>(k,ni,nj,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
@@ -899,11 +892,6 @@ io_snapshot_locate(gd_t *gd,
   return 0;
 }
 
-/*
- * combine init and creat to reduce funcs call
- */
-
-
 
 int
 io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
@@ -1015,14 +1003,11 @@ io_snap_nc_put(iosnap_t *iosnap,
                gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
-               float *w_end_d,
+               float *w_pre_d,
                float *buff,
                int   nt_total,
                int   it,
-               float time,
-               int is_run_out_vel,     // for stg, out vel and stress at sep call
-               int is_run_out_stress,  // 
-               int is_incr_cur_it)     // for stg, should output cur_it once
+               float time)
 {
   int ierr = 0;
 
@@ -1073,24 +1058,24 @@ io_snap_nc_put(iosnap_t *iosnap,
       grid.y = (snap_nj+block.y-1)/block.y;
       grid.z = (snap_nk+block.z-1)/block.z;
       // vel
-      if (is_run_out_vel == 1 && snap_out_V==1)
+      if (snap_out_V==1)
       {
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vx_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Vx_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+0*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+0],
               startp,countp,buff+0*siz_icmp);
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vy_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Vy_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+1*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+1],
               startp,countp,buff+1*siz_icmp);
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vz_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Vz_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+2*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
@@ -1098,52 +1083,84 @@ io_snap_nc_put(iosnap_t *iosnap,
               startp,countp,buff+2*siz_icmp);
       }
 
-      if (is_run_out_stress==1 && snap_out_T==1)
+      if (snap_out_T==1)
       {
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txx_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txx_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+3*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+0],
               startp,countp,buff+3*siz_icmp);
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyy_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tyy_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+4*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+1],
               startp,countp,buff+4*siz_icmp);
         
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tzz_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tzz_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+5*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+2],
               startp,countp,buff+5*siz_icmp);
         
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txz_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txz_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+6*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+3],
               startp,countp,buff+6*siz_icmp);
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyz_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tyz_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+7*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+4],
               startp,countp,buff+7*siz_icmp);
 
-        io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txy_pos,
+        io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txy_pos,
                  siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
         CUDACHECK(cudaMemcpy(buff+8*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+5],
               startp,countp,buff+8*siz_icmp);
       }
-      if (is_run_out_stress==1 && snap_out_E==1)
+      if (snap_out_E==1)
       {
+        if (snap_out_T==0)
+        {
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txx_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+3*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tyy_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+4*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+          
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tzz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+5*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+          
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+6*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Tyz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+7*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_pre_d + wav->Txy_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+8*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+        }
         // convert to strain
         io_snap_stress_to_strain_eliso(md->lambda,md->mu,
                                        buff + 3*siz_icmp,   //Txx
@@ -1176,9 +1193,7 @@ io_snap_nc_put(iosnap_t *iosnap,
 
       }
 
-      if (is_incr_cur_it == 1) {
-        iosnap_nc->cur_it[n] += 1;
-      }
+      iosnap_nc->cur_it[n] += 1;
 
       CUDACHECK(cudaFree(buff_d));
     } // if it
@@ -1352,7 +1367,7 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc)
 
 
 int
-io_recv_keep(iorecv_t *iorecv, float *w_end_d, 
+io_recv_keep(iorecv_t *iorecv, float *w_pre_d, 
              float *buff, int it, int ncmp, size_t siz_icmp)
 {
   float Lx1, Lx2, Ly1, Ly2, Lz1, Lz2;
@@ -1374,7 +1389,7 @@ io_recv_keep(iorecv_t *iorecv, float *w_end_d,
     Ly2 = this_recv->dj; Ly1 = 1.0 - Ly2;
     Lz2 = this_recv->dk; Lz1 = 1.0 - Lz2;
 
-    io_recv_line_interp_pack_buff<<<grid, block>>> (w_end_d, buff_d, ncmp, siz_icmp, indx1d_d);
+    io_recv_line_interp_pack_buff<<<grid, block>>> (w_pre_d, buff_d, ncmp, siz_icmp, indx1d_d);
     CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
     for (int icmp=0; icmp < ncmp; icmp++)
     {
@@ -1396,7 +1411,7 @@ io_recv_keep(iorecv_t *iorecv, float *w_end_d,
 }
 
 int
-io_line_keep(ioline_t *ioline, float *w_end_d,
+io_line_keep(ioline_t *ioline, float *w_pre_d,
              float *buff, int it, int ncmp, size_t siz_icmp)
 {
   int size = sizeof(float)*ncmp;
@@ -1413,7 +1428,7 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
     {
       int iptr = this_line_iptr[ir];
       float *this_seismo = this_line_seismo + ir * ioline->max_nt * ncmp;
-      io_recv_line_pack_buff<<<grid, block>>>(w_end_d, buff_d, ncmp, siz_icmp, iptr);
+      io_recv_line_pack_buff<<<grid, block>>>(w_pre_d, buff_d, ncmp, siz_icmp, iptr);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
       for (int icmp=0; icmp < ncmp; icmp++)
       {

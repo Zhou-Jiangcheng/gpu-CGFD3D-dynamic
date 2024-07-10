@@ -209,6 +209,24 @@ drv_rk_curv_col_allstep(
     t_cur = it * dt + t0;
     t_end = t_cur +dt;
 
+    //-- recv by interp
+    io_recv_keep(iorecv, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+
+    //-- line values
+    io_line_keep(ioline, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+    if(it%io_time_skip == 0)
+    {
+      int it_skip = (int)(it/io_time_skip);
+      // io fault var each dt, use w_buff as buff
+      io_fault_nc_put(&iofault_nc, gd, fault_d, w_buff, it_skip, t_cur);
+      // write slice, use w_buff as buff
+      io_slice_nc_put(ioslice,&ioslice_nc,gd,w_pre_d,w_buff,it_skip,t_cur);
+    }
+    // snapshot
+    io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
+                   w_pre_d, w_buff, nt_total, it, t_cur);
+
+
     if (myid==0 && verbose>10) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
@@ -584,23 +602,6 @@ drv_rk_curv_col_allstep(
 
     // calculate fault slip, Vs, ... at each dt  
     fault_var_update(f_end_d, it, dt, gd_d, fault_d, fault_coef_d, fault_wav_d);
-
-    //-- recv by interp
-    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
-
-    //-- line values
-    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
-    if((it+1)%io_time_skip == 0)
-    {
-      int it_skip = (int)(it/io_time_skip);
-      // io fault var each dt, use w_buff as buff
-      io_fault_nc_put(&iofault_nc, gd, fault_d, w_buff, it_skip, t_end);
-      // write slice, use w_buff as buff
-      io_slice_nc_put(ioslice,&ioslice_nc,gd,w_end_d,w_buff,it_skip,t_end,0,wav->ncmp-1);
-    }
-    // snapshot
-    io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
-                   w_end_d, w_buff, nt_total, it, t_end, 1,1,1);
 
     // swap w_pre and w_end pointer, avoid copying
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;

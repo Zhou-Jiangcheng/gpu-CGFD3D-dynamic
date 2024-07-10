@@ -344,6 +344,14 @@ par_read_from_str(const char *str, par_t *par)
   }
 
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
+    if (subitem = cJSON_GetObjectItem(item, "fault_x_index")) {
+      par->number_of_fault = cJSON_GetArraySize(subitem);
+      par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
+      for (int i=0; i<par->number_of_fault; i++)
+      {
+        par->fault_x_index[i] = cJSON_GetArrayItem(subitem, i)->valueint;
+      }
+    }
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
       par->grid_generation_itype = FAULT_PLANE;
@@ -356,18 +364,10 @@ par_read_from_str(const char *str, par_t *par)
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
         par->dh = thirditem->valueint;
       }
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_x_index")) {
-        par->number_of_fault = cJSON_GetArraySize(thirditem);
-        if(par->number_of_fault != 1)
-        {
-          fprintf(stderr,"Error: use this method, only support has 1 fault\n");
-          MPI_Abort(MPI_COMM_WORLD,9);
-        }
-        par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
-        for (int i=0; i<par->number_of_fault; i++)
-        {
-          par->fault_x_index[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-        }
+      if(par->number_of_fault != 1)
+      {
+        fprintf(stderr,"Error: use this method, only support has 1 fault\n");
+        MPI_Abort(MPI_COMM_WORLD,9);
       }
     }
     // 3D grid import
@@ -378,14 +378,6 @@ par_read_from_str(const char *str, par_t *par)
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
          sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
-      }
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_x_index")) {
-        par->number_of_fault = cJSON_GetArraySize(thirditem);
-        par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
-        for (int i=0; i<par->number_of_fault; i++)
-        {
-          par->fault_x_index[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-        }
       }
     }
   }

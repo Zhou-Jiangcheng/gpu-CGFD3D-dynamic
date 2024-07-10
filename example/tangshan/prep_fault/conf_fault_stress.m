@@ -15,7 +15,7 @@ k1 = 78;
 k2 = 300;
 
 
-mu_s = 0.357; 
+mu_s = 0.340; 
 mu_d = 0.275; 
 Dc = 0.4;
 
@@ -52,7 +52,7 @@ Angle_SH = 87;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate
-angle = 220;
+angle = 120;
 Angle_x = 90 + angle; 
 
 % Degree in counter-clockwise,

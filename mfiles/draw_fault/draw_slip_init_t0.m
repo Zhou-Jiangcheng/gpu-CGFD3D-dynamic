@@ -6,8 +6,10 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json'
-output_dir='../../project1/output'
+parfnm='../../project/test.json'
+output_dir='../../project/output'
+
+id=1;
 
 par = loadjson(parfnm);
 nproi=1;
@@ -17,9 +19,10 @@ j1 = par.fault_grid(1);
 j2 = par.fault_grid(2);
 k1 = par.fault_grid(3);
 k2 = par.fault_grid(4);
+fault_index = par.grid_generation_method.fault_x_index;
 nt = fault_num_time(output_dir);
 
-[x,y,z] = gather_fault_coord(output_dir,nproj,nprok);
+[x,y,z] = gather_fault_coord(output_dir,fault_index(id),nproj,nprok);
 
 x = x * 1e-3;
 y = y * 1e-3;
@@ -42,7 +45,7 @@ t1 = t0(k1:k2, j1:j2);
 % figure control parameters
 flag_print = 0;
 % get time contour
-vec_t = 1:1:12;
+vec_t = 1:1:25;
 
 h0 = figure;
 [C1,h] = contour(x1,z1,t1,vec_t,'k','ShowText','on');
@@ -73,10 +76,10 @@ t_z = C1(2,:);
 close all
 % draw the rupture time
 figure(1)
-surf(x1, y1, z1, Us1(j1:j2,k1:k2) ); 
+surf(x1, y1, z1, Us1(k1:k2,j1:j2)); 
 hold on;
 temp = 0;
-for ii = 1:2
+for ii = 1:count
     plot3(t_x(temp+1:temp+n(ii)),t_y(temp+1:temp+n(ii)),t_z(temp+1:temp+n(ii)),'r','linewidth',1.0);
     temp = temp + n(ii);
     hold on;
@@ -116,7 +119,7 @@ if flag_print==1
 end
 %%
 figure(2)
-surf(x1, y1, z1, Us2(j1:j2,k1:k2) ); 
+surf(x1, y1, z1, Us2(k1:k2,j1:j2) ); 
 hold on;
 temp = 0;
 for ii = 1:count

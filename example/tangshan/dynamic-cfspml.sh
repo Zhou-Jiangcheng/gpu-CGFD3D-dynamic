@@ -6,10 +6,11 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../../main_curv_col_el_3d
+EXEC_WAVE=`pwd`/../../main
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
@@ -17,10 +18,12 @@ INPUTDIR=`pwd`
 
 #-- output and conf
 PROJDIR=`pwd`/../../project
-PAR_FILE=${PROJDIR}/params.json
+PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
+
+rm -rf ${PROJDIR}
 
 #-- create dir
 mkdir -p $PROJDIR
@@ -29,23 +32,40 @@ mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
 #----------------------------------------------------------------------
+#----------------------------------------------------------------------
+#-- grid and mpi configurations
+#----------------------------------------------------------------------
+VERBOSE=100
+GPU_ID=0
+
+#-- total x grid points
+NX=200
+#-- total y grid points
+NY=960
+#-- total z grid points
+NZ=300
+#-- total ympi procs
+NPROCS_Y=2
+#-- total z mpi procs
+NPROCS_Z=2
+
 #-- create main conf
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 200,
-  "number_of_total_grid_points_y" : 960,
-  "number_of_total_grid_points_z" : 300,
+  "number_of_total_grid_points_x" : ${NX},
+  "number_of_total_grid_points_y" : ${NY},
+  "number_of_total_grid_points_z" : ${NZ},
 
-  "number_of_mpiprocs_y" : 4,
-  "number_of_mpiprocs_z" : 2,
+  "number_of_mpiprocs_y" : $NPROCS_Y,
+  "number_of_mpiprocs_z" : $NPROCS_Z,
 
-  "dynamic_method" : 1,
+  "dynamic_method" : 2,
   "fault_grid" : [101,896,78,300],
 
-  "size_of_time_step" : 0.006,
-  "number_of_time_steps" : 4000,
-  "#time_window_length" : 4,
+  "size_of_time_step" : 0.005,
+  "number_of_time_steps" : 5000,
+  "#time_window_length" : 15,
   "check_stability" : 1,
   "io_time_skip" : 2,
 
@@ -93,18 +113,16 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-
-
   "grid_generation_method" : {
+      "fault_x_index" : [ 100 ],
       "fault_plane" : {
         "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
         "fault_inteval" : 90.0
       },
-      "#grid_with_fault" : {
-        "grid_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_i_gobal_index" : 100.0
+      "#grid_import" : {
+        "import_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc"
       }
   },
   "is_export_grid" : 1,
@@ -132,8 +150,8 @@ cat << ieof > $PAR_FILE
         "Vs" : "$INPUTDIR/prep_medium/seam_Vs.bin",
         "rho" : "$INPUTDIR/prep_medium/seam_rho.bin"
       },
-      "code" : "",
       "#import" : "$MEDIA_DIR",
+      "code" : "",
       "#infile_layer" : "$INPUTDIR/prep_medium/basin_el_iso.md3lay",
       "#infile_grid" : "$INPUTDIR/prep_medium/topolay_el_iso.md3grd",
       "#equivalent_medium_method" : "loc",
@@ -150,7 +168,7 @@ cat << ieof > $PAR_FILE
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "in_station_file" : "$INPUTDIR/prep_station/station.list",
+  "#in_station_file" : "$INPUTDIR/station.list",
 
   "#receiver_line" : [
     {
@@ -176,8 +194,8 @@ cat << ieof > $PAR_FILE
   "#snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 199 ],
-      "grid_index_count" : [ 100,400, 1 ],
+      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
@@ -212,7 +230,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
@@ -233,4 +251,4 @@ fi
 
 date
 
-# vim:ft=conf:ts=4:sw=4:nu:et:ai:
+# vim:ts=4:sw=4:nu:et:ai:

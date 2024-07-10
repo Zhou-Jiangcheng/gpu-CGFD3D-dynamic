@@ -190,12 +190,12 @@ io_line_locate(gd_t *gd,
                char **receiver_line_name);
 
 int
-io_fault_locate(gd_t *gd, 
-                iofault_t *iofault,
-                int number_of_fault,
-                int *fault_x_index,
-                char *output_fname_part,
-                char *output_dir);
+io_recv_keep(iorecv_t *iorecv, float *w_pre_d,
+             float* buff, int it, int ncmp, size_t siz_icmp);
+
+int
+io_line_keep(ioline_t *ioline, float *w_pre_d,
+             float *buff, int it, int ncmp, size_t siz_icmp);
 
 int
 io_slice_locate(gd_t  *gd,
@@ -208,6 +208,21 @@ io_slice_locate(gd_t  *gd,
                 int *slice_z_index,
                 char *output_fname_part,
                 char *output_dir);
+
+int
+io_slice_nc_create(ioslice_t *ioslice, 
+                  int num_of_vars, char **w3d_name,
+                  int ni, int nj, int nk,
+                  int *topoid, ioslice_nc_t *ioslice_nc);
+
+int
+io_slice_nc_put(ioslice_t    *ioslice,
+                ioslice_nc_t *ioslice_nc,
+                gd_t     *gd,
+                float *w_pre_d,
+                float *buff,
+                int   it,
+                float time);
 
 int
 io_snapshot_locate(gd_t *gd,
@@ -226,43 +241,7 @@ io_snapshot_locate(gd_t *gd,
                     char *output_dir);
 
 int
-io_fault_nc_create(iofault_t *iofault, 
-                   int ni, int nj, int nk,
-                   int *topoid, iofault_nc_t *iofault_nc);
-
-int
-io_slice_nc_create(ioslice_t *ioslice, 
-                  int num_of_vars, char **w3d_name,
-                  int ni, int nj, int nk,
-                  int *topoid, ioslice_nc_t *ioslice_nc);
-
-int
 io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
-
-int
-io_fault_nc_put(iofault_nc_t *iofault_nc,
-                gd_t     *gd,
-                fault_t  F,
-                float *buff,
-                int   it,
-                float time);
-
-int
-io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
-                      gd_t     *gd,
-                      fault_t  F,
-                      float *buff);
-
-int
-io_slice_nc_put(ioslice_t    *ioslice,
-                ioslice_nc_t *ioslice_nc,
-                gd_t     *gd,
-                float *w4d,
-                float *buff,
-                int   it,
-                float time,
-                int   i1_cmp,
-                int   i2_cmp);
 
 int
 io_snap_nc_put(iosnap_t *iosnap,
@@ -270,14 +249,11 @@ io_snap_nc_put(iosnap_t *iosnap,
                gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
-               float *w4d,
+               float *w_pre_d,
                float *buff,
                int   nt_total,
                int   it,
-               float time,
-               int is_run_out_vel,     // for stg, out vel and stress at sep call
-               int is_run_out_stress,  // 
-               int is_incr_cur_it);     // for stg, should output cur_it once
+               float time);
 
 int
 io_snap_stress_to_strain_eliso(float *lam3d,
@@ -331,21 +307,11 @@ io_snap_pack_buff(float *var,
                   float *buff_d);
 
 int
-io_fault_nc_close(iofault_nc_t *iofault_nc);
-
-int
 io_slice_nc_close(ioslice_nc_t *ioslice_nc);
 
 int
 io_snap_nc_close(iosnap_nc_t *iosnap_nc);
 
-int
-io_recv_keep(iorecv_t *iorecv, float *w_end_d,
-             float* buff, int it, int ncmp, size_t siz_icmp);
-
-int
-io_line_keep(ioline_t *ioline, float *w_end_d,
-             float *buff, int it, int ncmp, size_t siz_icmp);
 
 __global__ void
 recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
@@ -426,5 +392,34 @@ PG_slice_output(float *PG,  gd_t *gd, char *output_dir, char *frame_coords, int*
 
 int
 io_get_nextline(FILE *fp, char *str, int length);
+
+int
+io_fault_locate(gd_t *gd, 
+                iofault_t *iofault,
+                int number_of_fault,
+                int *fault_x_index,
+                char *output_fname_part,
+                char *output_dir);
+
+int
+io_fault_nc_create(iofault_t *iofault, 
+                   int ni, int nj, int nk,
+                   int *topoid, iofault_nc_t *iofault_nc);
+
+int
+io_fault_nc_put(iofault_nc_t *iofault_nc,
+                gd_t     *gd,
+                fault_t  F,
+                float *buff,
+                int   it,
+                float time);
+
+int
+io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
+                      gd_t     *gd,
+                      fault_t  F,
+                      float *buff);
+int
+io_fault_nc_close(iofault_nc_t *iofault_nc);
 
 #endif

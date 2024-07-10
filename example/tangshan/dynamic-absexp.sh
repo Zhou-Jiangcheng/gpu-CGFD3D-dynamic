@@ -39,11 +39,11 @@ VERBOSE=100
 GPU_ID=0
 
 #-- total x grid points
-NX=100
+NX=200
 #-- total y grid points
-NY=400
+NY=960
 #-- total z grid points
-NZ=200
+NZ=300
 #-- total ympi procs
 NPROCS_Y=2
 #-- total z mpi procs
@@ -61,51 +61,41 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_z" : $NPROCS_Z,
 
   "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,200],
+  "fault_grid" : [101,896,78,300],
 
   "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 3000,
+  "number_of_time_steps" : 5000,
   "#time_window_length" : 15,
   "check_stability" : 1,
   "io_time_skip" : 2,
 
   "boundary_x_left" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_x_right" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_front" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_back" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_z_bottom" : {
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.14,
-          "beta_max" : 2.0,
+      "ablexp" : {
+          "number_of_layers" : 50,
           "ref_vel"  : 7000.0
           }
       },
@@ -114,11 +104,11 @@ cat << ieof > $PAR_FILE
       },
 
   "grid_generation_method" : {
-      "fault_x_index" : [ 50 ],
+      "fault_x_index" : [ 100 ],
       "fault_plane" : {
         "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 100.0
+        "fault_inteval" : 90.0
       },
       "#grid_import" : {
         "import_dir" : "${INPUTDIR}/prep_fault",
@@ -168,7 +158,7 @@ cat << ieof > $PAR_FILE
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "in_station_file" : "$INPUTDIR/station.list",
+  "#in_station_file" : "$INPUTDIR/station.list",
 
   "#receiver_line" : [
     {
@@ -191,7 +181,7 @@ cat << ieof > $PAR_FILE
       "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
       "grid_index_start" : [ 0, 0, $((NZ-1)) ],
@@ -230,7 +220,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
