@@ -177,15 +177,21 @@ io_recv_read_locate(gd_t      *gd,
     // by grid index
     if (flag_coord[ir] == 0)
     {
+      // need minus 1. C index start from 1.
+      all_coords[3*ir+0] -= 1;
+      all_coords[3*ir+1] -= 1;
+
       // if sz is relative to surface, convert to normal index
       if (flag_depth[ir] == 1) {
         all_coords[3*ir+2] = gd->gnk2 - all_coords[3*ir+2];
+      } else {
+        all_coords[3*ir+2] -= 1;
       }
 
       // do not take nearest value, but use smaller value
-      all_index[3*ir+0] = (int) (all_coords[3*ir+0] + 0.0);
-      all_index[3*ir+1] = (int) (all_coords[3*ir+1] + 0.0);
-      all_index[3*ir+2] = (int) (all_coords[3*ir+2] + 0.0);
+      all_index[3*ir+0] = (int) (all_coords[3*ir+0]);
+      all_index[3*ir+1] = (int) (all_coords[3*ir+1]);
+      all_index[3*ir+2] = (int) (all_coords[3*ir+2]);
       all_inc[3*ir+0] = all_coords[3*ir+0] - all_index[3*ir+0] ;
       all_inc[3*ir+1] = all_coords[3*ir+1] - all_index[3*ir+1] ;
       all_inc[3*ir+2] = all_coords[3*ir+2] - all_index[3*ir+2] ;
@@ -458,13 +464,15 @@ io_slice_locate(gd_t  *gd,
   for (int n=0; n < number_of_slice_x; n++)
   {
     int gi = slice_x_index[n];
+    // output slice file add 1, not start from 0.
+    int gi_1 = gi+1;
     if (gd_info_gindx_is_inner_i(gi, gd)==1)
     {
       int islc = ioslice->num_of_slice_x;
 
       ioslice->slice_x_indx[islc]  = gd_info_indx_glphy2lcext_i(gi, gd);
       sprintf(ioslice->slice_x_fname[islc],"%s/slicex_i%d_%s.nc",
-                output_dir,gi,output_fname_part);
+                output_dir,gi_1,output_fname_part);
 
       ioslice->num_of_slice_x += 1;
 
@@ -478,13 +486,15 @@ io_slice_locate(gd_t  *gd,
   for (int n=0; n < number_of_slice_y; n++)
   {
     int gj = slice_y_index[n];
+    // output slice file add 1, not start from 0.
+    int gj_1 = gj+1;
     if (gd_info_gindx_is_inner_j(gj, gd)==1)
     {
       int islc = ioslice->num_of_slice_y;
 
       ioslice->slice_y_indx[islc]  = gd_info_indx_glphy2lcext_j(gj, gd);
       sprintf(ioslice->slice_y_fname[islc],"%s/slicey_j%d_%s.nc",
-                output_dir,gj,output_fname_part);
+                output_dir,gj_1,output_fname_part);
 
       ioslice->num_of_slice_y += 1;
 
@@ -498,13 +508,15 @@ io_slice_locate(gd_t  *gd,
   for (int n=0; n < number_of_slice_z; n++)
   {
     int gk = slice_z_index[n];
+    // output slice file add 1, not start from 0.
+    int gk_1 = gk+1;
     if (gd_info_gindx_is_inner_k(gk, gd)==1)
     {
       int islc = ioslice->num_of_slice_z;
 
       ioslice->slice_z_indx[islc]  = gd_info_indx_glphy2lcext_k(gk, gd);
       sprintf(ioslice->slice_z_fname[islc],"%s/slicez_k%d_%s.nc",
-                output_dir,gk,output_fname_part);
+                output_dir,gk_1,output_fname_part);
 
       ioslice->num_of_slice_z += 1;
 
@@ -1912,13 +1924,14 @@ io_fault_locate(gd_t *gd,
   for (int i=0; i<number_of_fault; i++)
   {
     int gi = fault_x_index[i];
+    int gi_1 = gi+1;
     if(gd_info_gindx_is_inner_i(gi, gd)==1)
     {
       int islc = iofault->num_of_fault;
 
       iofault->fault_x_indx[islc] =  gd_info_indx_glphy2lcext_i(gi, gd);
       sprintf(iofault->fault_fname[islc],"%s/fault_i%d_%s.nc",
-                output_dir,gi,output_fname_part);
+                output_dir,gi_1,output_fname_part);
 
       iofault->num_of_fault += 1;
 

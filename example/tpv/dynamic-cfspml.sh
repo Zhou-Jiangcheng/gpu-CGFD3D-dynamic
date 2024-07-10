@@ -170,10 +170,10 @@ cat << ieof > $PAR_FILE
 
   "in_station_file" : "$INPUTDIR/station.list",
 
-  "#receiver_line" : [
+  "receiver_line" : [
     {
       "name" : "line_x_1",
-      "grid_index_start"    : [  0, 49, 59 ],
+      "grid_index_start"    : [  1, 49, 59 ],
       "grid_index_incre"    : [  1,  0,  0 ],
       "grid_index_count"    : 20
     },
@@ -185,7 +185,7 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "#slice" : {
+  "slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
@@ -194,7 +194,7 @@ cat << ieof > $PAR_FILE
   "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_start" : [ 1, 1, $NZ ],
       "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,

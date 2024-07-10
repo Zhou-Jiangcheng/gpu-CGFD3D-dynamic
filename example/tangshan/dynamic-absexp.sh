@@ -36,7 +36,7 @@ mkdir -p $MEDIA_DIR
 #-- grid and mpi configurations
 #----------------------------------------------------------------------
 VERBOSE=100
-GPU_ID=0
+GPU_START_ID=0
 
 #-- total x grid points
 NX=200
@@ -163,7 +163,7 @@ cat << ieof > $PAR_FILE
   "#receiver_line" : [
     {
       "name" : "line_x_1",
-      "grid_index_start"    : [  0, 49, 59 ],
+      "grid_index_start"    : [  1, 49, 59 ],
       "grid_index_incre"    : [  1,  0,  0 ],
       "grid_index_count"    : 20
     },
@@ -175,16 +175,16 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "#slice" : {
+  "slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
   },
 
-  "#snapshot" : [
+  "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_start" : [ 0, 0, $NZ ],
       "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
@@ -220,7 +220,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_ID 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START__ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
