@@ -38,6 +38,29 @@ typedef struct
   iorecv_one_t *recvone;
 } iorecv_t;
 
+// single station
+typedef struct
+{
+  float x;
+  float y;
+  float z;
+  int   i;
+  int   j;
+  int   k;
+  int   f_id;  // fault id
+  size_t   indx1d;
+  float *seismo;
+  char  name[CONST_MAX_STRLEN];
+} io_fault_recv_one_t;
+
+typedef struct
+{
+  int                 total_number;
+  int                 max_nt;
+  int                 ncmp;
+  io_fault_recv_one_t *fault_recvone;
+} io_fault_recv_t;
+
 // line output
 typedef struct
 {
@@ -421,5 +444,27 @@ io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
                       float *buff);
 int
 io_fault_nc_close(iofault_nc_t *iofault_nc);
+
+int
+io_fault_recv_read_locate(gd_t      *gd,
+                          io_fault_recv_t  *io_fault_recv,
+                          int       nt_total,
+                          int       num_of_vars,
+                          int       *fault_indx,
+                          char      *in_filenm,
+                          MPI_Comm  comm,
+                          int       myid,
+                          int       verbose);
+
+int
+io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t *F_d, 
+                   float *buff, int it);
+
+int
+io_fault_recv_output_sac(io_fault_recv_t *io_fault_recv,
+                         float dt,
+                         int num_of_vars,
+                         char *output_dir,
+                         char *err_message);
 
 #endif

@@ -7,11 +7,14 @@ addmypath;
 parfnm='../../project/test.json';
 output_dir='../../project/output';
 
+% Vs, Vs1, Vs2, Tn, Ts1, Ts2
+% Slip, Slip1, Slip2
+% n->normal s1->strike s2->dip
 % which variable to plot
-varnm='Vx';
+varnm='Vs1';
 % which station to plot (start from index '1')
-startid=1;
-endid = 2;
+startid=3;
+endid = 3;
 
 % figure control parameters
 flag_print=0;
@@ -20,7 +23,7 @@ flag_print=0;
 % read parameter file
 par=loadjson(parfnm);
 
-fileID = fopen(par.in_station_file);
+fileID = fopen(par.fault_station_file);
 %first line is number recv or station
 %must read to skip
 for i=1:startid
@@ -37,18 +40,19 @@ for irec=startid:1:endid
     end
     recvinfo = strsplit(recvinfo);
     recvnm = char(recvinfo(1));
-    sacnm=[output_dir,'/',recvnm,'.',varnm,'.sac'];
+    sacnm=[output_dir,'/fault_',recvnm,'.',varnm,'.sac'];
     sacdata=rsac(sacnm);
-    seismodata(irec-startid+1,:)=sacdata(:,2);
-    seismot(irec-startid+1,:)=sacdata(:,1);
+    seismodata(:,irec-startid+1)=sacdata(:,2);
+    seismot(:,irec-startid+1)=sacdata(:,1);
 end
+
 % plot receiver
 for irec=startid:1:endid
     figure(irec-startid+1)
-    plot(seismot(irec-startid+1,:),seismodata(irec-startid+1,:),'b','linewidth',1.0);
+    plot(seismot(:,irec-startid+1),seismodata(:,irec-startid+1),'b','linewidth',1.0);
     xlabel('Time (s)');
     ylabel('Amplitude');
-    title([varnm, ' recv No.',num2str(irec),' interpreter ','yes']);
+    title([varnm, ' recv No.',num2str(irec)]);
     set(gcf,'color','white','renderer','painters');
     % save and print figure
     if flag_print

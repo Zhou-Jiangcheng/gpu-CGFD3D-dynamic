@@ -20,7 +20,7 @@ k2 = 200;
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 200;
+srcj = 100;
 srck = 150;   
 
 % 1st method

@@ -52,6 +52,7 @@ typedef struct
   
   // io
   iorecv_t  *iorecv;
+  io_fault_recv_t  *io_fault_recv;
   ioline_t  *ioline;
   iosnap_t  *iosnap;
   ioslice_t *ioslice;

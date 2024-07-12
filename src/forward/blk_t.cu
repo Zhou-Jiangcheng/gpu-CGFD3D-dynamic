@@ -36,6 +36,7 @@ blk_init(blk_t *blk,
   blk->fault      = (fault_t      *) malloc(sizeof(fault_t));
   blk->fault_coef = (fault_coef_t *) malloc(sizeof(fault_coef_t));
   blk->fault_wav  = (fault_wav_t  *) malloc(sizeof(fault_wav_t));
+  blk->io_fault_recv = (io_fault_recv_t *) malloc(sizeof(io_fault_recv_t));
 
   sprintf(blk->name, "%s", "single");
 

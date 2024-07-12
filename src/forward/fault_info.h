@@ -88,9 +88,9 @@ typedef struct
   float *Tn;
   float *Ts1;
   float *Ts2;
-  float *slip;
-  float *slip1;
-  float *slip2;
+  float *Slip;
+  float *Slip1;
+  float *Slip2;
   float *Vs;
   float *Vs1;
   float *Vs2;

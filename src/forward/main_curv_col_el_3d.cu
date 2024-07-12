@@ -2,6 +2,11 @@
  * Curvilinear Grid Finite Difference For Fault Dynamic Simulation 
  ******************************************************************************/
 
+// NOTE: fault info
+//  n -> normal Tn 
+//  1 -> strike Ts1
+//  2 -> dip    Ts2
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -100,6 +105,7 @@ int main(int argc, char** argv)
   bdrypml_t       *bdrypml       = blk->bdrypml;
   bdryexp_t       *bdryexp       = blk->bdryexp;
   iorecv_t        *iorecv        = blk->iorecv;
+  io_fault_recv_t *io_fault_recv = blk->io_fault_recv;
   ioline_t        *ioline        = blk->ioline;
   iofault_t       *iofault       = blk->iofault;
   ioslice_t       *ioslice       = blk->ioslice;
@@ -485,7 +491,7 @@ int main(int argc, char** argv)
 
   float   t0 = par->time_start;
   float   dt = par->size_of_time_step;
-  int     nt_total = par->number_of_time_steps;
+  int     nt_total = par->number_of_time_steps+1;
 
   if (par->time_check_stability==1)
   {
@@ -575,6 +581,14 @@ int main(int argc, char** argv)
                       par->number_of_mpiprocs_z,
                       par->in_station_file,
                       comm, myid, verbose);
+
+  // Tn Ts1 Ts2 Vs Vs1 Vs2 Slip Slip1 Slip2
+  int fault_ncmp = 9;
+  io_fault_recv_read_locate(gd, io_fault_recv,
+                            nt_total, fault_ncmp, 
+                            par->fault_x_index,
+                            par->fault_station_file,
+                            comm, myid, verbose);
 
   // line
   io_line_locate(gd, ioline,
@@ -696,6 +710,7 @@ int main(int argc, char** argv)
                           bdryfree,bdrypml,bdryexp,wav,mympi,
                           fault_coef,fault,fault_wav,
                           iorecv,ioline,iofault,ioslice,iosnap,
+                          io_fault_recv,
                           dt,nt_total,t0,
                           blk->output_fname_part,
                           blk->output_dir,
@@ -712,6 +727,9 @@ int main(int argc, char** argv)
   //-------------------------------------------------------------------------------
   io_recv_output_sac(iorecv,dt,wav->ncmp,wav->cmp_name,
                       blk->output_dir,err_message);
+
+  io_fault_recv_output_sac(io_fault_recv,dt,fault_ncmp,
+                           blk->output_dir,err_message);
 
   if(md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
     io_recv_output_sac_el_iso_strain(iorecv,md->lambda,md->mu,dt,

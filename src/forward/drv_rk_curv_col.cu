@@ -45,6 +45,7 @@ drv_rk_curv_col_allstep(
   iofault_t    *iofault,
   ioslice_t    *ioslice,
   iosnap_t     *iosnap,
+  io_fault_recv_t     *io_fault_recv,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
@@ -211,6 +212,8 @@ drv_rk_curv_col_allstep(
 
     //-- recv by interp
     io_recv_keep(iorecv, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+
+    io_fault_recv_keep(io_fault_recv, &fault_d, w_buff, it);
 
     //-- line values
     io_line_keep(ioline, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);

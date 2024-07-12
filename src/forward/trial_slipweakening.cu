@@ -321,14 +321,14 @@ trial_slipweakening_gpu(
 
     float mu_s = F.mu_s[iptr_t];
     float mu_d = F.mu_d[iptr_t];
-    float slip = F.slip[iptr_t];
+    float Slip = F.Slip[iptr_t];
     float Dc = F.Dc[iptr_t];
     float C0 = F.C0[iptr_t];
     float friction;
 
     // slip weakening
-    if(slip <= Dc){
-      friction = mu_s - (mu_s - mu_d) * slip / Dc;
+    if(Slip <= Dc){
+      friction = mu_s - (mu_s - mu_d) * Slip / Dc;
     }else{
       friction = mu_d;
     }

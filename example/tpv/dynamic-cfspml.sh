@@ -6,8 +6,8 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
-#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../../main
@@ -36,10 +36,10 @@ mkdir -p $MEDIA_DIR
 #-- grid and mpi configurations
 #----------------------------------------------------------------------
 VERBOSE=100
-GPU_ID=0
+GPU_START_ID=4
 
 #-- total x grid points
-NX=100
+NX=200
 #-- total y grid points
 NY=400
 #-- total z grid points
@@ -114,7 +114,7 @@ cat << ieof > $PAR_FILE
       },
 
   "grid_generation_method" : {
-      "fault_x_index" : [ 50 ],
+      "fault_x_index" : [ 100 ],
       "fault_plane" : {
         "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
         "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
@@ -169,8 +169,9 @@ cat << ieof > $PAR_FILE
   "output_dir" : "$OUTPUT_DIR",
 
   "in_station_file" : "$INPUTDIR/station.list",
+  "fault_station_file" : "$INPUTDIR/fault_station.list",
 
-  "receiver_line" : [
+  "#receiver_line" : [
     {
       "name" : "line_x_1",
       "grid_index_start"    : [  1, 49, 59 ],
@@ -185,7 +186,7 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]

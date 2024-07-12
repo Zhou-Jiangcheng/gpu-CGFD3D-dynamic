@@ -35,6 +35,7 @@ drv_rk_curv_col_allstep(
   iofault_t   *iofault,
   ioslice_t   *ioslice,
   iosnap_t    *iosnap,
+  io_fault_recv_t    *io_fault_recv,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,

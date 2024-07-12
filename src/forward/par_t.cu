@@ -337,9 +337,10 @@ par_read_from_str(const char *str, par_t *par)
   //
   //-- grid
   //
+  // need minus 1. C index start from 1.
   if (item = cJSON_GetObjectItem(root, "fault_grid")) {
     for(int i=0; i<4; i++) {
-      par->fault_grid[i] = cJSON_GetArrayItem(item, i)->valueint;
+      par->fault_grid[i] = cJSON_GetArrayItem(item, i)->valueint-1;
     }
   }
 
@@ -724,6 +725,10 @@ par_read_from_str(const char *str, par_t *par)
   //-- receiver
   if (item = cJSON_GetObjectItem(root, "in_station_file")) {
     sprintf(par->in_station_file, "%s", item->valuestring);
+  }
+  //--fault receiver
+  if (item = cJSON_GetObjectItem(root, "fault_station_file")) {
+    sprintf(par->fault_station_file, "%s", item->valuestring);
   }
 
   //-- receiver line

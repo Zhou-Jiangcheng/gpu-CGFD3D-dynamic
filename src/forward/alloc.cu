@@ -348,9 +348,9 @@ int init_fault_device(gd_t *gd, fault_t *F, fault_t *F_d)
   F_d->Tn         = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->Ts1        = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->Ts2        = (float *) cuda_malloc(sizeof(float)*nj*nk);
-  F_d->slip       = (float *) cuda_malloc(sizeof(float)*nj*nk);
-  F_d->slip1      = (float *) cuda_malloc(sizeof(float)*nj*nk); 
-  F_d->slip2      = (float *) cuda_malloc(sizeof(float)*nj*nk);  
+  F_d->Slip       = (float *) cuda_malloc(sizeof(float)*nj*nk);
+  F_d->Slip1      = (float *) cuda_malloc(sizeof(float)*nj*nk); 
+  F_d->Slip2      = (float *) cuda_malloc(sizeof(float)*nj*nk);  
   F_d->Vs         = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->Vs1        = (float *) cuda_malloc(sizeof(float)*nj*nk);
   F_d->Vs2        = (float *) cuda_malloc(sizeof(float)*nj*nk);
@@ -378,9 +378,9 @@ int init_fault_device(gd_t *gd, fault_t *F, fault_t *F_d)
   CUDACHECK(cudaMemcpy(F_d->Tn,    F->Tn,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(F_d->Ts1,   F->Ts1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(F_d->Ts2,   F->Ts2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(F_d->slip,  F->slip,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(F_d->slip1, F->slip1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(F_d->slip2, F->slip2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Slip,  F->Slip,  sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Slip1, F->Slip1, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(F_d->Slip2, F->Slip2, sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(F_d->Vs,    F->Vs,    sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(F_d->Vs1,   F->Vs1,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(F_d->Vs2,   F->Vs2,   sizeof(float)*nj*nk, cudaMemcpyHostToDevice));
@@ -741,9 +741,9 @@ int dealloc_fault_device(fault_t F_d)
   CUDACHECK( cudaFree(F_d.Tn));
   CUDACHECK( cudaFree(F_d.Ts1));
   CUDACHECK( cudaFree(F_d.Ts2));
-  CUDACHECK( cudaFree(F_d.slip));
-  CUDACHECK( cudaFree(F_d.slip1));
-  CUDACHECK( cudaFree(F_d.slip2));
+  CUDACHECK( cudaFree(F_d.Slip));
+  CUDACHECK( cudaFree(F_d.Slip1));
+  CUDACHECK( cudaFree(F_d.Slip2));
   CUDACHECK( cudaFree(F_d.Vs));
   CUDACHECK( cudaFree(F_d.Vs1));
   CUDACHECK( cudaFree(F_d.Vs2));

@@ -847,9 +847,9 @@ fault_init(fault_t *F,
   F->Tn      = (float *) malloc(sizeof(float)*nj*nk);
   F->Ts1     = (float *) malloc(sizeof(float)*nj*nk);
   F->Ts2     = (float *) malloc(sizeof(float)*nj*nk);
-  F->slip    = (float *) malloc(sizeof(float)*nj*nk);
-  F->slip1   = (float *) malloc(sizeof(float)*nj*nk); 
-  F->slip2   = (float *) malloc(sizeof(float)*nj*nk);  
+  F->Slip    = (float *) malloc(sizeof(float)*nj*nk);
+  F->Slip1   = (float *) malloc(sizeof(float)*nj*nk); 
+  F->Slip2   = (float *) malloc(sizeof(float)*nj*nk);  
   F->Vs      = (float *) malloc(sizeof(float)*nj*nk);
   F->Vs1     = (float *) malloc(sizeof(float)*nj*nk);
   F->Vs2     = (float *) malloc(sizeof(float)*nj*nk);
@@ -867,9 +867,9 @@ fault_init(fault_t *F,
   F->init_t0_flag = (int *) malloc(sizeof(int)*nj*nk);
 
   memset(F->init_t0_flag, 0, sizeof(int)  *nj*nk);
-  memset(F->slip,         0, sizeof(float)*nj*nk);
-  memset(F->slip1,        0, sizeof(float)*nj*nk); 
-  memset(F->slip2,        0, sizeof(float)*nj*nk); 
+  memset(F->Slip,         0, sizeof(float)*nj*nk);
+  memset(F->Slip1,        0, sizeof(float)*nj*nk); 
+  memset(F->Slip2,        0, sizeof(float)*nj*nk); 
   memset(F->Vs1,          0, sizeof(float)*nj*nk);
   memset(F->Vs2,          0, sizeof(float)*nj*nk);
   memset(F->peak_Vs,      0, sizeof(float)*nj*nk);
@@ -933,17 +933,15 @@ fault_set(fault_t *F,
 
       gj = gnj1 + j;
       gk = gnk1 + k;
-      // fault grid read from json, index start 1.
-      // so gj need +1, C index from 0
       // rup_index = 0 means points out of fault.
       // NOTE: boundry 3 points out of fault, due to use different fd stencil
-      if( gj+1 <= fault_grid[0]+3 || gj+1 >= fault_grid[1]-3 ){
+      if( gj <= fault_grid[0]+3 || gj >= fault_grid[1]-3 ){
         F->rup_index_y[iptr_t] = 0;
       }else{
         F->rup_index_y[iptr_t] = 1;
       }
 
-      if( gk+1 <= fault_grid[2]+3 || gk+1 >= fault_grid[3]-3 ){
+      if( gk <= fault_grid[2]+3 || gk >= fault_grid[3]-3 ){
         F->rup_index_z[iptr_t] = 0;
       }else{
         F->rup_index_z[iptr_t] = 1;
@@ -954,7 +952,7 @@ fault_set(fault_t *F,
       // usually unilateral pml < 30 and strong boundry >= 50
       if(bdry_has_free == 1) 
       {
-        if( gj+1 > 30 && gj+1 <= npoint_y - 30 && gk+1 > 30) {
+        if( gj >= 30 && gj < npoint_y - 30 && gk >= 30) {
           F->united[iptr_t] = 0;
         }else{
           F->united[iptr_t] = 1;
@@ -962,15 +960,15 @@ fault_set(fault_t *F,
       } 
       else if(bdry_has_free == 0)
       {
-        if( gj+1 > 30 && gj+1 <= npoint_y - 30 && gk+1 > 30 
-            && gk+1 <= npoint_z - 30) {
+        if( gj >= 30 && gj < npoint_y - 30 && gk >= 30 
+            && gk < npoint_z - 30) {
           F->united[iptr_t] = 0;
         }else{
           F->united[iptr_t] = 1;
         }
       }
-      if( gj+1 >= fault_grid[0]+3 && gj+1 <= fault_grid[1]-3 &&
-          gk+1 >= fault_grid[2]+3 && gk+1 <= fault_grid[3]-3 ) {
+      if( gj >= fault_grid[0]+3 && gj <= fault_grid[1]-3 &&
+          gk >= fault_grid[2]+3 && gk <= fault_grid[3]-3 ) {
         F->faultgrid[iptr_t] = 1;
       }else{
         F->faultgrid[iptr_t] = 0;

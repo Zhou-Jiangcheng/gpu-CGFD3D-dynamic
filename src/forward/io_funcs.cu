@@ -89,7 +89,13 @@ io_recv_read_locate(gd_t      *gd,
       recv_by_coords += 1;
     }
 
+    if(num_of_mpiprocs_z >=2 && flag_depth[ir] == 1)
+    {
+      fprintf(stderr,"station not yet implement z axis depth to coord(index) with z axis mpi >= 2\n");
+      fflush(stderr); exit(1);
+    }
   }
+
   // by axis
   // computation is big, use GPU 
 
@@ -1997,13 +2003,13 @@ io_fault_nc_create(iofault_t *iofault,
     ierr = nc_def_var(iofault_nc->ncid[i], "Vs2",       NC_FLOAT, 3, dimid,   
                     &(iofault_nc->varid[8+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip",      NC_FLOAT, 3, dimid,   
+    ierr = nc_def_var(iofault_nc->ncid[i], "Slip",      NC_FLOAT, 3, dimid,   
                     &(iofault_nc->varid[9+i*num_of_vars]));
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip1",     NC_FLOAT, 3, dimid,   
+    ierr = nc_def_var(iofault_nc->ncid[i], "Slip1",     NC_FLOAT, 3, dimid,   
                     &(iofault_nc->varid[10+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "slip2",     NC_FLOAT, 3, dimid,   
+    ierr = nc_def_var(iofault_nc->ncid[i], "Slip2",     NC_FLOAT, 3, dimid,   
                     &(iofault_nc->varid[11+i*num_of_vars]));
     handle_nc_err(ierr);   
 
@@ -2062,13 +2068,13 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
     CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
     nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[8+i*num_of_vars], startp, countp, buff);
 
-    CUDACHECK(cudaMemcpy(buff,F.slip,size,cudaMemcpyDeviceToHost));
+    CUDACHECK(cudaMemcpy(buff,F.Slip,size,cudaMemcpyDeviceToHost));
     nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[9+i*num_of_vars], startp, countp, buff);
 
-    CUDACHECK(cudaMemcpy(buff,F.slip1,size,cudaMemcpyDeviceToHost));
+    CUDACHECK(cudaMemcpy(buff,F.Slip1,size,cudaMemcpyDeviceToHost));
     nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[10+i*num_of_vars], startp, countp, buff);
 
-    CUDACHECK(cudaMemcpy(buff,F.slip2,size,cudaMemcpyDeviceToHost));
+    CUDACHECK(cudaMemcpy(buff,F.Slip2,size,cudaMemcpyDeviceToHost));
     nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[11+i*num_of_vars], startp, countp, buff);
   }
 
@@ -2110,3 +2116,225 @@ io_fault_nc_close(iofault_nc_t *iofault_nc)
 
   return 0;
 }
+
+/*
+ * read in station list file and locate station
+ */
+int
+io_fault_recv_read_locate(gd_t      *gd,
+                          io_fault_recv_t  *io_fault_recv,
+                          int       nt_total,
+                          int       num_of_vars,
+                          int       *fault_indx,
+                          char      *in_filenm,
+                          MPI_Comm  comm,
+                          int       myid,
+                          int       verbose)
+{
+  FILE *fp;
+  char line[500];
+
+  io_fault_recv->total_number = 0;
+  if (!(fp = fopen (in_filenm, "rt")))
+	{
+    fprintf(stdout,"#########         ########\n");
+    fprintf(stdout,"######### Warning ########\n");
+    fprintf(stdout,"#########         ########\n");
+    fprintf(stdout,"Cannot open input fault station file %s\n", in_filenm);
+	  fflush (stdout);
+	  return 0;
+	}
+
+  int total_point_y = gd->total_point_y;
+  int total_point_z = gd->total_point_z;
+  // number of station
+  int num_recv;
+
+  io_get_nextline(fp, line, 500);
+  sscanf(line, "%d", &num_recv);
+
+  io_fault_recv_one_t *fault_recvone = (io_fault_recv_one_t *)malloc(num_recv * sizeof(io_fault_recv_one_t));
+
+  // read coord and locate
+
+  int ir=0;
+  int nr_this = 0; // in this thread
+
+  int f_id;  //fault_id
+  int ix, iy, iz; // global index
+  float rx, ry, rz; //coords
+
+  for (ir=0; ir<num_recv; ir++)
+  {
+    // read one line
+    io_get_nextline(fp, line, 500);
+
+    // get values
+    sscanf(line, "%s %d %d %d", 
+           fault_recvone[ir].name, &f_id, &iy, &iz);
+
+    // need minus 1, due to C is start from 0
+    f_id = f_id - 1;
+    ix = fault_indx[f_id];
+
+    // need minus 1, due to C is start from 0
+    iy = iy-1;
+    iz = iz-1;
+
+    if (gd_info_gindx_is_inner(ix,iy,iz,gd) == 1)
+    {
+      // convert to local index without ghost
+      int i_local = gd_info_indx_glphy2lcext_j(ix,gd);
+      int j_local = gd_info_indx_glphy2lcext_j(iy,gd);
+      int k_local = gd_info_indx_glphy2lcext_k(iz,gd);
+
+      rx = gd_coord_get_x(gd,i_local,j_local,k_local);
+      ry = gd_coord_get_y(gd,i_local,j_local,k_local);
+      rz = gd_coord_get_z(gd,i_local,j_local,k_local);
+
+      io_fault_recv_one_t *this_recv = fault_recvone + nr_this;
+
+      sprintf(this_recv->name, "%s", fault_recvone[ir].name);
+      // get coord
+      this_recv->x = rx;
+      this_recv->y = ry;
+      this_recv->z = rz;
+      // set point
+      this_recv->i=i_local;
+      this_recv->j=j_local;
+      this_recv->k=k_local;
+      this_recv->f_id = f_id;
+
+      // due to Fault out put var not include ghost
+      this_recv->indx1d = (j_local-3) + (k_local-3) * gd->nj;
+      nr_this += 1;
+    }
+  }
+
+  if(myid==0)
+  {
+    for (ir=0; ir<num_recv; ir++)
+    {
+      if(iy<0 || iy>total_point_y-1 || iz<0 || iz>total_point_z-1 )
+      {
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"######### Warning ########\n");
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"fault_recv_number[%d] physical coordinates are outside calculation area !\n",ir);
+      }
+    }
+  }
+
+  fclose(fp);
+ 
+  io_fault_recv->total_number  = nr_this;
+  io_fault_recv->fault_recvone = fault_recvone;
+  io_fault_recv->max_nt        = nt_total;
+  io_fault_recv->ncmp          = num_of_vars;
+
+  // malloc seismo
+  for (int ir=0; ir < io_fault_recv->total_number; ir++)
+  {
+    fault_recvone = io_fault_recv->fault_recvone + ir;
+    fault_recvone->seismo = (float *) malloc(num_of_vars * nt_total * sizeof(float));
+  }
+  return 0;
+}
+
+int
+io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t *F_d, 
+                   float *buff, int it)
+{
+  float *buff_d = (float *) cuda_malloc(sizeof(float));
+  fault_t *F;
+  for (int n=0; n < io_fault_recv->total_number; n++)
+  {
+    io_fault_recv_one_t *this_recv = io_fault_recv->fault_recvone + n;
+    size_t indx1d = this_recv->indx1d;
+
+    F = F_d + this_recv->f_id;
+
+    int iptr_sta = 0 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Tn+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 1 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Ts1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 2 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Ts2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 3 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Vs+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 4 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Vs1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 5 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Vs2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 6 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Slip+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 7 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Slip1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+
+    iptr_sta = 8 * io_fault_recv->max_nt + it;
+    CUDACHECK(cudaMemcpy(buff,F->Slip2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
+    this_recv->seismo[iptr_sta] =  buff[0];
+  }
+
+  return 0;
+}
+
+int
+io_fault_recv_output_sac(io_fault_recv_t *io_fault_recv,
+                         float dt,
+                         int num_of_vars,
+                         char *output_dir,
+                         char *err_message)
+{
+  // use fake evt_x etc. since did not implement gather evt_x by mpi
+  float evt_x = 0.0;
+  float evt_y = 0.0;
+  float evt_z = 0.0;
+  float evt_d = 0.0;
+  char ou_file[CONST_MAX_STRLEN];
+  char cmp_name[num_of_vars][CONST_MAX_STRLEN] = {"Tn","Ts1","Ts2",
+                                                  "Vs", "Vs1","Vs2",
+                                                  "Slip", "Slip1", "Slip2"};
+
+  for (int ir=0; ir < io_fault_recv->total_number; ir++)
+  {
+    io_fault_recv_one_t *this_recv = io_fault_recv->fault_recvone + ir;
+
+    //fprintf(stdout,"=== Debug: num_of_vars=%d\n",num_of_vars);fflush(stdout);
+    for (int icmp=0; icmp < num_of_vars; icmp++)
+    {
+      //fprintf(stdout,"=== Debug: icmp=%d\n",icmp);fflush(stdout);
+
+      float *this_trace = this_recv->seismo + icmp * io_fault_recv->max_nt;
+
+      sprintf(ou_file,"%s/fault_%s.%s.sac", output_dir, 
+                      this_recv->name, cmp_name[icmp]);
+
+      //fprintf(stdout,"=== Debug: icmp=%d,ou_file=%s\n",icmp,ou_file);fflush(stdout);
+
+      sacExport1C1R(ou_file,
+            this_trace,
+            evt_x, evt_y, evt_z, evt_d,
+            this_recv->x, this_recv->y, this_recv->z,
+            dt, dt, io_fault_recv->max_nt, err_message);
+    }
+  }
+
+  return 0;
+}
+
