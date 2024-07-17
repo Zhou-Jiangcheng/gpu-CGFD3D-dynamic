@@ -34,13 +34,9 @@
 typedef struct{
 
   //-- dirs and file name
-  //char project_dir  [PAR_MAX_STRLEN];
   char output_dir   [PAR_MAX_STRLEN];
   char out_grid_dir     [PAR_MAX_STRLEN];
   char media_dir    [PAR_MAX_STRLEN];
-  //char source_dir   [PAR_MAX_STRLEN];
-  //char station_dir  [PAR_MAX_STRLEN];
-  //char log_file_name[PAR_MAX_STRLEN];
 
   // MPI
   int number_of_mpiprocs_x;
@@ -65,11 +61,6 @@ typedef struct{
   int  number_of_total_grid_points_x;
   int  number_of_total_grid_points_y;
   int  number_of_total_grid_points_z;
-
-  // dis grid
-  int disg_num_level;
-  int *disg_at_zindx;
-  int *disg_factor;
 
   // boundary, CONST_NDIM_2
   char **boundary_type_name;
@@ -97,17 +88,17 @@ typedef struct{
   int imethod;
 
   // grid and fault
-  int number_of_fault;
+  int number_fault;
   int *fault_x_index;
-  int fault_grid[4];
+  int *fault_grid;
 
   int grid_generation_itype;
   int is_export_grid;
   char grid_export_dir[PAR_MAX_STRLEN];
 
-  char fault_coord_nc[PAR_MAX_STRLEN];
+  char fault_coord_dir[PAR_MAX_STRLEN];
   char grid_import_dir[PAR_MAX_STRLEN];
-  char init_stress_nc[PAR_MAX_STRLEN];
+  char init_stress_dir[PAR_MAX_STRLEN];
   float dh;
 
   // metric

@@ -13,7 +13,7 @@ output_dir='../../project/output';
 % which variable to plot
 varnm='Vs1';
 % which station to plot (start from index '1')
-startid=3;
+startid=1;
 endid = 3;
 
 % figure control parameters

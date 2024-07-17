@@ -3,15 +3,15 @@
 #include "transform.h"
 #include "fdlib_math.h"
 
-
 int 
 wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d, 
                     float *f_cur_d, float *f_rhs_d, fault_wav_t FW, 
-                    int i0, fault_t F, gd_metric_t metric_d, gd_t gd_d)
+                    fault_t F, gd_metric_t metric_d, gd_t gd_d)
 {
   int nj = gd_d.nj;
   int nk = gd_d.nk;
   int ny = gd_d.ny;
+  int nz = gd_d.nz;
   int nj1 = gd_d.nj1;
   int nk1 = gd_d.nk1;
   size_t siz_iy   = gd_d.siz_iy;
@@ -20,22 +20,22 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
 
   // INPUT
   // local pointer get each vars
-  float *Vx    = w_cur_d + wav_d.Vx_pos ;
-  float *Vy    = w_cur_d + wav_d.Vy_pos ;
-  float *Vz    = w_cur_d + wav_d.Vz_pos ;
-  float *Txx   = w_cur_d + wav_d.Txx_pos;
-  float *Tyy   = w_cur_d + wav_d.Tyy_pos;
-  float *Tzz   = w_cur_d + wav_d.Tzz_pos;
-  float *Tyz   = w_cur_d + wav_d.Tyz_pos;
-  float *Txz   = w_cur_d + wav_d.Txz_pos;
-  float *Txy   = w_cur_d + wav_d.Txy_pos;
+  float *Vx  = w_cur_d + wav_d.Vx_pos ;
+  float *Vy  = w_cur_d + wav_d.Vy_pos ;
+  float *Vz  = w_cur_d + wav_d.Vz_pos ;
+  float *Txx = w_cur_d + wav_d.Txx_pos;
+  float *Tyy = w_cur_d + wav_d.Tyy_pos;
+  float *Tzz = w_cur_d + wav_d.Tzz_pos;
+  float *Tyz = w_cur_d + wav_d.Tyz_pos;
+  float *Txz = w_cur_d + wav_d.Txz_pos;
+  float *Txy = w_cur_d + wav_d.Txy_pos;
 
-  float *hTxx  = w_rhs_d   + wav_d.Txx_pos; 
-  float *hTyy  = w_rhs_d   + wav_d.Tyy_pos; 
-  float *hTzz  = w_rhs_d   + wav_d.Tzz_pos; 
-  float *hTyz  = w_rhs_d   + wav_d.Tyz_pos; 
-  float *hTxz  = w_rhs_d   + wav_d.Txz_pos; 
-  float *hTxy  = w_rhs_d   + wav_d.Txy_pos; 
+  float *hTxx = w_rhs_d + wav_d.Txx_pos; 
+  float *hTyy = w_rhs_d + wav_d.Tyy_pos; 
+  float *hTzz = w_rhs_d + wav_d.Tzz_pos; 
+  float *hTyz = w_rhs_d + wav_d.Tyz_pos; 
+  float *hTxz = w_rhs_d + wav_d.Txz_pos; 
+  float *hTxy = w_rhs_d + wav_d.Txy_pos; 
 
   float *xi_x  = metric_d.xi_x;
   float *xi_y  = metric_d.xi_y;
@@ -47,48 +47,52 @@ wave2fault_onestage(float *w_cur_d, float *w_rhs_d, wav_t wav_d,
   float *zt_y  = metric_d.zeta_y;
   float *zt_z  = metric_d.zeta_z;
   float *jac3d = metric_d.jac;
-
   // OUTPUT
   // local pointer get each vars
-  float *f_Vx    = f_cur_d + FW.Vx_pos ;
-  float *f_Vy    = f_cur_d + FW.Vy_pos ;
-  float *f_Vz    = f_cur_d + FW.Vz_pos ;
-  float *f_T2x   = f_cur_d + FW.T2x_pos;
-  float *f_T2y   = f_cur_d + FW.T2y_pos;
-  float *f_T2z   = f_cur_d + FW.T2z_pos;
-  float *f_T3x   = f_cur_d + FW.T3x_pos;
-  float *f_T3y   = f_cur_d + FW.T3y_pos;
-  float *f_T3z   = f_cur_d + FW.T3z_pos;
-
-  float *f_T1x   = FW.T1x;
-  float *f_T1y   = FW.T1y;
-  float *f_T1z   = FW.T1z;
-
-  float *f_hT2x  = f_rhs_d + FW.T2x_pos; 
-  float *f_hT2y  = f_rhs_d + FW.T2y_pos; 
-  float *f_hT2z  = f_rhs_d + FW.T2z_pos; 
-  float *f_hT3x  = f_rhs_d + FW.T3x_pos; 
-  float *f_hT3y  = f_rhs_d + FW.T3y_pos; 
-  float *f_hT3z  = f_rhs_d + FW.T3z_pos; 
+  for(int id=0; id<FW.number_fault; id++)
   {
-    dim3 block(8,8);
-    dim3 grid;
-    grid.x = (nj+block.x-1)/block.x;
-    grid.y = (nk+block.y-1)/block.y;
-    wave2fault_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
-                                     Tyz, Txz, Txy, hTxx, hTyy, hTzz,
-                                     hTyz,hTxz,hTxy,f_Vx, f_Vy, f_Vz,
-                                     f_T2x, f_T2y, f_T2z,
-                                     f_T3x, f_T3y, f_T3z,
-                                     f_T1x, f_T1y, f_T1z,
-                                     f_hT2x,f_hT2y,f_hT2z,
-                                     f_hT3x,f_hT3y,f_hT3z,
-                                     xi_x, xi_y, xi_z,
-                                     et_x, et_y, et_z,
-                                     zt_x, zt_y, zt_z,
-                                     jac3d, i0, nj, nj1, nk, nk1, ny, 
-                                     siz_iy, siz_iz,
-                                     siz_slice_yz, F);
+    float *f_cur_thisone = f_cur_d + id*FW.siz_ilevel; 
+    float *f_Vx    = f_cur_thisone + FW.Vx_pos ;
+    float *f_Vy    = f_cur_thisone + FW.Vy_pos ;
+    float *f_Vz    = f_cur_thisone + FW.Vz_pos ;
+    float *f_T2x   = f_cur_thisone + FW.T2x_pos;
+    float *f_T2y   = f_cur_thisone + FW.T2y_pos;
+    float *f_T2z   = f_cur_thisone + FW.T2z_pos;
+    float *f_T3x   = f_cur_thisone + FW.T3x_pos;
+    float *f_T3y   = f_cur_thisone + FW.T3y_pos;
+    float *f_T3z   = f_cur_thisone + FW.T3z_pos;
+
+    float *f_T1x   = FW.T1x + id*7*siz_slice_yz;
+    float *f_T1y   = FW.T1y + id*7*siz_slice_yz;
+    float *f_T1z   = FW.T1z + id*7*siz_slice_yz;
+
+    float *f_rhs_thisone = f_rhs_d + id*FW.siz_ilevel; 
+    float *f_hT2x  = f_rhs_thisone + FW.T2x_pos; 
+    float *f_hT2y  = f_rhs_thisone + FW.T2y_pos; 
+    float *f_hT2z  = f_rhs_thisone + FW.T2z_pos; 
+    float *f_hT3x  = f_rhs_thisone + FW.T3x_pos; 
+    float *f_hT3y  = f_rhs_thisone + FW.T3y_pos; 
+    float *f_hT3z  = f_rhs_thisone + FW.T3z_pos; 
+    {
+      dim3 block(8,8);
+      dim3 grid;
+      grid.x = (nj+block.x-1)/block.x;
+      grid.y = (nk+block.y-1)/block.y;
+      wave2fault_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
+                                       Tyz, Txz, Txy, hTxx, hTyy, hTzz,
+                                       hTyz,hTxz,hTxy,f_Vx, f_Vy, f_Vz,
+                                       f_T2x, f_T2y, f_T2z,
+                                       f_T3x, f_T3y, f_T3z,
+                                       f_T1x, f_T1y, f_T1z,
+                                       f_hT2x,f_hT2y,f_hT2z,
+                                       f_hT3x,f_hT3y,f_hT3z,
+                                       xi_x, xi_y, xi_z,
+                                       et_x, et_y, et_z,
+                                       zt_x, zt_y, zt_z,
+                                       jac3d, nj, nj1, nk, nk1, ny, 
+                                       siz_iy, siz_iz, siz_slice_yz,
+                                       id,F);
+    }
   }
   return 0;
 }
@@ -108,10 +112,11 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
                float * xi_x,  float * xi_y,  float * xi_z,
                float * et_x,  float * et_y,  float * et_z,
                float * zt_x,  float * zt_y,  float * zt_z,
-               float * jac3d, int i0, int nj, int nj1, 
+               float * jac3d, int nj, int nj1, 
                int nk, int nk1, int ny, 
                size_t siz_iy, size_t siz_iz, 
-               size_t siz_slice_yz, fault_t F)
+               size_t siz_slice_yz,
+               int id, fault_t F) 
 {
   // it's not necessary do
   // transform
@@ -129,10 +134,14 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
   float jac;
   float metric[3][3], stress[3][3], traction[3][3];
   size_t iptr, iptr_f;
+  iptr_f = (iy+nj1) + (iz+nk1) * ny;
+  
+  int i0 = F.fault_index[id] + 3; //fault plane x index with ghost
+  fault_one_t *F_thisone = F.fault_one + id;
 
   // only united == 1 , wave transform fault
   // pml + strong boundry easy implement
-  if( iy < nj && iz < nk && F.united[iy + iz * nj] == 1) 
+  if( iy < nj && iz < nk && F_thisone->united[iptr_f] == 1) 
   {
     iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     metric[0][0]=xi_x[iptr];metric[0][1]=et_x[iptr];metric[0][2]=zt_x[iptr];
@@ -145,7 +154,6 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
     stress[2][0]=Txz[iptr];stress[2][1]=Tyz[iptr];stress[2][2]=Tzz[iptr];
 
     fdlib_math_matmul3x3(stress, metric, traction);
-
     for (int i = 0; i < 3; i++)
     {
       for (int j = 0; j < 3; j++)
@@ -199,13 +207,14 @@ wave2fault_gpu(float * Vx,    float * Vy,    float * Vz,
       f_hT3z[iptr_f] = traction[2][2];
     }
   } // end of loop j, k
+
   return;
 }
 
 int
 fault2wave_onestage(float *w_cur_d, wav_t wav_d, 
                     float *f_cur_d, fault_wav_t FW, 
-                    int i0, fault_t F, gd_metric_t metric_d, gd_t gd_d)
+                    fault_t F, gd_metric_t metric_d, gd_t gd_d)
 {
   int nj = gd_d.nj;
   int nk = gd_d.nk;
@@ -240,35 +249,41 @@ fault2wave_onestage(float *w_cur_d, wav_t wav_d,
   float *zt_z  = metric_d.zeta_z;
   float *jac3d = metric_d.jac;
 
-  float *f_Vx    = f_cur_d + FW.Vx_pos ;
-  float *f_Vy    = f_cur_d + FW.Vy_pos ;
-  float *f_Vz    = f_cur_d + FW.Vz_pos ;
-  float *f_T2x   = f_cur_d + FW.T2x_pos;
-  float *f_T2y   = f_cur_d + FW.T2y_pos;
-  float *f_T2z   = f_cur_d + FW.T2z_pos;
-  float *f_T3x   = f_cur_d + FW.T3x_pos;
-  float *f_T3y   = f_cur_d + FW.T3y_pos;
-  float *f_T3z   = f_cur_d + FW.T3z_pos;
-
-  float *f_T1x   = FW.T1x;
-  float *f_T1y   = FW.T1y;
-  float *f_T1z   = FW.T1z;
+  for(int id=0; id<FW.number_fault; id++)
   {
-    dim3 block(8,8);
-    dim3 grid;
-    grid.x = (nj+block.x-1)/block.x;
-    grid.y = (nk+block.y-1)/block.y;
-    fault2wave_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
-                                     Tyz, Txz, Txy, f_Vx, f_Vy, f_Vz,
-                                     f_T2x, f_T2y, f_T2z, 
-                                     f_T3x, f_T3y, f_T3z,
-                                     f_T1x, f_T1y, f_T1z,
-                                     xi_x, xi_y, xi_z,
-                                     et_x, et_y, et_z,
-                                     zt_x, zt_y, zt_z,
-                                     jac3d, i0, nj, nj1, nk, nk1, ny, 
-                                     siz_iy, siz_iz, 
-                                     siz_slice_yz, F);
+
+    float *f_cur_thisone = f_cur_d + id*FW.siz_ilevel; 
+    float *f_Vx    = f_cur_thisone + FW.Vx_pos ;
+    float *f_Vy    = f_cur_thisone + FW.Vy_pos ;
+    float *f_Vz    = f_cur_thisone + FW.Vz_pos ;
+    float *f_T2x   = f_cur_thisone + FW.T2x_pos;
+    float *f_T2y   = f_cur_thisone + FW.T2y_pos;
+    float *f_T2z   = f_cur_thisone + FW.T2z_pos;
+    float *f_T3x   = f_cur_thisone + FW.T3x_pos;
+    float *f_T3y   = f_cur_thisone + FW.T3y_pos;
+    float *f_T3z   = f_cur_thisone + FW.T3z_pos;
+
+    float *f_T1x   = FW.T1x + id*7*siz_slice_yz;
+    float *f_T1y   = FW.T1y + id*7*siz_slice_yz;
+    float *f_T1z   = FW.T1z + id*7*siz_slice_yz;
+    {
+      dim3 block(8,8);
+      dim3 grid;
+      grid.x = (nj+block.x-1)/block.x;
+      grid.y = (nk+block.y-1)/block.y;
+      fault2wave_gpu <<<grid, block>>>(Vx, Vy, Vz, Txx, Tyy, Tzz,
+                                       Tyz, Txz, Txy, f_Vx, f_Vy, f_Vz,
+                                       f_T2x, f_T2y, f_T2z, 
+                                       f_T3x, f_T3y, f_T3z,
+                                       f_T1x, f_T1y, f_T1z,
+                                       xi_x, xi_y, xi_z,
+                                       et_x, et_y, et_z,
+                                       zt_x, zt_y, zt_z,
+                                       jac3d, nj, nj1, nk, nk1, ny, 
+                                       siz_iy, siz_iz, 
+                                       siz_slice_yz,
+                                       id,F);
+    }
   }
 
   return 0;
@@ -285,10 +300,11 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
                float * xi_x,  float * xi_y, float * xi_z,
                float * et_x,  float * et_y, float * et_z,
                float * zt_x,  float * zt_y, float * zt_z,
-               float *jac3d, int i0, int nj, int nj1,
-               int nk, int nk1,int ny, 
+               float *jac3d, int nj, int nj1,
+               int nk, int nk1,int ny,  
                size_t siz_iy, size_t siz_iz, 
-               size_t siz_slice_yz, fault_t F)
+               size_t siz_slice_yz,
+               int id, fault_t F)
 {
   // it's necessary for wave output
   // transform
@@ -307,9 +323,12 @@ fault2wave_gpu(float * Vx,  float * Vy,  float * Vz,
   float jac;
   float metric[3][3], stress[3][3], traction[3][3];
   size_t iptr, iptr_f;
-  
+  int i0 = F.fault_index[id] + 3; //fault plane x index with ghost
+  iptr_f = (iy+nj1) + (iz+nk1) * ny;
+
+  fault_one_t *F_thisone = F.fault_one + id;
   // only united == 0 , fault transform wave
-  if( iy < nj && iz < nk && F.united[iy + iz * nj] == 0)
+  if( iy < nj && iz < nk && F_thisone->united[iptr_f] == 0)
   { 
     iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
     metric[0][0]=xi_x[iptr];metric[0][1]=et_x[iptr];metric[0][2]=zt_x[iptr];

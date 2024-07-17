@@ -425,6 +425,368 @@ io_line_locate(gd_t *gd,
   return ierr;
 }
 
+int
+io_recv_keep(iorecv_t *iorecv, float *w_pre_d, 
+             float *buff, int it, int ncmp, size_t siz_icmp)
+{
+  float Lx1, Lx2, Ly1, Ly2, Lz1, Lz2;
+  //CONST_2_NDIM = 8, use 8 points interp
+  int size = sizeof(float)*ncmp*CONST_2_NDIM;
+  float *buff_d = (float *) cuda_malloc(size);
+  size_t *indx1d_d = (size_t *) cuda_malloc(sizeof(size_t)*CONST_2_NDIM);
+  dim3 block(32);
+  dim3 grid;
+  grid.x = (ncmp+block.x-1)/block.x;
+  for (int n=0; n < iorecv->total_number; n++)
+  {
+    iorecv_one_t *this_recv = iorecv->recvone + n;
+    size_t *indx1d = this_recv->indx1d;
+    CUDACHECK(cudaMemcpy(indx1d_d,indx1d,sizeof(size_t)*CONST_2_NDIM,cudaMemcpyHostToDevice));
+
+    // get coef of linear interp
+    Lx2 = this_recv->di; Lx1 = 1.0 - Lx2;
+    Ly2 = this_recv->dj; Ly1 = 1.0 - Ly2;
+    Lz2 = this_recv->dk; Lz1 = 1.0 - Lz2;
+
+    io_recv_line_interp_pack_buff<<<grid, block>>> (w_pre_d, buff_d, ncmp, siz_icmp, indx1d_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    for (int icmp=0; icmp < ncmp; icmp++)
+    {
+      int iptr_sta = icmp * iorecv->max_nt + it;
+      this_recv->seismo[iptr_sta] =  buff[CONST_2_NDIM*icmp + 0] * Lx1 * Ly1 * Lz1
+                                   + buff[CONST_2_NDIM*icmp + 1] * Lx2 * Ly1 * Lz1
+                                   + buff[CONST_2_NDIM*icmp + 2] * Lx1 * Ly2 * Lz1
+                                   + buff[CONST_2_NDIM*icmp + 3] * Lx2 * Ly2 * Lz1
+                                   + buff[CONST_2_NDIM*icmp + 5] * Lx1 * Ly1 * Lz2
+                                   + buff[CONST_2_NDIM*icmp + 5] * Lx2 * Ly1 * Lz2
+                                   + buff[CONST_2_NDIM*icmp + 6] * Lx1 * Ly2 * Lz2
+                                   + buff[CONST_2_NDIM*icmp + 7] * Lx2 * Ly2 * Lz2;
+    }
+  }
+  CUDACHECK(cudaFree(buff_d));
+  CUDACHECK(cudaFree(indx1d_d));
+
+  return 0;
+}
+
+int
+io_line_keep(ioline_t *ioline, float *w_pre_d,
+             float *buff, int it, int ncmp, size_t siz_icmp)
+{
+  int size = sizeof(float)*ncmp;
+  float *buff_d = (float *) cuda_malloc(size);
+  dim3 block(32);
+  dim3 grid;
+  grid.x = (ncmp+block.x-1)/block.x;
+  for (int n=0; n < ioline->num_of_lines; n++)
+  {
+    int   *this_line_iptr   = ioline->recv_iptr[n];
+    float *this_line_seismo = ioline->recv_seismo[n];
+  
+    for (int ir=0; ir < ioline->line_nr[n]; ir++)
+    {
+      int iptr = this_line_iptr[ir];
+      float *this_seismo = this_line_seismo + ir * ioline->max_nt * ncmp;
+      io_recv_line_pack_buff<<<grid, block>>>(w_pre_d, buff_d, ncmp, siz_icmp, iptr);
+      CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+      for (int icmp=0; icmp < ncmp; icmp++)
+      {
+        int iptr_seismo = icmp * ioline->max_nt + it;
+        this_seismo[iptr_seismo] = buff[icmp];
+      }
+    }
+  }
+  CUDACHECK(cudaFree(buff_d));
+
+  return 0;
+}
+
+__global__ void
+recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
+                   int *flag_indx, int *flag_depth, MPI_Comm comm, int myid)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
+  if(ix<num_recv)
+  {
+    float sx = all_coords_d[3*ix+0];
+    float sy = all_coords_d[3*ix+1];
+    if(flag_indx[ix] == 0 && flag_depth[ix] == 1)
+    {
+      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
+    }
+  }
+}
+
+__global__ void 
+recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
+                         float *all_inc_d, int num_recv, gd_t gd_d, 
+                         int *flag_indx, MPI_Comm comm, int myid)
+{
+  int ix = blockIdx.x * blockDim.x + threadIdx.x;
+  if(ix < num_recv)
+  {
+    // count num of recv in this thread
+    // convert coord to glob index
+    int ri_glob, rj_glob, rk_glob;
+    float rx_inc,ry_inc,rz_inc;
+    float sx = all_coords_d[3*ix+0];
+    float sy = all_coords_d[3*ix+1];
+    float sz = all_coords_d[3*ix+2];
+    if(flag_indx[ix] == 0)
+    {
+
+      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
+      // keep index to avoid duplicat run
+      all_index_d[3*ix+0] = ri_glob;
+      all_index_d[3*ix+1] = rj_glob;
+      all_index_d[3*ix+2] = rk_glob;
+      all_inc_d[3*ix+0]   = rx_inc;
+      all_inc_d[3*ix+1]   = ry_inc;
+      all_inc_d[3*ix+2]   = rz_inc;
+    }
+  }
+}
+
+__global__ void
+io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, size_t *indx1d_d)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  //indx1d_d size is CONST_2_NDIM = 8
+  if(ix < ncmp)
+  {
+   buff_d[8*ix+0] = var[ix*siz_icmp + indx1d_d[0] ];
+   buff_d[8*ix+1] = var[ix*siz_icmp + indx1d_d[1] ];
+   buff_d[8*ix+2] = var[ix*siz_icmp + indx1d_d[2] ];
+   buff_d[8*ix+3] = var[ix*siz_icmp + indx1d_d[3] ];
+   buff_d[8*ix+4] = var[ix*siz_icmp + indx1d_d[4] ];
+   buff_d[8*ix+5] = var[ix*siz_icmp + indx1d_d[5] ];
+   buff_d[8*ix+6] = var[ix*siz_icmp + indx1d_d[6] ];
+   buff_d[8*ix+7] = var[ix*siz_icmp + indx1d_d[7] ];
+  }
+}
+
+__global__ void
+io_recv_line_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, int iptr)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  if(ix < ncmp)
+  {
+   buff_d[ix] = var[ix*siz_icmp + iptr];
+  }
+}
+
+int
+io_recv_output_sac(iorecv_t *iorecv,
+                   float dt,
+                   int num_of_vars,
+                   char **cmp_name,
+                   char *output_dir,
+                   char *err_message)
+{
+  // use fake evt_x etc. since did not implement gather evt_x by mpi
+  float evt_x = 0.0;
+  float evt_y = 0.0;
+  float evt_z = 0.0;
+  float evt_d = 0.0;
+  char ou_file[CONST_MAX_STRLEN];
+
+  for (int ir=0; ir < iorecv->total_number; ir++)
+  {
+    iorecv_one_t *this_recv = iorecv->recvone + ir;
+
+    //fprintf(stdout,"=== Debug: num_of_vars=%d\n",num_of_vars);fflush(stdout);
+    for (int icmp=0; icmp < num_of_vars; icmp++)
+    {
+      //fprintf(stdout,"=== Debug: icmp=%d\n",icmp);fflush(stdout);
+
+      float *this_trace = this_recv->seismo + icmp * iorecv->max_nt;
+
+      sprintf(ou_file,"%s/%s.%s.sac", output_dir, 
+                      this_recv->name, cmp_name[icmp]);
+
+      //fprintf(stdout,"=== Debug: icmp=%d,ou_file=%s\n",icmp,ou_file);fflush(stdout);
+
+      sacExport1C1R(ou_file,
+            this_trace,
+            evt_x, evt_y, evt_z, evt_d,
+            this_recv->x, this_recv->y, this_recv->z,
+            dt, dt, iorecv->max_nt, err_message);
+    }
+  }
+
+  return 0;
+}
+
+// calculate and output strain cmp for elastic medium
+//   do not find a better file to hold this func
+//   temporarily put here
+
+int
+io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
+                     float *lam3d,
+                     float *mu3d,
+                     float dt,
+                     char *output_dir,
+                     char *err_message)
+{
+  // use fake evt_x etc. since did not implement gather evt_x by mpi
+  float evt_x = 0.0;
+  float evt_y = 0.0;
+  float evt_z = 0.0;
+  float evt_d = 0.0;
+  char ou_file[CONST_MAX_STRLEN];
+
+  for (int ir=0; ir < iorecv->total_number; ir++)
+  {
+    iorecv_one_t *this_recv = iorecv->recvone + ir;
+    size_t iptr = this_recv->indx1d[0];
+
+    float lam = lam3d[iptr];
+    float mu  =  mu3d[iptr];
+
+    // cmp seq hard-coded, need to revise in the future
+    float *Txx = this_recv->seismo + 3 * iorecv->max_nt;
+    float *Tyy = this_recv->seismo + 4 * iorecv->max_nt;
+    float *Tzz = this_recv->seismo + 5 * iorecv->max_nt;
+    float *Tyz = this_recv->seismo + 6 * iorecv->max_nt;
+    float *Txz = this_recv->seismo + 7 * iorecv->max_nt;
+    float *Txy = this_recv->seismo + 8 * iorecv->max_nt;
+
+    float E1 = (lam + mu) / (mu * ( 3.0 * lam + 2.0 * mu));
+    float E2 = - lam / ( 2.0 * mu * (3.0 * lam + 2.0 * mu));
+    float E3 = 1.0 / mu;
+
+    // conver to strain per time step
+    for (int it = 0; it < iorecv->max_nt; it++)
+    {
+      float E0 = E2 * (Txx[it] + Tyy[it] + Tzz[it]);
+
+      Txx[it] = E0 - (E2 - E1) * Txx[it];
+      Tyy[it] = E0 - (E2 - E1) * Tyy[it];
+      Tzz[it] = E0 - (E2 - E1) * Tzz[it];
+      Tyz[it] = 0.5 * E3 * Tyz[it];
+      Txz[it] = 0.5 * E3 * Txz[it];
+      Txy[it] = 0.5 * E3 * Txy[it];
+    }
+
+    // output to sca file
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exx");
+    sacExport1C1R(ou_file,Txx,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyy");
+    sacExport1C1R(ou_file,Tyy,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Ezz");
+    sacExport1C1R(ou_file,Tzz,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyz");
+    sacExport1C1R(ou_file,Tyz,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exz");
+    sacExport1C1R(ou_file,Txz,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exy");
+    sacExport1C1R(ou_file,Txy,evt_x, evt_y, evt_z, evt_d,
+          this_recv->x, this_recv->y, this_recv->z,
+          dt, dt, iorecv->max_nt, err_message);
+  } // loop ir
+
+  return 0;
+}
+
+int
+io_recv_output_sac_el_vti_strain(iorecv_t *iorecv,
+                        float * c11, float * c13,
+                        float * c33, float * c55,
+                        float * c66,
+                        float dt,
+                        char *evtnm,
+                        char *output_dir,
+                        char *err_message)
+{
+  //not implement
+
+
+
+  return 0;
+}
+int
+io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
+                        float * c11, float * c12,
+                        float * c13, float * c14,
+                        float * c15, float * c16,
+                        float * c22, float * c23,
+                        float * c24, float * c25,
+                        float * c26, float * c33,
+                        float * c34, float * c35,
+                        float * c36, float * c44,
+                        float * c45, float * c46,
+                        float * c55, float * c56,
+                        float * c66,
+                        float dt,
+                        char *evtnm,
+                        char *output_dir,
+                        char *err_message)
+{
+  //not implement
+
+
+
+  return 0;
+}
+int
+io_line_output_sac(ioline_t *ioline,
+      float dt, char **cmp_name, char *output_dir)
+{
+  // use fake evt_x etc. since did not implement gather evt_x by mpi
+  float evt_x = 0.0;
+  float evt_y = 0.0;
+  float evt_z = 0.0;
+  float evt_d = 0.0;
+  char ou_file[CONST_MAX_STRLEN];
+  char err_message[CONST_MAX_STRLEN];
+  
+  for (int n=0; n < ioline->num_of_lines; n++)
+  {
+    int   *this_line_iptr   = ioline->recv_iptr[n];
+    float *this_line_seismo = ioline->recv_seismo[n];
+
+    for (int ir=0; ir < ioline->line_nr[n]; ir++)
+    {
+      float *this_seismo = this_line_seismo + ir * ioline->max_nt * ioline->ncmp;
+
+      for (int icmp=0; icmp < ioline->ncmp; icmp++)
+      {
+        float *this_trace = this_seismo + icmp * ioline->max_nt;
+
+        sprintf(ou_file,"%s/%s.no%d.%s.sac", output_dir,
+                  ioline->line_name[n],ioline->recv_seq[n][ir],
+                  cmp_name[icmp]);
+
+        sacExport1C1R(ou_file,
+              this_trace,
+              evt_x, evt_y, evt_z, evt_d,
+              ioline->recv_x[n][ir],
+              ioline->recv_y[n][ir],
+              ioline->recv_z[n][ir],
+              dt, dt, ioline->max_nt, err_message);
+      } // icmp
+    } // ir
+  } // line
+
+  return 0;
+}
+
 
 int
 io_slice_locate(gd_t  *gd,
@@ -1383,369 +1745,6 @@ io_snap_nc_close(iosnap_nc_t *iosnap_nc)
   return 0;
 }
 
-
-int
-io_recv_keep(iorecv_t *iorecv, float *w_pre_d, 
-             float *buff, int it, int ncmp, size_t siz_icmp)
-{
-  float Lx1, Lx2, Ly1, Ly2, Lz1, Lz2;
-  //CONST_2_NDIM = 8, use 8 points interp
-  int size = sizeof(float)*ncmp*CONST_2_NDIM;
-  float *buff_d = (float *) cuda_malloc(size);
-  size_t *indx1d_d = (size_t *) cuda_malloc(sizeof(size_t)*CONST_2_NDIM);
-  dim3 block(32);
-  dim3 grid;
-  grid.x = (ncmp+block.x-1)/block.x;
-  for (int n=0; n < iorecv->total_number; n++)
-  {
-    iorecv_one_t *this_recv = iorecv->recvone + n;
-    size_t *indx1d = this_recv->indx1d;
-    CUDACHECK(cudaMemcpy(indx1d_d,indx1d,sizeof(size_t)*CONST_2_NDIM,cudaMemcpyHostToDevice));
-
-    // get coef of linear interp
-    Lx2 = this_recv->di; Lx1 = 1.0 - Lx2;
-    Ly2 = this_recv->dj; Ly1 = 1.0 - Ly2;
-    Lz2 = this_recv->dk; Lz1 = 1.0 - Lz2;
-
-    io_recv_line_interp_pack_buff<<<grid, block>>> (w_pre_d, buff_d, ncmp, siz_icmp, indx1d_d);
-    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
-    for (int icmp=0; icmp < ncmp; icmp++)
-    {
-      int iptr_sta = icmp * iorecv->max_nt + it;
-      this_recv->seismo[iptr_sta] =  buff[CONST_2_NDIM*icmp + 0] * Lx1 * Ly1 * Lz1
-                                   + buff[CONST_2_NDIM*icmp + 1] * Lx2 * Ly1 * Lz1
-                                   + buff[CONST_2_NDIM*icmp + 2] * Lx1 * Ly2 * Lz1
-                                   + buff[CONST_2_NDIM*icmp + 3] * Lx2 * Ly2 * Lz1
-                                   + buff[CONST_2_NDIM*icmp + 5] * Lx1 * Ly1 * Lz2
-                                   + buff[CONST_2_NDIM*icmp + 5] * Lx2 * Ly1 * Lz2
-                                   + buff[CONST_2_NDIM*icmp + 6] * Lx1 * Ly2 * Lz2
-                                   + buff[CONST_2_NDIM*icmp + 7] * Lx2 * Ly2 * Lz2;
-    }
-  }
-  CUDACHECK(cudaFree(buff_d));
-  CUDACHECK(cudaFree(indx1d_d));
-
-  return 0;
-}
-
-int
-io_line_keep(ioline_t *ioline, float *w_pre_d,
-             float *buff, int it, int ncmp, size_t siz_icmp)
-{
-  int size = sizeof(float)*ncmp;
-  float *buff_d = (float *) cuda_malloc(size);
-  dim3 block(32);
-  dim3 grid;
-  grid.x = (ncmp+block.x-1)/block.x;
-  for (int n=0; n < ioline->num_of_lines; n++)
-  {
-    int   *this_line_iptr   = ioline->recv_iptr[n];
-    float *this_line_seismo = ioline->recv_seismo[n];
-  
-    for (int ir=0; ir < ioline->line_nr[n]; ir++)
-    {
-      int iptr = this_line_iptr[ir];
-      float *this_seismo = this_line_seismo + ir * ioline->max_nt * ncmp;
-      io_recv_line_pack_buff<<<grid, block>>>(w_pre_d, buff_d, ncmp, siz_icmp, iptr);
-      CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
-      for (int icmp=0; icmp < ncmp; icmp++)
-      {
-        int iptr_seismo = icmp * ioline->max_nt + it;
-        this_seismo[iptr_seismo] = buff[icmp];
-      }
-    }
-  }
-  CUDACHECK(cudaFree(buff_d));
-
-  return 0;
-}
-
-__global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
-                   int *flag_indx, int *flag_depth, MPI_Comm comm, int myid)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
-  if(ix<num_recv)
-  {
-    float sx = all_coords_d[3*ix+0];
-    float sy = all_coords_d[3*ix+1];
-    if(flag_indx[ix] == 0 && flag_depth[ix] == 1)
-    {
-      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
-    }
-  }
-}
-
-__global__ void 
-recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gd_t gd_d, 
-                         int *flag_indx, MPI_Comm comm, int myid)
-{
-  int ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix < num_recv)
-  {
-    // count num of recv in this thread
-    // convert coord to glob index
-    int ri_glob, rj_glob, rk_glob;
-    float rx_inc,ry_inc,rz_inc;
-    float sx = all_coords_d[3*ix+0];
-    float sy = all_coords_d[3*ix+1];
-    float sz = all_coords_d[3*ix+2];
-    if(flag_indx[ix] == 0)
-    {
-
-      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
-      // keep index to avoid duplicat run
-      all_index_d[3*ix+0] = ri_glob;
-      all_index_d[3*ix+1] = rj_glob;
-      all_index_d[3*ix+2] = rk_glob;
-      all_inc_d[3*ix+0]   = rx_inc;
-      all_inc_d[3*ix+1]   = ry_inc;
-      all_inc_d[3*ix+2]   = rz_inc;
-    }
-  }
-}
-
-__global__ void
-io_recv_line_interp_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, size_t *indx1d_d)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  //indx1d_d size is CONST_2_NDIM = 8
-  if(ix < ncmp)
-  {
-   buff_d[8*ix+0] = var[ix*siz_icmp + indx1d_d[0] ];
-   buff_d[8*ix+1] = var[ix*siz_icmp + indx1d_d[1] ];
-   buff_d[8*ix+2] = var[ix*siz_icmp + indx1d_d[2] ];
-   buff_d[8*ix+3] = var[ix*siz_icmp + indx1d_d[3] ];
-   buff_d[8*ix+4] = var[ix*siz_icmp + indx1d_d[4] ];
-   buff_d[8*ix+5] = var[ix*siz_icmp + indx1d_d[5] ];
-   buff_d[8*ix+6] = var[ix*siz_icmp + indx1d_d[6] ];
-   buff_d[8*ix+7] = var[ix*siz_icmp + indx1d_d[7] ];
-  }
-}
-
-__global__ void
-io_recv_line_pack_buff(float *var, float *buff_d, int ncmp, size_t siz_icmp, int iptr)
-{
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  if(ix < ncmp)
-  {
-   buff_d[ix] = var[ix*siz_icmp + iptr];
-  }
-}
-
-int
-io_recv_output_sac(iorecv_t *iorecv,
-                   float dt,
-                   int num_of_vars,
-                   char **cmp_name,
-                   char *output_dir,
-                   char *err_message)
-{
-  // use fake evt_x etc. since did not implement gather evt_x by mpi
-  float evt_x = 0.0;
-  float evt_y = 0.0;
-  float evt_z = 0.0;
-  float evt_d = 0.0;
-  char ou_file[CONST_MAX_STRLEN];
-
-  for (int ir=0; ir < iorecv->total_number; ir++)
-  {
-    iorecv_one_t *this_recv = iorecv->recvone + ir;
-
-    //fprintf(stdout,"=== Debug: num_of_vars=%d\n",num_of_vars);fflush(stdout);
-    for (int icmp=0; icmp < num_of_vars; icmp++)
-    {
-      //fprintf(stdout,"=== Debug: icmp=%d\n",icmp);fflush(stdout);
-
-      float *this_trace = this_recv->seismo + icmp * iorecv->max_nt;
-
-      sprintf(ou_file,"%s/%s.%s.sac", output_dir, 
-                      this_recv->name, cmp_name[icmp]);
-
-      //fprintf(stdout,"=== Debug: icmp=%d,ou_file=%s\n",icmp,ou_file);fflush(stdout);
-
-      sacExport1C1R(ou_file,
-            this_trace,
-            evt_x, evt_y, evt_z, evt_d,
-            this_recv->x, this_recv->y, this_recv->z,
-            dt, dt, iorecv->max_nt, err_message);
-    }
-  }
-
-  return 0;
-}
-
-// calculate and output strain cmp for elastic medium
-//   do not find a better file to hold this func
-//   temporarily put here
-
-int
-io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
-                     float *lam3d,
-                     float *mu3d,
-                     float dt,
-                     char *output_dir,
-                     char *err_message)
-{
-  // use fake evt_x etc. since did not implement gather evt_x by mpi
-  float evt_x = 0.0;
-  float evt_y = 0.0;
-  float evt_z = 0.0;
-  float evt_d = 0.0;
-  char ou_file[CONST_MAX_STRLEN];
-
-  for (int ir=0; ir < iorecv->total_number; ir++)
-  {
-    iorecv_one_t *this_recv = iorecv->recvone + ir;
-    size_t iptr = this_recv->indx1d[0];
-
-    float lam = lam3d[iptr];
-    float mu  =  mu3d[iptr];
-
-    // cmp seq hard-coded, need to revise in the future
-    float *Txx = this_recv->seismo + 3 * iorecv->max_nt;
-    float *Tyy = this_recv->seismo + 4 * iorecv->max_nt;
-    float *Tzz = this_recv->seismo + 5 * iorecv->max_nt;
-    float *Tyz = this_recv->seismo + 6 * iorecv->max_nt;
-    float *Txz = this_recv->seismo + 7 * iorecv->max_nt;
-    float *Txy = this_recv->seismo + 8 * iorecv->max_nt;
-
-    float E1 = (lam + mu) / (mu * ( 3.0 * lam + 2.0 * mu));
-    float E2 = - lam / ( 2.0 * mu * (3.0 * lam + 2.0 * mu));
-    float E3 = 1.0 / mu;
-
-    // conver to strain per time step
-    for (int it = 0; it < iorecv->max_nt; it++)
-    {
-      float E0 = E2 * (Txx[it] + Tyy[it] + Tzz[it]);
-
-      Txx[it] = E0 - (E2 - E1) * Txx[it];
-      Tyy[it] = E0 - (E2 - E1) * Tyy[it];
-      Tzz[it] = E0 - (E2 - E1) * Tzz[it];
-      Tyz[it] = 0.5 * E3 * Tyz[it];
-      Txz[it] = 0.5 * E3 * Txz[it];
-      Txy[it] = 0.5 * E3 * Txy[it];
-    }
-
-    // output to sca file
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exx");
-    sacExport1C1R(ou_file,Txx,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyy");
-    sacExport1C1R(ou_file,Tyy,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Ezz");
-    sacExport1C1R(ou_file,Tzz,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyz");
-    sacExport1C1R(ou_file,Tyz,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exz");
-    sacExport1C1R(ou_file,Txz,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-
-    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exy");
-    sacExport1C1R(ou_file,Txy,evt_x, evt_y, evt_z, evt_d,
-          this_recv->x, this_recv->y, this_recv->z,
-          dt, dt, iorecv->max_nt, err_message);
-  } // loop ir
-
-  return 0;
-}
-
-int
-io_recv_output_sac_el_vti_strain(iorecv_t *iorecv,
-                        float * c11, float * c13,
-                        float * c33, float * c55,
-                        float * c66,
-                        float dt,
-                        char *evtnm,
-                        char *output_dir,
-                        char *err_message)
-{
-  //not implement
-
-
-
-  return 0;
-}
-int
-io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
-                        float * c11, float * c12,
-                        float * c13, float * c14,
-                        float * c15, float * c16,
-                        float * c22, float * c23,
-                        float * c24, float * c25,
-                        float * c26, float * c33,
-                        float * c34, float * c35,
-                        float * c36, float * c44,
-                        float * c45, float * c46,
-                        float * c55, float * c56,
-                        float * c66,
-                        float dt,
-                        char *evtnm,
-                        char *output_dir,
-                        char *err_message)
-{
-  //not implement
-
-
-
-  return 0;
-}
-int
-io_line_output_sac(ioline_t *ioline,
-      float dt, char **cmp_name, char *output_dir)
-{
-  // use fake evt_x etc. since did not implement gather evt_x by mpi
-  float evt_x = 0.0;
-  float evt_y = 0.0;
-  float evt_z = 0.0;
-  float evt_d = 0.0;
-  char ou_file[CONST_MAX_STRLEN];
-  char err_message[CONST_MAX_STRLEN];
-  
-  for (int n=0; n < ioline->num_of_lines; n++)
-  {
-    int   *this_line_iptr   = ioline->recv_iptr[n];
-    float *this_line_seismo = ioline->recv_seismo[n];
-
-    for (int ir=0; ir < ioline->line_nr[n]; ir++)
-    {
-      float *this_seismo = this_line_seismo + ir * ioline->max_nt * ioline->ncmp;
-
-      for (int icmp=0; icmp < ioline->ncmp; icmp++)
-      {
-        float *this_trace = this_seismo + icmp * ioline->max_nt;
-
-        sprintf(ou_file,"%s/%s.no%d.%s.sac", output_dir,
-                  ioline->line_name[n],ioline->recv_seq[n][ir],
-                  cmp_name[icmp]);
-
-        sacExport1C1R(ou_file,
-              this_trace,
-              evt_x, evt_y, evt_z, evt_d,
-              ioline->recv_x[n][ir],
-              ioline->recv_y[n][ir],
-              ioline->recv_z[n][ir],
-              dt, dt, ioline->max_nt, err_message);
-      } // icmp
-    } // ir
-  } // line
-
-  return 0;
-}
-
 int
 ioslice_print(ioslice_t *ioslice)
 {    
@@ -1912,7 +1911,7 @@ io_get_nextline(FILE *fp, char *str, int length)
 int
 io_fault_locate(gd_t *gd, 
                 iofault_t *iofault,
-                int number_of_fault,
+                int number_fault,
                 int *fault_x_index,
                 char *output_fname_part,
                 char *output_dir)
@@ -1920,26 +1919,26 @@ io_fault_locate(gd_t *gd,
   int ierr = 0;
   iofault->siz_max_wrk = 0;
 
-  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(number_of_fault,
+  iofault->fault_fname = (char **) fdlib_mem_malloc_2l_char(number_fault,
                                    CONST_MAX_STRLEN,"fault_fname");
 
-  iofault->fault_x_indx = (int *) malloc(number_of_fault * sizeof(int));
+  iofault->fault_local_index = (int *) malloc(number_fault * sizeof(int));
 
-  iofault->num_of_fault = 0;
+  iofault->number_fault = 0;
 
-  for (int i=0; i<number_of_fault; i++)
+  for (int i=0; i<number_fault; i++)
   {
     int gi = fault_x_index[i];
     int gi_1 = gi+1;
     if(gd_info_gindx_is_inner_i(gi, gd)==1)
     {
-      int islc = iofault->num_of_fault;
+      int islc = iofault->number_fault;
 
-      iofault->fault_x_indx[islc] =  gd_info_indx_glphy2lcext_i(gi, gd);
+      iofault->fault_local_index[islc] =  gd_info_indx_glphy2lcext_i(gi, gd);
       sprintf(iofault->fault_fname[islc],"%s/fault_i%d_%s.nc",
                 output_dir,gi_1,output_fname_part);
 
-      iofault->num_of_fault += 1;
+      iofault->number_fault += 1;
 
       size_t slice_siz = gd->nj * gd->nk;
       iofault->siz_max_wrk = slice_siz > iofault->siz_max_wrk ? 
@@ -1956,18 +1955,18 @@ io_fault_nc_create(iofault_t *iofault,
                    int *topoid, iofault_nc_t *iofault_nc)
 {
   int ierr = 0;
-  int num_of_fault = iofault->num_of_fault;
+  int number_fault = iofault->number_fault;
 
-  iofault_nc->num_of_fault = num_of_fault;
+  iofault_nc->number_fault = number_fault;
   int num_of_vars  = 20;  // not a fixed number, dependent on output
   iofault_nc->num_of_vars = num_of_vars;
 
   // malloc vars
-  iofault_nc->ncid   = (int *)malloc(num_of_fault*sizeof(int));
-  iofault_nc->varid  = (int *)malloc(num_of_vars*num_of_fault*sizeof(int));
+  iofault_nc->ncid   = (int *)malloc(number_fault*sizeof(int));
+  iofault_nc->varid  = (int *)malloc(num_of_vars*number_fault*sizeof(int));
 
   int dimid[3];
-  for (int i=0; i<num_of_fault; i++)
+  for (int i=0; i<number_fault; i++)
   {
     // fault slice
     ierr = nc_create(iofault->fault_fname[i], NC_CLOBBER, &(iofault_nc->ncid[i])); handle_nc_err(ierr);
@@ -1979,43 +1978,43 @@ io_fault_nc_create(iofault_t *iofault,
     ierr = nc_def_var(iofault_nc->ncid[i], "time",      NC_FLOAT, 1, dimid+0, 
                     &(iofault_nc->varid[0+i*num_of_vars]));  
     handle_nc_err(ierr);
-    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
-                    &(iofault_nc->varid[1+i*num_of_vars]));
-    handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
-                    &(iofault_nc->varid[2+i*num_of_vars]));
-    handle_nc_err(ierr);   
     ierr = nc_def_var(iofault_nc->ncid[i], "Tn" ,       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[3+i*num_of_vars]));
+                    &(iofault_nc->varid[1+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Ts1",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[4+i*num_of_vars]));
+                    &(iofault_nc->varid[2+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Ts2",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[5+i*num_of_vars]));
+                    &(iofault_nc->varid[3+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Vs",        NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[6+i*num_of_vars]));
+                    &(iofault_nc->varid[4+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Vs1",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[7+i*num_of_vars])); 
+                    &(iofault_nc->varid[5+i*num_of_vars])); 
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Vs2",       NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[8+i*num_of_vars]));
+                    &(iofault_nc->varid[6+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Slip",      NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[9+i*num_of_vars]));
+                    &(iofault_nc->varid[7+i*num_of_vars]));
     handle_nc_err(ierr);
     ierr = nc_def_var(iofault_nc->ncid[i], "Slip1",     NC_FLOAT, 3, dimid,   
-                    &(iofault_nc->varid[10+i*num_of_vars]));
+                    &(iofault_nc->varid[8+i*num_of_vars]));
     handle_nc_err(ierr);   
     ierr = nc_def_var(iofault_nc->ncid[i], "Slip2",     NC_FLOAT, 3, dimid,   
+                    &(iofault_nc->varid[9+i*num_of_vars]));
+    handle_nc_err(ierr);   
+    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
+                    &(iofault_nc->varid[10+i*num_of_vars]));
+    handle_nc_err(ierr);   
+    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
                     &(iofault_nc->varid[11+i*num_of_vars]));
     handle_nc_err(ierr);   
 
     // attribute: index info for plot
     nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
-                   NC_INT,1,iofault->fault_x_indx+i);
+                   NC_INT,1,iofault->fault_local_index+i);
     nc_put_att_int(iofault_nc->ncid[i],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,3,topoid);
 
@@ -2028,7 +2027,8 @@ io_fault_nc_create(iofault_t *iofault,
 int
 io_fault_nc_put(iofault_nc_t *iofault_nc,
                 gd_t     *gd,
-                fault_t  F,
+                fault_t  *F,
+                fault_t  F_d,
                 float *buff,
                 int   it,
                 float time)
@@ -2037,79 +2037,126 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 
   int   nj  = gd->nj;
   int   nk  = gd->nk;
+  int   ny  = gd->ny;
   size_t size = sizeof(float) * nj * nk; 
+  float *buff_d;
+  buff_d = (float *) cuda_malloc(size);
 
   size_t startp[] = { it, 0, 0 };
   size_t countp[] = { 1, nk, nj};
   size_t start_tdim = it;
   int  num_of_vars = iofault_nc->num_of_vars;
 
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  dim3 block(8,8);
+  dim3 grid;
+  grid.x = (nj+block.x-1)/block.x;
+  grid.y = (nk+block.y-1)/block.y;
+  for (int id=0; id<iofault_nc->number_fault; id++)
   {
-    nc_put_var1_float(iofault_nc->ncid[i], iofault_nc->varid[0+i*num_of_vars],
+    nc_put_var1_float(iofault_nc->ncid[id], iofault_nc->varid[0+id*num_of_vars],
                         &start_tdim, &time);
 
-
-    CUDACHECK(cudaMemcpy(buff,F.Tn,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[3+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Ts1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[4+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Ts2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[5+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[6+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[7+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Vs2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[8+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Slip,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[9+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Slip1,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[10+i*num_of_vars], startp, countp, buff);
-
-    CUDACHECK(cudaMemcpy(buff,F.Slip2,size,cudaMemcpyDeviceToHost));
-    nc_put_vara_float(iofault_nc->ncid[i], iofault_nc->varid[11+i*num_of_vars], startp, countp, buff);
+    // Tn
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[0],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[1+id*num_of_vars], startp, countp, buff); 
+    // Ts1  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[1],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[2+id*num_of_vars], startp, countp, buff); 
+    // Ts2  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[2],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[3+id*num_of_vars], startp, countp, buff); 
+    // Vs  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[3],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[4+id*num_of_vars], startp, countp, buff); 
+    // Vs1  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[4],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[5+id*num_of_vars], startp, countp, buff); 
+    // Vs2  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[5],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[6+id*num_of_vars], startp, countp, buff); 
+    // Slip  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[6],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[7+id*num_of_vars], startp, countp, buff); 
+    // Slip1  
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[7],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[8+id*num_of_vars], startp, countp, buff); 
+    // Slip2 
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[8],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[9+id*num_of_vars], startp, countp, buff); 
   }
 
+  CUDACHECK(cudaFree(buff_d));
   return ierr;
 }
 
 int
 io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
                       gd_t     *gd,
-                      fault_t  F,
+                      fault_t  *F,
+                      fault_t  F_d,
                       float *buff)
 {
   int ierr = 0;
 
-  int nj  = gd->nj ;
-  int nk  = gd->nk ;
+  int nj  = gd->nj;
+  int nk  = gd->nk;
+  int ny  = gd->ny;
   size_t size = sizeof(float) * nj * nk; 
+  float *buff_d;
+  buff_d = (float *) cuda_malloc(size);
+
+  size_t startp[] = {  0, 0 };
+  size_t countp[] = { nk, nj};
   int  num_of_vars = iofault_nc->num_of_vars;
 
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
-  {
-    CUDACHECK(cudaMemcpy(buff,F.init_t0,size,cudaMemcpyDeviceToHost));
-    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[1+i*num_of_vars], buff);
+  dim3 block(8,8);
+  dim3 grid;
+  grid.x = (nj+block.x-1)/block.x;
+  grid.y = (nk+block.y-1)/block.y;
 
-    CUDACHECK(cudaMemcpy(buff,F.peak_Vs,size,cudaMemcpyDeviceToHost));
-    nc_put_var_float(iofault_nc->ncid[i], iofault_nc->varid[2+i*num_of_vars], buff);
+  for (int id=0; id<iofault_nc->number_fault; id++)
+  {
+    // peak_Vs
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[9],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[10+id*num_of_vars], startp, countp, buff); 
+    // init_t0
+    io_fault_pack_buff<<<grid, block>>>(nj,nk,ny,id,F_d,F->cmp_pos[10],buff_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    nc_put_vara_float(iofault_nc->ncid[id], iofault_nc->varid[11+id*num_of_vars], startp, countp, buff); 
   }
+  CUDACHECK(cudaFree(buff_d));
 
   return ierr;
+}
+
+__global__ void
+io_fault_pack_buff(int nj, int nk, int ny, int id, fault_t F, size_t cmp_pos, float* buff_d)
+{
+  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
+  fault_one_t *F_thisone = F.fault_one + id; 
+  if(iy < nj && iz < nk)
+  {
+    size_t iptr_slice = iy + iz*nj;
+    size_t iptr = (iy+3) + (iz+3) * ny; 
+    buff_d[iptr_slice] = F_thisone->output[cmp_pos + iptr];
+  }
 }
 
 int
 io_fault_nc_close(iofault_nc_t *iofault_nc)
 {
-  for (int i=0; i<iofault_nc->num_of_fault; i++)
+  for (int i=0; i<iofault_nc->number_fault; i++)
   {
     nc_close(iofault_nc->ncid[i]);
   }
@@ -2163,6 +2210,7 @@ io_fault_recv_read_locate(gd_t      *gd,
   int f_id;  //fault_id
   int ix, iy, iz; // global index
   float rx, ry, rz; //coords
+  float rx_inc, ry_inc, rz_inc; //increment
 
   for (ir=0; ir<num_recv; ir++)
   {
@@ -2170,16 +2218,21 @@ io_fault_recv_read_locate(gd_t      *gd,
     io_get_nextline(fp, line, 500);
 
     // get values
-    sscanf(line, "%s %d %d %d", 
-           fault_recvone[ir].name, &f_id, &iy, &iz);
+    sscanf(line, "%s %d %g %g", 
+           fault_recvone[ir].name, &f_id, &ry, &rz);
 
     // need minus 1, due to C is start from 0
     f_id = f_id - 1;
+    ry = ry-1;
+    rz = rz-1;
     ix = fault_indx[f_id];
+    rx_inc = 0;
 
-    // need minus 1, due to C is start from 0
-    iy = iy-1;
-    iz = iz-1;
+    // do not take nearest value, but use smaller value
+    iy = floor(ry);
+    iz = floor(rz);
+    ry_inc = ry - iy;
+    rz_inc = rz - iz;
 
     if (gd_info_gindx_is_inner(ix,iy,iz,gd) == 1)
     {
@@ -2203,10 +2256,15 @@ io_fault_recv_read_locate(gd_t      *gd,
       this_recv->i=i_local;
       this_recv->j=j_local;
       this_recv->k=k_local;
+      this_recv->di = rx_inc;
+      this_recv->dj = ry_inc;
+      this_recv->dk = rz_inc;
       this_recv->f_id = f_id;
 
-      // due to Fault out put var not include ghost
-      this_recv->indx1d = (j_local-3) + (k_local-3) * gd->nj;
+      this_recv->indx1d[0] = j_local     + k_local * gd->ny;
+      this_recv->indx1d[1] = (j_local+1) + k_local * gd->ny;
+      this_recv->indx1d[2] = j_local     + (k_local+1) * gd->ny;
+      this_recv->indx1d[3] = (j_local+1) + (k_local+1) * gd->ny;
       nr_this += 1;
     }
   }
@@ -2242,57 +2300,60 @@ io_fault_recv_read_locate(gd_t      *gd,
 }
 
 int
-io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t *F_d, 
-                   float *buff, int it)
+io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t F_d, 
+                   float *buff, int it, size_t siz_slice_yz)
 {
-  float *buff_d = (float *) cuda_malloc(sizeof(float));
-  fault_t *F;
+  float Ly1, Ly2, Lz1, Lz2;
+  int ncmp = F_d.ncmp-2; //0-8 variable 
+  int size = sizeof(float)*4*ncmp;
+  float *buff_d = (float *) cuda_malloc(size);
+  size_t *indx1d_d = (size_t *) cuda_malloc(sizeof(size_t)*4);
+  int iptr_sta;
+  dim3 block(32);
+  dim3 grid;
+  grid.x = (ncmp+block.x-1)/block.x;
+
   for (int n=0; n < io_fault_recv->total_number; n++)
   {
     io_fault_recv_one_t *this_recv = io_fault_recv->fault_recvone + n;
-    size_t indx1d = this_recv->indx1d;
+    int id = this_recv->f_id;
 
-    F = F_d + this_recv->f_id;
+    size_t *indx1d = this_recv->indx1d;
+    CUDACHECK(cudaMemcpy(indx1d_d,indx1d,sizeof(size_t)*4,cudaMemcpyHostToDevice));
 
-    int iptr_sta = 0 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Tn+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
+    // get coef of linear interp
+    Ly2 = this_recv->dj; Ly1 = 1.0 - Ly2;
+    Lz2 = this_recv->dk; Lz1 = 1.0 - Lz2;
 
-    iptr_sta = 1 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Ts1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 2 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Ts2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 3 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Vs+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 4 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Vs1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 5 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Vs2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 6 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Slip+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 7 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Slip1+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
-
-    iptr_sta = 8 * io_fault_recv->max_nt + it;
-    CUDACHECK(cudaMemcpy(buff,F->Slip2+indx1d,sizeof(float),cudaMemcpyDeviceToHost));
-    this_recv->seismo[iptr_sta] =  buff[0];
+    io_fault_recv_interp_pack_buff<<<grid, block>>> (id, F_d, buff_d, ncmp, siz_slice_yz, indx1d_d);
+    CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
+    for (int icmp=0; icmp < ncmp; icmp++)
+    {
+      int iptr_sta = icmp * io_fault_recv->max_nt + it;
+      this_recv->seismo[iptr_sta] = buff[4*icmp+0] * Ly1 * Lz1
+                                  + buff[4*icmp+1] * Ly2 * Lz1
+                                  + buff[4*icmp+2] * Ly1 * Lz2
+                                  + buff[4*icmp+3] * Ly2 * Lz2;
+    }
   }
 
   return 0;
 }
+
+__global__ void
+io_fault_recv_interp_pack_buff(int id, fault_t  F_d, float *buff_d, int ncmp, size_t siz_slice_yz, size_t *indx1d_d)
+{
+  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
+  fault_one_t *F_thisone = F_d.fault_one + id; 
+  if(ix < ncmp)
+  {
+    buff_d[4*ix+0] = F_thisone->output[ix*siz_slice_yz+indx1d_d[0]];
+    buff_d[4*ix+1] = F_thisone->output[ix*siz_slice_yz+indx1d_d[1]];
+    buff_d[4*ix+2] = F_thisone->output[ix*siz_slice_yz+indx1d_d[2]];
+    buff_d[4*ix+3] = F_thisone->output[ix*siz_slice_yz+indx1d_d[3]];
+  }
+}
+
 
 int
 io_fault_recv_output_sac(io_fault_recv_t *io_fault_recv,

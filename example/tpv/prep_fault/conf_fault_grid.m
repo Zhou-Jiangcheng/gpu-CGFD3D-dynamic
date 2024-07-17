@@ -20,7 +20,7 @@ z = zeros(nj, nk);
 theta = 0/4*pi;
 for k = 1:nk
   for j = 1:nj
-        x(j,k) = 0 + (k-nk)*dh*tan(theta);
+        x(j,k) = 0 + (k-nk)*dh*tan(theta)+10000;
 %         y(j,k) = (j-1-nj/2)*dh;
         y(j,k) = (j-1)*dh;
         z(j,k) = (k-nk)*dh;
@@ -56,7 +56,7 @@ metric = cal_metric(x,y,z,dh);
 [vec_n, vec_m, vec_l] = cal_basevectors(metric);
 jac = metric.jac;
 disp('write output...')
-fnm_out = "./fault_coord.nc"
+fnm_out = "./fault_coord_2.nc"
 ncid = netcdf.create(fnm_out, 'CLOBBER');
 dimid(1) = netcdf.defDim(ncid,'nj',nj);
 dimid(2) = netcdf.defDim(ncid,'nk',nk);

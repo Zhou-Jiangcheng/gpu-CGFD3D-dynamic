@@ -39,7 +39,7 @@ VERBOSE=100
 GPU_START_ID=4
 
 #-- total x grid points
-NX=200
+NX=300
 #-- total y grid points
 NY=400
 #-- total z grid points
@@ -60,14 +60,28 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : $NPROCS_Y,
   "number_of_mpiprocs_z" : $NPROCS_Z,
 
-  "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,200],
-
   "size_of_time_step" : 0.005,
   "number_of_time_steps" : 3000,
   "#time_window_length" : 15,
   "check_stability" : 1,
-  "io_time_skip" : 2,
+  "io_time_skip" : 1,
+
+  "dynamic_method" : 2,
+  "fault_grid" : [51,350,51,200,51,350,51,200],
+  "fault_x_index" : [ 100, 200 ],
+  "grid_generation_method" : {
+      "fault_plane" : {
+        "fault_geometry_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault",
+        "fault_inteval" : 100.0
+      },
+      "#grid_import" : {
+        "import_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault"
+      }
+  },
+  "is_export_grid" : 1,
+  "grid_export_dir"   : "$GRID_DIR",
 
   "boundary_x_left" : {
       "cfspml" : {
@@ -112,21 +126,6 @@ cat << ieof > $PAR_FILE
   "boundary_z_top" : {
       "free" : "timg"
       },
-
-  "grid_generation_method" : {
-      "fault_x_index" : [ 100 ],
-      "fault_plane" : {
-        "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 100.0
-      },
-      "#grid_import" : {
-        "import_dir" : "${INPUTDIR}/prep_fault",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc"
-      }
-  },
-  "is_export_grid" : 1,
-  "grid_export_dir"   : "$GRID_DIR",
 
   "metric_calculation_method" : {
       "#import" : "$GRID_DIR",
@@ -192,7 +191,7 @@ cat << ieof > $PAR_FILE
       "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
       "grid_index_start" : [ 1, 1, $NZ ],

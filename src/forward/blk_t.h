@@ -112,8 +112,15 @@ blk_macdrp_mesg_init(mympi_t *mympi,
                 int ni,
                 int nj,
                 int nk,
-                int num_of_vars,
-                int num_of_vars_fault);
+                int num_of_vars);
+
+int
+blk_macdrp_fault_mesg_init(mympi_t *mympi,
+                           fd_t *fd,
+                           int nj,
+                           int nk,
+                           int num_of_vars_fault,
+                           int number_fault);
 
 int
 blk_macdrp_pack_mesg_gpu(float *w_cur,
@@ -122,7 +129,7 @@ blk_macdrp_pack_mesg_gpu(float *w_cur,
                          mympi_t *mpmpi,
                          int ipair_mpi,
                          int istage_mpi,
-                         int num_of_vars,
+                         int ncmp,
                          int myid);
 
 __global__ void
@@ -152,7 +159,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
-                           int num_of_vars,
+                           int ncmp,
                            int *neighid);
 
 __global__ void
@@ -179,10 +186,10 @@ int
 blk_macdrp_pack_fault_mesg_gpu(float * fw_cur,
                                fd_t *fd,
                                gd_t *gd, 
+                               fault_wav_t FW_d,
                                mympi_t *mympi, 
                                int ipair_mpi,
                                int istage_mpi,
-                               int num_of_vars_fault,
                                int myid);
 
 __global__ void
@@ -209,10 +216,10 @@ int
 blk_macdrp_unpack_fault_mesg_gpu(float *fw_cur, 
                                  fd_t *fd,
                                  gd_t *gd,
+                                 fault_wav_t FW_d,
                                  mympi_t *mympi, 
                                  int ipair_mpi,
                                  int istage_mpi,
-                                 int num_of_vars_fault,
                                  int *neighid);
 
 __global__ void

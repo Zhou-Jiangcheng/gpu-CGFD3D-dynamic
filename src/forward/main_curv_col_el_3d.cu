@@ -163,7 +163,7 @@ int main(int argc, char** argv)
     case FAULT_PLANE : {
 
       if (myid==0) fprintf(stdout,"gerate grid using fault plane...\n"); 
-      gd_curv_gen_fault(gd, par->fault_x_index, par->dh, par->fault_coord_nc);
+      gd_curv_gen_fault(gd, par->number_fault, par->fault_x_index, par->dh, par->fault_coord_dir);
       if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
       gd_exchange(gd,gd->v4d,gd->ncmp,mympi->neighid,mympi->topocomm);
 
@@ -207,7 +207,6 @@ int main(int argc, char** argv)
 
       if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
       gd_curv_metric_cal(gd, gd_metric);
-
       if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
       gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
@@ -236,8 +235,6 @@ int main(int argc, char** argv)
     if (myid==0) fprintf(stdout,"do not export metric\n"); 
   }
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
-  // print basic info for QC
-  fprintf(stdout,"gd info at topoid=%d,%d,%d\n", mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]); 
 
   //-------------------------------------------------------------------------------
   //-- media generation or import
@@ -556,11 +553,11 @@ int main(int argc, char** argv)
   //-- fault init
   //-------------------------------------------------------------------------------
 
-  fault_coef_init(fault_coef, gd); 
-  fault_coef_cal(gd, gd_metric, md, par->fault_x_index, fault_coef);
-  fault_init(fault, gd);
-  fault_set(fault, fault_coef, gd, par->bdry_has_free, par->fault_grid, par->init_stress_nc);
-  fault_wav_init(gd, fault_wav, fd->num_rk_stages);
+  fault_coef_init(fault_coef, gd, par->number_fault, par->fault_x_index); 
+  fault_coef_cal(gd, gd_metric, md, fault_coef);
+  fault_init(fault, gd, par->number_fault, par->fault_x_index);
+  fault_set(fault, fault_coef, gd, par->bdry_has_free, par->fault_grid, par->init_stress_dir);
+  fault_wav_init(gd, fault_wav, par->number_fault, par->fault_x_index, fd->num_rk_stages);
 
   //-------------------------------------------------------------------------------
   //-- allocate main var
@@ -583,7 +580,7 @@ int main(int argc, char** argv)
                       comm, myid, verbose);
 
   // Tn Ts1 Ts2 Vs Vs1 Vs2 Slip Slip1 Slip2
-  int fault_ncmp = 9;
+  int fault_ncmp = fault->ncmp - 2;  //=9
   io_fault_recv_read_locate(gd, io_fault_recv,
                             nt_total, fault_ncmp, 
                             par->fault_x_index,
@@ -602,7 +599,7 @@ int main(int argc, char** argv)
   
   // fault slice
   io_fault_locate(gd,iofault,
-                  par->number_of_fault, 
+                  par->number_fault, 
                   par->fault_x_index, 
                   blk->output_fname_part,
                   blk->output_dir);
@@ -681,7 +678,9 @@ int main(int argc, char** argv)
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
   blk_macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
-                  wav->ncmp, fault_wav->ncmp);
+                  wav->ncmp);
+  blk_macdrp_fault_mesg_init(mympi, fd, gd->nj, gd->nk,
+                  fault_wav->ncmp, par->number_fault);
 
   //-------------------------------------------------------------------------------
   //-- qc

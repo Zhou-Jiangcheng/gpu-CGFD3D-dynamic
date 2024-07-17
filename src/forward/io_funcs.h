@@ -44,11 +44,14 @@ typedef struct
   float x;
   float y;
   float z;
+  float di;
+  float dj;
+  float dk;
   int   i;
   int   j;
   int   k;
   int   f_id;  // fault id
-  size_t   indx1d;
+  size_t   indx1d[4];
   float *seismo;
   char  name[CONST_MAX_STRLEN];
 } io_fault_recv_one_t;
@@ -88,8 +91,8 @@ typedef struct
   // for esti size of working space var
   size_t siz_max_wrk;
 
-  int num_of_fault;
-  int *fault_x_indx;
+  int number_fault;
+  int *fault_local_index;
   char **fault_fname;
 } iofault_t;
 
@@ -146,7 +149,7 @@ typedef struct
 
 typedef struct
 {
-  int num_of_fault;
+  int number_fault;
   int num_of_vars;
 
   int *ncid;
@@ -419,7 +422,7 @@ io_get_nextline(FILE *fp, char *str, int length);
 int
 io_fault_locate(gd_t *gd, 
                 iofault_t *iofault,
-                int number_of_fault,
+                int number_fault,
                 int *fault_x_index,
                 char *output_fname_part,
                 char *output_dir);
@@ -432,7 +435,8 @@ io_fault_nc_create(iofault_t *iofault,
 int
 io_fault_nc_put(iofault_nc_t *iofault_nc,
                 gd_t     *gd,
-                fault_t  F,
+                fault_t  *F,
+                fault_t  F_d,
                 float *buff,
                 int   it,
                 float time);
@@ -440,8 +444,15 @@ io_fault_nc_put(iofault_nc_t *iofault_nc,
 int
 io_fault_end_t_nc_put(iofault_nc_t *iofault_nc,
                       gd_t     *gd,
-                      fault_t  F,
+                      fault_t  *F,
+                      fault_t  F_d,
                       float *buff);
+
+__global__ void
+io_fault_pack_buff(int nj, int nk, int ny,
+                   int id, fault_t F, 
+                   size_t cmp_pos, float* buff_d);
+
 int
 io_fault_nc_close(iofault_nc_t *iofault_nc);
 
@@ -457,8 +468,13 @@ io_fault_recv_read_locate(gd_t      *gd,
                           int       verbose);
 
 int
-io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t *F_d, 
-                   float *buff, int it);
+io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t F_d, 
+                   float *buff, int it, size_t siz_slice_yz);
+
+__global__ void
+io_fault_recv_interp_pack_buff(
+                         int id, fault_t F_d, float *buff_d, int ncmp, 
+                         size_t siz_slice_yz, size_t *indx1d_d);
 
 int
 io_fault_recv_output_sac(io_fault_recv_t *io_fault_recv,

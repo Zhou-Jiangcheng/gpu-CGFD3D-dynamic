@@ -60,8 +60,8 @@ Trans_M = [cos(theta), sin(theta), 0.0; ...
 Stress_tensor = Trans_M * Stress_pri * Trans_M';
 
 % load fault geometry
-fnm_grid   = './fault_coord.nc';
-fnm_stress = './init_stress.nc';
+fnm_grid   = './fault_coord_2.nc';
+fnm_stress = './init_stress_2.nc';
 
 x  = ncread(fnm_grid, 'x');
 y  = ncread(fnm_grid, 'y');

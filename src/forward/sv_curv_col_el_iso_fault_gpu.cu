@@ -14,7 +14,6 @@ sv_curv_col_el_iso_fault_onestage(
                      float *w_rhs_d, 
                      float *f_cur_d,
                      float *f_rhs_d, 
-                     int i0,
                      int isfree,
                      int imethod,
                      wav_t  wav_d,
@@ -51,34 +50,6 @@ sv_curv_col_el_iso_fault_onestage(
   float *hTxz = w_rhs_d + wav_d.Txz_pos;
   float *hTxy = w_rhs_d + wav_d.Txy_pos;
 
-  float *f_Vx  = f_cur_d + FW.Vx_pos;
-  float *f_Vy  = f_cur_d + FW.Vy_pos;
-  float *f_Vz  = f_cur_d + FW.Vz_pos;
-  float *f_T2x = f_cur_d + FW.T2x_pos;
-  float *f_T2y = f_cur_d + FW.T2y_pos;
-  float *f_T2z = f_cur_d + FW.T2z_pos;
-  float *f_T3x = f_cur_d + FW.T3x_pos;
-  float *f_T3y = f_cur_d + FW.T3y_pos;
-  float *f_T3z = f_cur_d + FW.T3z_pos;
-
-  float *f_hVx  = f_rhs_d + FW.Vx_pos;
-  float *f_hVy  = f_rhs_d + FW.Vy_pos;
-  float *f_hVz  = f_rhs_d + FW.Vz_pos;
-  float *f_hT2x = f_rhs_d + FW.T2x_pos;
-  float *f_hT2y = f_rhs_d + FW.T2y_pos;
-  float *f_hT2z = f_rhs_d + FW.T2z_pos;
-  float *f_hT3x = f_rhs_d + FW.T3x_pos;
-  float *f_hT3y = f_rhs_d + FW.T3y_pos;
-  float *f_hT3z = f_rhs_d + FW.T3z_pos;
-
-  float *f_T1x = FW.T1x;
-  float *f_T1y = FW.T1y;
-  float *f_T1z = FW.T1z;
-
-  float *f_hT1x = FW.hT1x;
-  float *f_hT1y = FW.hT1y;
-  float *f_hT1z = FW.hT1z;
-
   int nj1 = gd_d.nj1;
   int nk1 = gd_d.nk1;
   int nj  = gd_d.nj;
@@ -109,76 +80,109 @@ sv_curv_col_el_iso_fault_onestage(
   int kdir = fdz_op->dir;
   float *matVx2Vz = bdryfree_d.matVx2Vz2;
   float *matVy2Vz = bdryfree_d.matVy2Vz2;
-  {
-    dim3 block(8,8);
-    dim3 grid;
-    grid.x = (nj+block.x-1)/block.x;
-    grid.y = (nk+block.y-1)/block.y;
-    sv_curv_col_el_iso_rhs_fault_velo_gpu <<<grid, block>>>(
-                                           Txx, Tyy, Tzz,
-                                           Tyz, Txz, Txy, 
-                                           hVx, hVy, hVz, 
-                                           f_T2x, f_T2y, f_T2z,
-                                           f_T3x, f_T3y, f_T3z,
-                                           f_hVx, f_hVy, f_hVz, 
-                                           f_T1x, f_T1y, f_T1z,
-                                           xi_x, xi_y, xi_z,
-                                           et_x, et_y, et_z, 
-                                           zt_x, zt_y, zt_z,
-                                           jac3d, slw3d, 
-                                           F, FC, i0, isfree,
-                                           nj1, nj, nk1, nk, ny, 
-                                           siz_iy, siz_iz, siz_slice_yz,
-                                           idir, jdir, kdir);
-    CUDACHECK(cudaDeviceSynchronize());
-  }
 
+  for(int id=0; id<FW.number_fault; id++)
   {
-    dim3 block(8,8);
-    dim3 grid;
-    grid.x = (nj+block.x-1)/block.x;
-    grid.y = (nk+block.y-1)/block.y;
-    if(idir == 1) 
+    float *f_cur_thisone = f_cur_d + id*FW.siz_ilevel; 
+    float *f_Vx  = f_cur_thisone + FW.Vx_pos;
+    float *f_Vy  = f_cur_thisone + FW.Vy_pos;
+    float *f_Vz  = f_cur_thisone + FW.Vz_pos;
+    float *f_T2x = f_cur_thisone + FW.T2x_pos;
+    float *f_T2y = f_cur_thisone + FW.T2y_pos;
+    float *f_T2z = f_cur_thisone + FW.T2z_pos;
+    float *f_T3x = f_cur_thisone + FW.T3x_pos;
+    float *f_T3y = f_cur_thisone + FW.T3y_pos;
+    float *f_T3z = f_cur_thisone + FW.T3z_pos;
+
+    float *f_rhs_thisone = f_rhs_d + id*FW.siz_ilevel; 
+    float *f_hVx  = f_rhs_thisone + FW.Vx_pos;
+    float *f_hVy  = f_rhs_thisone + FW.Vy_pos;
+    float *f_hVz  = f_rhs_thisone + FW.Vz_pos;
+    float *f_hT2x = f_rhs_thisone + FW.T2x_pos;
+    float *f_hT2y = f_rhs_thisone + FW.T2y_pos;
+    float *f_hT2z = f_rhs_thisone + FW.T2z_pos;
+    float *f_hT3x = f_rhs_thisone + FW.T3x_pos;
+    float *f_hT3y = f_rhs_thisone + FW.T3y_pos;
+    float *f_hT3z = f_rhs_thisone + FW.T3z_pos;
+
+    float *f_T1x = FW.T1x + id*7*siz_slice_yz;
+    float *f_T1y = FW.T1y + id*7*siz_slice_yz;
+    float *f_T1z = FW.T1z + id*7*siz_slice_yz;
+
+    float *f_hT1x = FW.hT1x + id*siz_slice_yz;
+    float *f_hT1y = FW.hT1y + id*siz_slice_yz;
+    float *f_hT1z = FW.hT1z + id*siz_slice_yz;
+
     {
-      sv_curv_col_el_iso_rhs_fault_stress_F_gpu <<<grid, block>>>(
-                                                Vx, Vy, Vz, 
-                                                hTxx, hTyy, hTzz, 
-                                                hTyz, hTxz, hTxy,
-                                                f_Vx, f_Vy, f_Vz,
-                                                f_hT2x, f_hT2y, f_hT2z,
-                                                f_hT3x, f_hT3y, f_hT3z, 
-                                                f_hT1x, f_hT1y, f_hT1z,
-                                                xi_x, xi_y, xi_z, 
-                                                et_x, et_y, et_z, 
-                                                zt_x, zt_y, zt_z,
-                                                lam3d, mu3d, slw3d, 
-                                                matVx2Vz, matVy2Vz,
-                                                i0, isfree, imethod, F, FC,
-                                                nj1, nj, nk1, nk, ny, 
-                                                siz_iy, siz_iz, siz_slice_yz,
-                                                jdir, kdir);
+      dim3 block(8,8);
+      dim3 grid;
+      grid.x = (nj+block.x-1)/block.x;
+      grid.y = (nk+block.y-1)/block.y;
+      sv_curv_col_el_iso_rhs_fault_velo_gpu <<<grid, block>>>(
+                                             Txx, Tyy, Tzz,
+                                             Tyz, Txz, Txy,
+                                             hVx, hVy, hVz,
+                                             f_T2x, f_T2y, f_T2z,
+                                             f_T3x, f_T3y, f_T3z,
+                                             f_hVx, f_hVy, f_hVz, 
+                                             f_T1x, f_T1y, f_T1z,
+                                             xi_x, xi_y, xi_z,
+                                             et_x, et_y, et_z,
+                                             zt_x, zt_y, zt_z,
+                                             jac3d, slw3d, isfree,
+                                             nj1, nj, nk1, nk, ny,
+                                             siz_iy, siz_iz, siz_slice_yz,
+                                             idir, jdir, kdir, id, F, FC);
+      CUDACHECK(cudaDeviceSynchronize());
     }
-    if(idir == 0) 
+
     {
-      sv_curv_col_el_iso_rhs_fault_stress_B_gpu <<<grid, block>>>(
-                                                Vx, Vy, Vz, 
-                                                hTxx, hTyy, hTzz,
-                                                hTyz, hTxz, hTxy,
-                                                f_Vx, f_Vy, f_Vz,
-                                                f_hT2x, f_hT2y, f_hT2z,
-                                                f_hT3x, f_hT3y, f_hT3z,
-                                                f_hT1x, f_hT1y, f_hT1z,
-                                                xi_x, xi_y, xi_z,
-                                                et_x, et_y, et_z,
-                                                zt_x, zt_y, zt_z,
-                                                lam3d, mu3d, slw3d,
-                                                matVx2Vz, matVy2Vz, 
-                                                i0, isfree, imethod, F, FC,
-                                                nj1, nj, nk1, nk, ny, 
-                                                siz_iy, siz_iz, siz_slice_yz,
-                                                jdir, kdir);
+      dim3 block(8,8);
+      dim3 grid;
+      grid.x = (nj+block.x-1)/block.x;
+      grid.y = (nk+block.y-1)/block.y;
+      if(idir == 1) 
+      {
+        sv_curv_col_el_iso_rhs_fault_stress_F_gpu <<<grid, block>>>(
+                                                  Vx, Vy, Vz, 
+                                                  hTxx, hTyy, hTzz, 
+                                                  hTyz, hTxz, hTxy,
+                                                  f_Vx, f_Vy, f_Vz,
+                                                  f_hT2x, f_hT2y, f_hT2z,
+                                                  f_hT3x, f_hT3y, f_hT3z, 
+                                                  f_hT1x, f_hT1y, f_hT1z,
+                                                  xi_x, xi_y, xi_z, 
+                                                  et_x, et_y, et_z, 
+                                                  zt_x, zt_y, zt_z,
+                                                  lam3d, mu3d, slw3d, 
+                                                  matVx2Vz, matVy2Vz,
+                                                  isfree, imethod,
+                                                  nj1, nj, nk1, nk, ny,
+                                                  siz_iy, siz_iz, siz_slice_yz,
+                                                  jdir, kdir, id, F, FC);
+      }
+      if(idir == 0) 
+      {
+        sv_curv_col_el_iso_rhs_fault_stress_B_gpu <<<grid, block>>>(
+                                                  Vx, Vy, Vz, 
+                                                  hTxx, hTyy, hTzz,
+                                                  hTyz, hTxz, hTxy,
+                                                  f_Vx, f_Vy, f_Vz,
+                                                  f_hT2x, f_hT2y, f_hT2z,
+                                                  f_hT3x, f_hT3y, f_hT3z,
+                                                  f_hT1x, f_hT1y, f_hT1z,
+                                                  xi_x, xi_y, xi_z,
+                                                  et_x, et_y, et_z,
+                                                  zt_x, zt_y, zt_z,
+                                                  lam3d, mu3d, slw3d,
+                                                  matVx2Vz, matVy2Vz, 
+                                                  isfree, imethod,
+                                                  nj1, nj, nk1, nk, ny,
+                                                  siz_iy, siz_iz, siz_slice_yz,
+                                                  jdir, kdir, id, F, FC);
+      }
+      CUDACHECK(cudaDeviceSynchronize());
     }
-    CUDACHECK(cudaDeviceSynchronize());
   }
 
   return 0;
@@ -196,15 +200,20 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
                        float * xi_x,  float * xi_y, float * xi_z,
                        float * et_x,  float * et_y, float * et_z,
                        float * zt_x,  float * zt_y, float * zt_z,
-                       float * jac3d, float * slw3d, fault_t F, fault_coef_t FC,  
-                       int i0, int isfree, int nj1, int nj, int nk1, int nk, int ny, 
+                       float * jac3d, float * slw3d,  
+                       int isfree, int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_iy, size_t siz_iz, size_t siz_slice_yz,
-                       int idir, int jdir, int kdir)
+                       int idir, int jdir, int kdir,
+                       int id, fault_t F, fault_coef_t FC) 
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  size_t iptr, iptr_f, iptr_t;
+  fault_one_t *F_thisone = F.fault_one + id;
+  fault_coef_one_t *FC_thisone = FC.fault_coef_one + id;
+  int i0 = F.fault_index[id] + 3; //fault plane x index with ghost
+
+  size_t iptr, iptr_f;
   float rrhojac;
   float *T2x_ptr;
   float *T2y_ptr;
@@ -219,9 +228,9 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
   float vecT1x[7], vecT1y[7], vecT1z[7];
   float vecT2x[7], vecT2y[7], vecT2z[7];
   float vecT3x[7], vecT3y[7], vecT3z[7];
-  iptr_t = iy + iz * nj;
+  iptr_f = (iy+nj1) + (iz+nk1) * ny;
 
-  if (iy<nj && iz<nk && F.united[iptr_t] == 0) 
+  if (iy<nj && iz<nk && F_thisone->united[iptr_f] == 0) 
   { 
     int km = nk - (iz+1);
     int n_free = km+3;
@@ -355,13 +364,13 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
       T2z_ptr = f_T2z + iptr_f + m*siz_slice_yz;
       // fault point use short stencil
       // due to slip change sharp
-      if(F.rup_index_y[iptr_t] == 1)
+      if(F_thisone->rup_index_y[iptr_f] == 1)
       {
         M_FD_SHIFT_PTR_MAC22(DyT2x, T2x_ptr, 1, jdir);
         M_FD_SHIFT_PTR_MAC22(DyT2y, T2y_ptr, 1, jdir);
         M_FD_SHIFT_PTR_MAC22(DyT2z, T2z_ptr, 1, jdir);
       }
-      if(F.rup_index_y[iptr_t] == 0)
+      if(F_thisone->rup_index_y[iptr_f] == 0)
       {
         M_FD_SHIFT_PTR_MACDRP(DyT2x, T2x_ptr, 1, jdir);
         M_FD_SHIFT_PTR_MACDRP(DyT2y, T2y_ptr, 1, jdir);
@@ -372,13 +381,13 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
       T3x_ptr = f_T3x + iptr_f + m*siz_slice_yz;
       T3y_ptr = f_T3y + iptr_f + m*siz_slice_yz;
       T3z_ptr = f_T3z + iptr_f + m*siz_slice_yz;
-      if(F.rup_index_z[iptr_t] == 1)
+      if(F_thisone->rup_index_z[iptr_f] == 1)
       {
         M_FD_SHIFT_PTR_MAC22(DzT3x, T3x_ptr, ny, kdir);
         M_FD_SHIFT_PTR_MAC22(DzT3y, T3y_ptr, ny, kdir);
         M_FD_SHIFT_PTR_MAC22(DzT3z, T3z_ptr, ny, kdir);
       }
-      if(F.rup_index_z[iptr_t] == 0)
+      if(F_thisone->rup_index_z[iptr_f] == 0)
       {
         M_FD_SHIFT_PTR_MACDRP(DzT3x, T3x_ptr, ny, kdir);
         M_FD_SHIFT_PTR_MACDRP(DzT3y, T3y_ptr, ny, kdir);
@@ -410,7 +419,7 @@ void sv_curv_col_el_iso_rhs_fault_velo_gpu(
 
       iptr = i0 + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
       iptr_f = (iy+nj1) + (iz+nk1) * ny + m * siz_slice_yz; 
-      rrhojac = 1.0 / (FC.rho_f[iptr_f] * jac3d[iptr]);
+      rrhojac = 1.0 / (FC_thisone->rho_f[iptr_f] * jac3d[iptr]);
       f_hVx[iptr_f] = (DxT1x+DyT2x+DzT3x)*rrhojac;
       f_hVy[iptr_f] = (DxT1y+DyT2y+DzT3y)*rrhojac;
       f_hVz[iptr_f] = (DxT1z+DyT2z+DzT3z)*rrhojac;
@@ -432,16 +441,21 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
                        float * et_x,  float * et_y, float * et_z,
                        float * zt_x,  float * zt_y, float * zt_z,
                        float * lam3d, float * mu3d, float * slw3d, 
-                       float *matVx2Vz, float *matVy2Vz, int i0,
-                       int isfree, int imethod,  fault_t F, fault_coef_t FC,
+                       float *matVx2Vz, float *matVy2Vz,
+                       int isfree, int imethod,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_iy, size_t siz_iz, size_t siz_slice_yz,
-                       int jdir, int kdir)
+                       int jdir, int kdir,
+                       int id, fault_t F, fault_coef_t FC)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  size_t iptr, iptr_f, iptr_t;
+  fault_one_t *F_thisone = F.fault_one + id;
+  fault_coef_one_t *FC_thisone = FC.fault_coef_one + id;
+  int i0 = F.fault_index[id] + 3; //fault plane x index with ghost
+
+  size_t iptr, iptr_f;
   size_t idx;
   float *Vx_ptr;
   float *Vy_ptr;
@@ -488,8 +502,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
   float matVx2Vz1[3][3], matVy2Vz1[3][3];
   float matVx2Vz2[3][3], matVy2Vz2[3][3];
 
-  iptr_t = iy + iz * nj;
-  if (iy < nj && iz < nk && F.united[iptr_t] == 0) 
+  iptr_f = (iy+nj1) + (iz+nk1) * ny;
+  if (iy < nj && iz < nk && F_thisone->united[iptr_f] == 0) 
   { 
     int km = nk - (iz+1); 
     int n_free = km + 3;
@@ -529,7 +543,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     MAC22_F(DxVz[5],Vz_ptr,1);
 
     // fault split point D+ D-
-    if(F.rup_index_y[iptr_t] == 1)
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_y[iptr_f] == 1)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
@@ -546,7 +561,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       M_FD_SHIFT_PTR_MAC22(DyVy[3],f_Vy_ptr,1,jdir);
       M_FD_SHIFT_PTR_MAC22(DyVz[3],f_Vz_ptr,1,jdir);
     }
-    if(F.rup_index_y[iptr_t] == 0)
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_y[iptr_f] == 0)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
@@ -563,7 +579,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       M_FD_SHIFT_PTR_MACDRP(DyVy[3],f_Vy_ptr,1,jdir);
       M_FD_SHIFT_PTR_MACDRP(DyVz[3],f_Vz_ptr,1,jdir);
     }
-    if(F.rup_index_z[iptr_t] == 1){
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_z[iptr_f] == 1){
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
@@ -579,7 +596,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       M_FD_SHIFT_PTR_MAC22(DzVy[3],f_Vy_ptr,ny,kdir);
       M_FD_SHIFT_PTR_MAC22(DzVz[3],f_Vz_ptr,ny,kdir);
     }
-    if(F.rup_index_z[iptr_t] == 0){
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_z[iptr_f] == 0){
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
@@ -600,18 +618,18 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     for (int ii=0; ii<3; ii++){
       for (int jj=0; jj<3; jj++){
         int ij = 3*ii + jj;
-        matPlus2Min1[ii][jj] = FC.matPlus2Min1[idx + ij];
-        matPlus2Min2[ii][jj] = FC.matPlus2Min2[idx + ij];
-        matPlus2Min3[ii][jj] = FC.matPlus2Min3[idx + ij];
-        matPlus2Min4[ii][jj] = FC.matPlus2Min4[idx + ij];
-        matPlus2Min5[ii][jj] = FC.matPlus2Min5[idx + ij];
+        matPlus2Min1[ii][jj] = FC_thisone->matPlus2Min1[idx + ij];
+        matPlus2Min2[ii][jj] = FC_thisone->matPlus2Min2[idx + ij];
+        matPlus2Min3[ii][jj] = FC_thisone->matPlus2Min3[idx + ij];
+        matPlus2Min4[ii][jj] = FC_thisone->matPlus2Min4[idx + ij];
+        matPlus2Min5[ii][jj] = FC_thisone->matPlus2Min5[idx + ij];
 
-        matT1toVx_Min [ii][jj]  = FC.matT1toVx_Min [idx + ij];
-        matVytoVx_Min [ii][jj]  = FC.matVytoVx_Min [idx + ij];
-        matVztoVx_Min [ii][jj]  = FC.matVztoVx_Min [idx + ij];
-        matT1toVx_Plus[ii][jj]  = FC.matT1toVx_Plus[idx + ij];
-        matVytoVx_Plus[ii][jj]  = FC.matVytoVx_Plus[idx + ij];
-        matVztoVx_Plus[ii][jj]  = FC.matVztoVx_Plus[idx + ij];
+        matT1toVx_Min [ii][jj]  = FC_thisone->matT1toVx_Min [idx + ij];
+        matVytoVx_Min [ii][jj]  = FC_thisone->matVytoVx_Min [idx + ij];
+        matVztoVx_Min [ii][jj]  = FC_thisone->matVztoVx_Min [idx + ij];
+        matT1toVx_Plus[ii][jj]  = FC_thisone->matT1toVx_Plus[idx + ij];
+        matVytoVx_Plus[ii][jj]  = FC_thisone->matVytoVx_Plus[idx + ij];
+        matVztoVx_Plus[ii][jj]  = FC_thisone->matVztoVx_Plus[idx + ij];
       }
     }
 
@@ -646,7 +664,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     }
     if(imethod == 2)
     {
-      if(F.faultgrid[iptr_t] == 1){
+      iptr_f = (iy+nj1) + (iz+nk1) * ny;
+      if(F_thisone->faultgrid[iptr_f] == 1){
         iptr_f = (iy+nj1)+(iz+nk1)*ny;
         dtT1[0] = f_hT1x[iptr_f];   // inner use 1st order
         dtT1[1] = f_hT1y[iptr_f];
@@ -696,17 +715,17 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       for (int ii = 0; ii < 3; ii++){
         for (int jj = 0; jj < 3; jj++){
           int ij = 3*ii + jj;
-          matVx2Vz1    [ii][jj]   = FC.matVx2Vz1      [(iy+3)*9 + ij];
-          matVx2Vz2    [ii][jj]   = FC.matVx2Vz2      [(iy+3)*9 + ij];
-          matVy2Vz1    [ii][jj]   = FC.matVy2Vz1      [(iy+3)*9 + ij];
-          matVy2Vz2    [ii][jj]   = FC.matVy2Vz2      [(iy+3)*9 + ij];
-          matPlus2Min1f[ii][jj]   = FC.matPlus2Min1f  [(iy+3)*9 + ij];
-          matPlus2Min2f[ii][jj]   = FC.matPlus2Min2f  [(iy+3)*9 + ij];
-          matPlus2Min3f[ii][jj]   = FC.matPlus2Min3f  [(iy+3)*9 + ij];
-          matT1toVxf_Min[ii][jj]  = FC.matT1toVxf_Min [(iy+3)*9 + ij];
-          matVytoVxf_Min[ii][jj]  = FC.matVytoVxf_Min [(iy+3)*9 + ij];
-          matT1toVxf_Plus[ii][jj] = FC.matT1toVxf_Plus[(iy+3)*9 + ij];
-          matVytoVxf_Plus[ii][jj] = FC.matVytoVxf_Plus[(iy+3)*9 + ij];
+          matVx2Vz1    [ii][jj]   = FC_thisone->matVx2Vz1      [(iy+3)*9 + ij];
+          matVx2Vz2    [ii][jj]   = FC_thisone->matVx2Vz2      [(iy+3)*9 + ij];
+          matVy2Vz1    [ii][jj]   = FC_thisone->matVy2Vz1      [(iy+3)*9 + ij];
+          matVy2Vz2    [ii][jj]   = FC_thisone->matVy2Vz2      [(iy+3)*9 + ij];
+          matPlus2Min1f[ii][jj]   = FC_thisone->matPlus2Min1f  [(iy+3)*9 + ij];
+          matPlus2Min2f[ii][jj]   = FC_thisone->matPlus2Min2f  [(iy+3)*9 + ij];
+          matPlus2Min3f[ii][jj]   = FC_thisone->matPlus2Min3f  [(iy+3)*9 + ij];
+          matT1toVxf_Min[ii][jj]  = FC_thisone->matT1toVxf_Min [(iy+3)*9 + ij];
+          matVytoVxf_Min[ii][jj]  = FC_thisone->matVytoVxf_Min [(iy+3)*9 + ij];
+          matT1toVxf_Plus[ii][jj] = FC_thisone->matT1toVxf_Plus[(iy+3)*9 + ij];
+          matVytoVxf_Plus[ii][jj] = FC_thisone->matVytoVxf_Plus[(iy+3)*9 + ij];
         }
       }
 
@@ -731,7 +750,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       }
       if(imethod == 2)
       {
-        if(F.faultgrid[iptr_t] == 1){
+        iptr_f = (iy+nj1) + (iz+nk1) * ny;
+        if(F_thisone->faultgrid[iptr_f] == 1){
           iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
@@ -834,18 +854,18 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       for (int ii = 0; ii < 3; ii++){
         for (int jj = 0; jj < 3; jj++){
           int ij = 3*ii + jj;
-          matPlus2Min1[ii][jj] = FC.matPlus2Min1[idx + ij];
-          matPlus2Min2[ii][jj] = FC.matPlus2Min2[idx + ij];
-          matPlus2Min3[ii][jj] = FC.matPlus2Min3[idx + ij];
-          matPlus2Min4[ii][jj] = FC.matPlus2Min4[idx + ij];
-          matPlus2Min5[ii][jj] = FC.matPlus2Min5[idx + ij];
+          matPlus2Min1[ii][jj] = FC_thisone->matPlus2Min1[idx + ij];
+          matPlus2Min2[ii][jj] = FC_thisone->matPlus2Min2[idx + ij];
+          matPlus2Min3[ii][jj] = FC_thisone->matPlus2Min3[idx + ij];
+          matPlus2Min4[ii][jj] = FC_thisone->matPlus2Min4[idx + ij];
+          matPlus2Min5[ii][jj] = FC_thisone->matPlus2Min5[idx + ij];
 
-          matT1toVx_Min[ii][jj]  = FC.matT1toVx_Min[idx + ij];
-          matVytoVx_Min[ii][jj]  = FC.matVytoVx_Min[idx + ij];
-          matVztoVx_Min[ii][jj]  = FC.matVztoVx_Min[idx + ij];
-          matT1toVx_Plus[ii][jj] = FC.matT1toVx_Plus[idx + ij];
-          matVytoVx_Plus[ii][jj] = FC.matVytoVx_Plus[idx + ij];
-          matVztoVx_Plus[ii][jj] = FC.matVztoVx_Plus[idx + ij];
+          matT1toVx_Min[ii][jj]  = FC_thisone->matT1toVx_Min[idx + ij];
+          matVytoVx_Min[ii][jj]  = FC_thisone->matVytoVx_Min[idx + ij];
+          matVztoVx_Min[ii][jj]  = FC_thisone->matVztoVx_Min[idx + ij];
+          matT1toVx_Plus[ii][jj] = FC_thisone->matT1toVx_Plus[idx + ij];
+          matVytoVx_Plus[ii][jj] = FC_thisone->matVytoVx_Plus[idx + ij];
+          matVztoVx_Plus[ii][jj] = FC_thisone->matVztoVx_Plus[idx + ij];
         }
       }
       if(imethod == 1)
@@ -870,7 +890,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       }
       if(imethod == 2)
       {
-        if(F.faultgrid[iptr_t] == 1){
+        iptr_f = (iy+nj1) + (iz+nk1) * ny;
+        if(F_thisone->faultgrid[iptr_f] == 1){
           iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
@@ -924,9 +945,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D21_2[idx + ij];
-        mat2[ii][jj] = FC.D22_2[idx + ij];
-        mat3[ii][jj] = FC.D23_2[idx + ij];
+        mat1[ii][jj] = FC_thisone->D21_2[idx + ij];
+        mat2[ii][jj] = FC_thisone->D22_2[idx + ij];
+        mat3[ii][jj] = FC_thisone->D23_2[idx + ij];
       }
     }
 
@@ -943,9 +964,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D31_2[idx + ij];
-        mat2[ii][jj] = FC.D32_2[idx + ij];
-        mat3[ii][jj] = FC.D33_2[idx + ij];
+        mat1[ii][jj] = FC_thisone->D31_2[idx + ij];
+        mat2[ii][jj] = FC_thisone->D32_2[idx + ij];
+        mat3[ii][jj] = FC_thisone->D33_2[idx + ij];
       }
     }
 
@@ -966,9 +987,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D21_1[idx + ij];
-        mat2[ii][jj] = FC.D22_1[idx + ij];
-        mat3[ii][jj] = FC.D23_1[idx + ij];
+        mat1[ii][jj] = FC_thisone->D21_1[idx + ij];
+        mat2[ii][jj] = FC_thisone->D22_1[idx + ij];
+        mat3[ii][jj] = FC_thisone->D23_1[idx + ij];
       }
     }
 
@@ -985,9 +1006,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D31_1[idx + ij];
-        mat2[ii][jj] = FC.D32_1[idx + ij];
-        mat3[ii][jj] = FC.D33_1[idx + ij];
+        mat1[ii][jj] = FC_thisone->D31_1[idx + ij];
+        mat2[ii][jj] = FC_thisone->D32_1[idx + ij];
+        mat3[ii][jj] = FC_thisone->D33_1[idx + ij];
       }
     }
 
@@ -1153,16 +1174,21 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
                        float * et_x,  float * et_y, float * et_z,
                        float * zt_x,  float * zt_y, float * zt_z,
                        float * lam3d, float * mu3d, float * slw3d, 
-                       float *matVx2Vz, float *matVy2Vz, int i0,
-                       int isfree, int imethod, fault_t F, fault_coef_t FC,
+                       float *matVx2Vz, float *matVy2Vz,
+                       int isfree, int imethod,
                        int nj1, int nj, int nk1, int nk, int ny, 
                        size_t siz_iy, size_t siz_iz, size_t siz_slice_yz,
-                       int jdir, int kdir)
+                       int jdir, int kdir,
+                       int id, fault_t F, fault_coef_t FC)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  size_t iptr, iptr_f, iptr_t;
+  fault_one_t *F_thisone = F.fault_one + id;
+  fault_coef_one_t *FC_thisone = FC.fault_coef_one + id;
+  int i0 = F.fault_index[id] + 3; //fault plane x index with ghost
+
+  size_t iptr, iptr_f;
   size_t idx;
   float *Vx_ptr;
   float *Vy_ptr;
@@ -1208,9 +1234,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
   float matMin2Plus1f[3][3], matMin2Plus2f[3][3], matMin2Plus3f[3][3];
   float matVx2Vz1[3][3], matVy2Vz1[3][3];
   float matVx2Vz2[3][3], matVy2Vz2[3][3];
-
-  iptr_t = iy + iz * nj;
-  if (iy < nj && iz < nk && F.united[iptr_t] == 0) 
+ 
+  iptr_f = (iy+nj1) + (iz+nk1) * ny;
+  if (iy < nj && iz < nk && F_thisone->united[iptr_f] == 0) 
   { 
     int km = nk - (iz+1); 
     int n_free = km + 3;
@@ -1250,7 +1276,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     MAC22_B(DxVz[2],Vz_ptr,1);
 
     //fault split point D- D+
-    if(F.rup_index_y[iptr_t] == 1)
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_y[iptr_f] == 1)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
@@ -1267,7 +1294,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       M_FD_SHIFT_PTR_MAC22(DyVy[4],f_Vy_ptr,1,jdir);
       M_FD_SHIFT_PTR_MAC22(DyVz[4],f_Vz_ptr,1,jdir);
     }
-    if(F.rup_index_y[iptr_t] == 0)
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_y[iptr_f] == 0)
     {
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
@@ -1284,7 +1312,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       M_FD_SHIFT_PTR_MACDRP(DyVy[4],f_Vy_ptr,1,jdir);
       M_FD_SHIFT_PTR_MACDRP(DyVz[4],f_Vz_ptr,1,jdir);
     }
-    if(F.rup_index_z[iptr_t] == 1){
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_z[iptr_f] == 1){
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
@@ -1300,7 +1329,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       M_FD_SHIFT_PTR_MAC22(DzVy[4],f_Vy_ptr,ny,kdir);
       M_FD_SHIFT_PTR_MAC22(DzVz[4],f_Vz_ptr,ny,kdir);
     }
-    if(F.rup_index_z[iptr_t] == 0){
+    iptr_f = (iy+nj1) + (iz+nk1) * ny;
+    if(F_thisone->rup_index_z[iptr_f] == 0){
       iptr_f = (iy+nj1) + (iz+nk1) * ny + 0 * siz_slice_yz;
       f_Vx_ptr = f_Vx + iptr_f;
       f_Vy_ptr = f_Vy + iptr_f;
@@ -1321,18 +1351,18 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        matMin2Plus1[ii][jj] = FC.matMin2Plus1[idx + ij];
-        matMin2Plus2[ii][jj] = FC.matMin2Plus2[idx + ij];
-        matMin2Plus3[ii][jj] = FC.matMin2Plus3[idx + ij];
-        matMin2Plus4[ii][jj] = FC.matMin2Plus4[idx + ij];
-        matMin2Plus5[ii][jj] = FC.matMin2Plus5[idx + ij];
+        matMin2Plus1[ii][jj] = FC_thisone->matMin2Plus1[idx + ij];
+        matMin2Plus2[ii][jj] = FC_thisone->matMin2Plus2[idx + ij];
+        matMin2Plus3[ii][jj] = FC_thisone->matMin2Plus3[idx + ij];
+        matMin2Plus4[ii][jj] = FC_thisone->matMin2Plus4[idx + ij];
+        matMin2Plus5[ii][jj] = FC_thisone->matMin2Plus5[idx + ij];
 
-        matT1toVx_Min[ii][jj]  = FC.matT1toVx_Min[idx + ij];
-        matVytoVx_Min[ii][jj]  = FC.matVytoVx_Min[idx + ij];
-        matVztoVx_Min[ii][jj]  = FC.matVztoVx_Min[idx + ij];
-        matT1toVx_Plus[ii][jj] = FC.matT1toVx_Plus[idx + ij];
-        matVytoVx_Plus[ii][jj] = FC.matVytoVx_Plus[idx + ij];
-        matVztoVx_Plus[ii][jj] = FC.matVztoVx_Plus[idx + ij];
+        matT1toVx_Min[ii][jj]  = FC_thisone->matT1toVx_Min[idx + ij];
+        matVytoVx_Min[ii][jj]  = FC_thisone->matVytoVx_Min[idx + ij];
+        matVztoVx_Min[ii][jj]  = FC_thisone->matVztoVx_Min[idx + ij];
+        matT1toVx_Plus[ii][jj] = FC_thisone->matT1toVx_Plus[idx + ij];
+        matVytoVx_Plus[ii][jj] = FC_thisone->matVytoVx_Plus[idx + ij];
+        matVztoVx_Plus[ii][jj] = FC_thisone->matVztoVx_Plus[idx + ij];
       }
     }
     if(imethod == 1)
@@ -1363,7 +1393,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     }
     if(imethod == 2)
     {
-      if(F.faultgrid[iptr_t] == 1){
+      iptr_f = (iy+nj1) + (iz+nk1) * ny;
+      if(F_thisone->faultgrid[iptr_f] == 1){
         iptr_f = (iy+nj1)+(iz+nk1)*ny;
         dtT1[0] = f_hT1x[iptr_f];
         dtT1[1] = f_hT1y[iptr_f];
@@ -1413,19 +1444,19 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       for (int ii = 0; ii < 3; ii++){
         for (int jj = 0; jj < 3; jj++){
           int ij = 3*ii + jj;
-          matVx2Vz1    [ii][jj] = FC.matVx2Vz1[(iy+3)*9 + ij];
-          matVx2Vz2    [ii][jj] = FC.matVx2Vz2[(iy+3)*9 + ij];
-          matVy2Vz1    [ii][jj] = FC.matVy2Vz1[(iy+3)*9 + ij];
-          matVy2Vz2    [ii][jj] = FC.matVy2Vz2[(iy+3)*9 + ij];
+          matVx2Vz1    [ii][jj] = FC_thisone->matVx2Vz1[(iy+3)*9 + ij];
+          matVx2Vz2    [ii][jj] = FC_thisone->matVx2Vz2[(iy+3)*9 + ij];
+          matVy2Vz1    [ii][jj] = FC_thisone->matVy2Vz1[(iy+3)*9 + ij];
+          matVy2Vz2    [ii][jj] = FC_thisone->matVy2Vz2[(iy+3)*9 + ij];
 
-          matMin2Plus1f[ii][jj] = FC.matMin2Plus1f[(iy+3)*9 + ij];
-          matMin2Plus2f[ii][jj] = FC.matMin2Plus2f[(iy+3)*9 + ij];
-          matMin2Plus3f[ii][jj] = FC.matMin2Plus3f[(iy+3)*9 + ij];
+          matMin2Plus1f[ii][jj] = FC_thisone->matMin2Plus1f[(iy+3)*9 + ij];
+          matMin2Plus2f[ii][jj] = FC_thisone->matMin2Plus2f[(iy+3)*9 + ij];
+          matMin2Plus3f[ii][jj] = FC_thisone->matMin2Plus3f[(iy+3)*9 + ij];
 
-          matT1toVxf_Min [ii][jj] = FC.matT1toVxf_Min [(iy+3)*9 + ij];
-          matVytoVxf_Min [ii][jj] = FC.matVytoVxf_Min [(iy+3)*9 + ij];
-          matT1toVxf_Plus[ii][jj] = FC.matT1toVxf_Plus[(iy+3)*9 + ij];
-          matVytoVxf_Plus[ii][jj] = FC.matVytoVxf_Plus[(iy+3)*9 + ij];
+          matT1toVxf_Min [ii][jj] = FC_thisone->matT1toVxf_Min [(iy+3)*9 + ij];
+          matVytoVxf_Min [ii][jj] = FC_thisone->matVytoVxf_Min [(iy+3)*9 + ij];
+          matT1toVxf_Plus[ii][jj] = FC_thisone->matT1toVxf_Plus[(iy+3)*9 + ij];
+          matVytoVxf_Plus[ii][jj] = FC_thisone->matVytoVxf_Plus[(iy+3)*9 + ij];
         }
       }
 
@@ -1450,7 +1481,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       }
       if(imethod == 2)
       {
-        if(F.faultgrid[iptr_t] == 1){
+        iptr_f = (iy+nj1) + (iz+nk1) * ny;
+        if(F_thisone->faultgrid[iptr_f] == 1){
           iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
@@ -1547,18 +1579,18 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       for (int ii = 0; ii < 3; ii++){
         for (int jj = 0; jj < 3; jj++){
           int ij = 3*ii + jj;
-          matMin2Plus1[ii][jj] = FC.matMin2Plus1[idx + ij];
-          matMin2Plus2[ii][jj] = FC.matMin2Plus2[idx + ij];
-          matMin2Plus3[ii][jj] = FC.matMin2Plus3[idx + ij];
-          matMin2Plus4[ii][jj] = FC.matMin2Plus4[idx + ij];
-          matMin2Plus5[ii][jj] = FC.matMin2Plus5[idx + ij];
+          matMin2Plus1[ii][jj] = FC_thisone->matMin2Plus1[idx + ij];
+          matMin2Plus2[ii][jj] = FC_thisone->matMin2Plus2[idx + ij];
+          matMin2Plus3[ii][jj] = FC_thisone->matMin2Plus3[idx + ij];
+          matMin2Plus4[ii][jj] = FC_thisone->matMin2Plus4[idx + ij];
+          matMin2Plus5[ii][jj] = FC_thisone->matMin2Plus5[idx + ij];
 
-          matT1toVx_Min [ii][jj] = FC.matT1toVx_Min [idx + ij];
-          matVytoVx_Min [ii][jj] = FC.matVytoVx_Min [idx + ij];
-          matVztoVx_Min [ii][jj] = FC.matVztoVx_Min [idx + ij];
-          matT1toVx_Plus[ii][jj] = FC.matT1toVx_Plus[idx + ij];
-          matVytoVx_Plus[ii][jj] = FC.matVytoVx_Plus[idx + ij];
-          matVztoVx_Plus[ii][jj] = FC.matVztoVx_Plus[idx + ij];
+          matT1toVx_Min [ii][jj] = FC_thisone->matT1toVx_Min [idx + ij];
+          matVytoVx_Min [ii][jj] = FC_thisone->matVytoVx_Min [idx + ij];
+          matVztoVx_Min [ii][jj] = FC_thisone->matVztoVx_Min [idx + ij];
+          matT1toVx_Plus[ii][jj] = FC_thisone->matT1toVx_Plus[idx + ij];
+          matVytoVx_Plus[ii][jj] = FC_thisone->matVytoVx_Plus[idx + ij];
+          matVztoVx_Plus[ii][jj] = FC_thisone->matVztoVx_Plus[idx + ij];
         }
       }
       if(imethod == 1)
@@ -1583,7 +1615,8 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
       }
       if(imethod == 2)
       {
-        if(F.faultgrid[iptr_t] == 1) {
+        iptr_f = (iy+nj1) + (iz+nk1) * ny;
+        if(F_thisone->faultgrid[iptr_f] == 1) {
           iptr_f = (iy+nj1)+(iz+nk1)*ny;
           dtT1[0] = f_hT1x[iptr_f];
           dtT1[1] = f_hT1y[iptr_f];
@@ -1637,9 +1670,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D21_1[idx + ij];
-        mat2[ii][jj] = FC.D22_1[idx + ij];
-        mat3[ii][jj] = FC.D23_1[idx + ij];
+        mat1[ii][jj] = FC_thisone->D21_1[idx + ij];
+        mat2[ii][jj] = FC_thisone->D22_1[idx + ij];
+        mat3[ii][jj] = FC_thisone->D23_1[idx + ij];
       }
     }
 
@@ -1656,9 +1689,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D31_1[idx + ij];
-        mat2[ii][jj] = FC.D32_1[idx + ij];
-        mat3[ii][jj] = FC.D33_1[idx + ij];
+        mat1[ii][jj] = FC_thisone->D31_1[idx + ij];
+        mat2[ii][jj] = FC_thisone->D32_1[idx + ij];
+        mat3[ii][jj] = FC_thisone->D33_1[idx + ij];
       }
     }
 
@@ -1679,9 +1712,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D21_2[idx + ij];
-        mat2[ii][jj] = FC.D22_2[idx + ij];
-        mat3[ii][jj] = FC.D23_2[idx + ij];
+        mat1[ii][jj] = FC_thisone->D21_2[idx + ij];
+        mat2[ii][jj] = FC_thisone->D22_2[idx + ij];
+        mat3[ii][jj] = FC_thisone->D23_2[idx + ij];
       }
     }
 
@@ -1698,9 +1731,9 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     for (int ii = 0; ii < 3; ii++){
       for (int jj = 0; jj < 3; jj++){
         int ij = 3*ii + jj;
-        mat1[ii][jj] = FC.D31_2[idx + ij];
-        mat2[ii][jj] = FC.D32_2[idx + ij];
-        mat3[ii][jj] = FC.D33_2[idx + ij];
+        mat1[ii][jj] = FC_thisone->D31_2[idx + ij];
+        mat2[ii][jj] = FC_thisone->D32_2[idx + ij];
+        mat3[ii][jj] = FC_thisone->D33_2[idx + ij];
       }
     }
 
@@ -1718,36 +1751,36 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
     DxVy[5] = (Vy[iptr] - f_Vy[iptr_f]); 
     DxVz[5] = (Vz[iptr] - f_Vz[iptr_f]); 
 
-    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vx[iptr_t];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_3[0] = f_Vx[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vx[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[2] = Vx[iptr];
     VEC_24_B(DxVx[6], vec_3);
 
-    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vy[iptr_t];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_3[0] = f_Vy[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vy[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[2] = Vy[iptr];
     VEC_24_B(DxVy[6], vec_3);
 
-    iptr_t = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_3[0] = f_Vz[iptr_t];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_3[0] = f_Vz[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[1] = Vz[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_3[2] = Vz[iptr];
     VEC_24_B(DxVz[6], vec_3);
 
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vx[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_5[0] = f_Vx[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vx[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vx[iptr];
     iptr = (i0+3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vx[iptr];
     iptr = (i0+4) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[4] = Vx[iptr];
     VEC_DRP_B(DxVx[7], vec_5);
 
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vy[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_5[0] = f_Vy[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vy[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vy[iptr];
     iptr = (i0+3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vy[iptr];
     iptr = (i0+4) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[4] = Vy[iptr];
     VEC_DRP_B(DxVy[7], vec_5);
 
-    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;       vec_5[0] = f_Vz[iptr_f];
+    iptr_f = (iy+nj1) + (iz+nk1) * ny + 1 * siz_slice_yz;  vec_5[0] = f_Vz[iptr_f];
     iptr = (i0+1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[1] = Vz[iptr];
     iptr = (i0+2) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[2] = Vz[iptr];
     iptr = (i0+3) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz; vec_5[3] = Vz[iptr];
@@ -1847,3 +1880,4 @@ void sv_curv_col_el_iso_rhs_fault_stress_B_gpu(
   } 
   return;
 }
+

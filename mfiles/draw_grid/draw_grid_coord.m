@@ -5,7 +5,7 @@ addmypath
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json';
+parfnm='../../project/test.json';
 output_dir='../../project/output';
 
 % which grid profile to plot

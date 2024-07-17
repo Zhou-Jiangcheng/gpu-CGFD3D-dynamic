@@ -68,7 +68,7 @@ par_read_from_str(const char *str, par_t *par)
   // allocate
   par->boundary_type_name = (char **)malloc(CONST_NDIM_2 * sizeof(char*));
   for (int i=0; i<CONST_NDIM_2; i++) {
-    par->boundary_type_name[i] = (char *)malloc(10*sizeof(char));
+    par->boundary_type_name[i] = (char *)malloc(30*sizeof(char));
   }
 
   // convert str to json
@@ -90,27 +90,6 @@ par_read_from_str(const char *str, par_t *par)
   }
   if (item = cJSON_GetObjectItem(root, "number_of_total_grid_points_z")) {
     par->number_of_total_grid_points_z = item->valueint;
-  }
-
-  // dis grid
-  par->disg_num_level = 0;
-  if (item = cJSON_GetObjectItem(root, "dis_grid_at_zindx")) {
-    par->disg_num_level = cJSON_GetArraySize(item);
-    par->disg_at_zindx = (int *)malloc(par->disg_num_level * sizeof(int));
-    for (int n=0; n < par->disg_num_level; n++) {
-      par->disg_at_zindx[n] = cJSON_GetArrayItem(item, n)->valueint;
-    }
-  }
-  if (item = cJSON_GetObjectItem(root, "dis_grid_factor")) {
-    // should be improved to allow input order change
-    if (par->disg_num_level != cJSON_GetArraySize(item)) {
-      fprintf(stderr,"ERROR: input size of dis_grid_at_zindx and dis_grid_factor diff\n");
-      MPI_Abort(MPI_COMM_WORLD,9);
-    }
-    par->disg_factor = (int *)malloc(par->disg_num_level * sizeof(int));
-    for (int n=0; n < par->disg_num_level; n++) {
-      par->disg_factor[n] = cJSON_GetArrayItem(item, n)->valueint;
-    }
   }
 
   // default mpi threads
@@ -334,52 +313,59 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "dynamic_method")) {
     par->imethod = item->valueint;
   }
-  //
-  //-- grid
-  //
-  // need minus 1. C index start from 1.
-  if (item = cJSON_GetObjectItem(root, "fault_grid")) {
-    for(int i=0; i<4; i++) {
-      par->fault_grid[i] = cJSON_GetArrayItem(item, i)->valueint-1;
+  if (item = cJSON_GetObjectItem(root, "fault_x_index")) 
+  {
+    par->number_fault = cJSON_GetArraySize(item);
+    par->fault_x_index = (int *)malloc(par->number_fault * sizeof(int));
+    // need minus 1. C index start from 1.
+    for (int id=0; id<par->number_fault; id++)
+    {
+      par->fault_x_index[id] = cJSON_GetArrayItem(item, id)->valueint-1;
+      if(par->fault_x_index[id] < 0 || par->fault_x_index[id] > par->number_of_total_grid_points_x)
+      {
+        fprintf(stderr,"fault index %d out calculate area!\n", par->fault_x_index[id]);
+        fflush(stderr);
+        exit(1);
+      }
+    }
+  }
+  if (item = cJSON_GetObjectItem(root, "fault_grid")) 
+  {
+    par->fault_grid = (int *)malloc(par->number_fault * 4 * sizeof(int));
+    for (int id=0; id<par->number_fault; id++)
+    {
+      for(int j=0; j<4; j++) {
+        // need minus 1. C index start from 1.
+        par->fault_grid[j+4*id] = cJSON_GetArrayItem(item, j+4*id)->valueint-1;
+      }
     }
   }
 
+  //
+  //-- grid
+  //
   if (item = cJSON_GetObjectItem(root, "grid_generation_method")) {
-    if (subitem = cJSON_GetObjectItem(item, "fault_x_index")) {
-      par->number_of_fault = cJSON_GetArraySize(subitem);
-      par->fault_x_index = (int *)malloc(par->number_of_fault * sizeof(int));
-      // need minus 1. C index start from 1.
-      for (int i=0; i<par->number_of_fault; i++)
-      {
-        par->fault_x_index[i] = cJSON_GetArrayItem(subitem, i)->valueint-1;
-      }
-    }
     // fault import
     if (subitem = cJSON_GetObjectItem(item, "fault_plane")) {
       par->grid_generation_itype = FAULT_PLANE;
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_file")) {
-         sprintf(par->fault_coord_nc, "%s", thirditem->valuestring);
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_geometry_dir")) {
+         sprintf(par->fault_coord_dir, "%s", thirditem->valuestring);
       }
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
-         sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_dir")) {
+         sprintf(par->init_stress_dir, "%s", thirditem->valuestring);
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
         par->dh = thirditem->valueint;
-      }
-      if(par->number_of_fault != 1)
-      {
-        fprintf(stderr,"Error: use this method, only support has 1 fault\n");
-        MPI_Abort(MPI_COMM_WORLD,9);
       }
     }
     // 3D grid import
     if (subitem = cJSON_GetObjectItem(item, "grid_import")) {
       par->grid_generation_itype = GRID_IMPORT;
-      if (thirditem = cJSON_GetObjectItem(subitem, "grid_dir")) {
+      if (thirditem = cJSON_GetObjectItem(subitem, "import_dir")) {
          sprintf(par->grid_import_dir, "%s", thirditem->valuestring);
       }
-      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_file")) {
-         sprintf(par->init_stress_nc, "%s", thirditem->valuestring);
+      if (thirditem = cJSON_GetObjectItem(subitem, "fault_init_stress_dir")) {
+         sprintf(par->init_stress_dir, "%s", thirditem->valuestring);
       }
     }
   }
@@ -1039,13 +1025,6 @@ par_print(par_t *par)
   fprintf(stdout, " number_of_total_grid_points_x = %-10d\n", par->number_of_total_grid_points_x);
   fprintf(stdout, " number_of_total_grid_points_y = %-10d\n", par->number_of_total_grid_points_y);
   fprintf(stdout, " number_of_total_grid_points_z = %-10d\n", par->number_of_total_grid_points_z);
-
-  fprintf(stdout, " disg_num_level = %-10d\n", par->disg_num_level);
-  for (int n = 0; n < par->disg_num_level; n++) {
-    fprintf(stdout, "    #%d: at %d, factor=%d\n",
-          n, par->disg_at_zindx[n], par->disg_factor[n]);
-  }
-
 
   fprintf(stdout, " metric_method_itype = %d\n", par->metric_method_itype);
 

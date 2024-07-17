@@ -10,6 +10,7 @@
 
 typedef struct
 {
+
   //Fault coefs
   float *D21_1;
   float *D22_1;
@@ -72,11 +73,19 @@ typedef struct
   float *x_et;
   float *y_et;
   float *z_et;
+} fault_coef_one_t;
 
+typedef struct
+{
+
+  int number_fault;
+  int *fault_index;
+  fault_coef_one_t fault_coef_one[5];
 } fault_coef_t;
 
 typedef struct
 {
+
   float *T0x;
   float *T0y;
   float *T0z;
@@ -84,7 +93,8 @@ typedef struct
   float *mu_d;
   float *Dc;
   float *C0;
-
+  
+  float *output;
   float *Tn;
   float *Ts1;
   float *Ts2;
@@ -106,7 +116,19 @@ typedef struct
   int *rup_index_z;
   int *flag_rup;
   int *init_t0_flag;
+} fault_one_t;
+
+typedef struct
+{
+  
+  size_t *cmp_pos;
+  char  **cmp_name;
+  int ncmp; //output number
+  int number_fault;
+  int *fault_index;
+  fault_one_t fault_one[5];
 } fault_t;
+
 
 /*************************************************
  * function prototype
@@ -114,18 +136,21 @@ typedef struct
 
 int
 fault_coef_init(fault_coef_t *FC,
-                gd_t *gd);
+                gd_t *gd,
+                int number_fault,
+                int *fault_x_index);
 
 int 
 fault_coef_cal(gd_t *gd, 
                gd_metric_t *metric, 
                md_t *md, 
-               int *fault_x_index,
                fault_coef_t *FC);
 
 int
 fault_init(fault_t *F,
-           gd_t *gd);
+           gd_t *gd,
+           int number_fault,
+           int *fault_x_index);
 
 int
 fault_set(fault_t *F,
@@ -133,11 +158,12 @@ fault_set(fault_t *F,
           gd_t *gd,
           int bdry_has_free,
           int *fault_grid,
-          char *init_stress_nc);
+          char *init_stress_dir);
 
 int 
-nc_read_init_stress(fault_t *F, 
+nc_read_init_stress(fault_one_t *F_thisone, 
                     gd_t *gd, 
-                    char *init_stress_nc);
+                    int id,
+                    char *init_stress_dir);
 
 #endif

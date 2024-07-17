@@ -65,15 +65,16 @@ drv_rk_curv_col_allstep(
   int ni = gd->ni;
   int nj = gd->nj;
   int nk = gd->nk;
-  // fault x index with ghost
-  int i0 = par->fault_x_index[0] + gd->fdx_nghosts;
+  int nx = gd->nx;
+  int ny = gd->ny;
+  int nz = gd->nz;
   // mpi
   int myid = mympi->myid;
   int *topoid = mympi->topoid;
   MPI_Comm comm = mympi->comm;
   int *neighid_d = init_neighid_device(mympi->neighid);
 
-  gd_t     gd_d;
+  gd_t         gd_d;
   md_t         md_d;
   wav_t        wav_d;
   fd_device_t  fd_device_d;
@@ -91,12 +92,12 @@ drv_rk_curv_col_allstep(
   init_fd_device(fd, &fd_device_d);
   init_metric_device(metric, &metric_d);
   init_wave_device(wav, &wav_d);
-  init_fault_coef_device(gd, fault_coef, &fault_coef_d);
-  init_fault_device(gd, fault, &fault_d);
-  init_fault_wav_device(fault_wav, &fault_wav_d);
   init_bdryfree_device(gd, bdryfree, &bdryfree_d);
   init_bdrypml_device(gd, bdrypml, &bdrypml_d);
   init_bdryexp_device(gd, bdryexp, &bdryexp_d);
+  init_fault_wav_device(fault_wav, &fault_wav_d);
+  init_fault_coef_device(gd, fault_coef, &fault_coef_d);
+  init_fault_device(gd, fault, &fault_d);
 
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
@@ -120,10 +121,10 @@ drv_rk_curv_col_allstep(
   w_end_d = wav_d.v5d + wav_d.siz_ilevel * 3; // end level at n+1
 
   // get fault wavefield
-  f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 0; // previous level at n
-  f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 1; // intermidate value
-  f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 2; // for rhs
-  f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * 3; // end level at n+1
+  f_pre_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * fault_wav_d.number_fault * 0; // previous level at n
+  f_tmp_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * fault_wav_d.number_fault * 1; // intermidate value
+  f_rhs_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * fault_wav_d.number_fault * 2; // for rhs
+  f_end_d = fault_wav_d.v5d + fault_wav_d.siz_ilevel * fault_wav_d.number_fault * 3; // end level at n+1
 
   int   ipair, istage;
   float t_cur;
@@ -148,8 +149,8 @@ drv_rk_curv_col_allstep(
   io_snap_nc_create(iosnap, &iosnap_nc, topoid);
 
   // only y/z mpi
-  int num_of_r_reqs = 8;
-  int num_of_s_reqs = 8;
+  int num_of_r_reqs = 4;
+  int num_of_s_reqs = 4;
 
   // set pml for rk
   if(bdrypml_d.is_enable_pml == 1)
@@ -177,7 +178,7 @@ drv_rk_curv_col_allstep(
   {
     PG_d = init_PGVAD_device(gd);
     Dis_accu_d = init_Dis_accu_device(gd);
-    PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gd->ny*gd->nx,0.0,"PGV,A,D malloc");
+    PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*ny*nx,0.0,"PGV,A,D malloc");
   }
   // calculate conversion matrix for free surface
   if (isfree == 1)
@@ -213,7 +214,7 @@ drv_rk_curv_col_allstep(
     //-- recv by interp
     io_recv_keep(iorecv, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
 
-    io_fault_recv_keep(io_fault_recv, &fault_d, w_buff, it);
+    io_fault_recv_keep(io_fault_recv, fault_d, w_buff, it, gd->siz_slice_yz);
 
     //-- line values
     io_line_keep(ioline, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
@@ -221,7 +222,7 @@ drv_rk_curv_col_allstep(
     {
       int it_skip = (int)(it/io_time_skip);
       // io fault var each dt, use w_buff as buff
-      io_fault_nc_put(&iofault_nc, gd, fault_d, w_buff, it_skip, t_cur);
+      io_fault_nc_put(&iofault_nc, gd, fault, fault_d, w_buff, it_skip, t_cur);
       // write slice, use w_buff as buff
       io_slice_nc_put(ioslice,&ioslice_nc,gd,w_pre_d,w_buff,it_skip,t_cur);
     }
@@ -276,7 +277,6 @@ drv_rk_curv_col_allstep(
           }
         }
       }
-
       // compute rhs
       switch (md_d.medium_type)
       {
@@ -285,11 +285,11 @@ drv_rk_curv_col_allstep(
           wave2fault_onestage(
                         w_cur_d, w_rhs_d, wav_d, 
                         f_cur_d, f_rhs_d, fault_wav_d,
-                        i0, fault_d, metric_d, gd_d);
+                        fault_d, metric_d, gd_d);
 
           trial_slipweakening_onestage(
                         w_cur_d, f_cur_d, f_pre_d, 
-                        i0, isfree, dt,
+                        isfree, dt,
                         gd_d, metric_d, wav_d, 
                         fault_wav_d, fault_d, fault_coef_d,
                         fd->pair_fdy_op[ipair][istage],
@@ -299,7 +299,7 @@ drv_rk_curv_col_allstep(
           fault2wave_onestage(
                         w_cur_d, wav_d, 
                         f_cur_d, fault_wav_d,
-                        i0, fault_d, metric_d, gd_d);
+                        fault_d, metric_d, gd_d);
 
           sv_curv_col_el_iso_onestage(
                         w_cur_d, w_rhs_d, wav_d, gd_d, fd_device_d, 
@@ -311,7 +311,7 @@ drv_rk_curv_col_allstep(
 
           sv_curv_col_el_iso_fault_onestage(
                         w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
-                        i0, isfree, imethod, wav_d, 
+                        isfree, imethod, wav_d, 
                         fault_wav_d, fault_d, fault_coef_d,
                         gd_d, metric_d, md_d, bdryfree_d,  
                         fd->pair_fdx_op[ipair][istage],
@@ -321,12 +321,13 @@ drv_rk_curv_col_allstep(
 
           break;
         }
-      //  synchronize onestage device func.
-      CUDACHECK(cudaDeviceSynchronize());
+        //  synchronize onestage device func.
+        CUDACHECK(cudaDeviceSynchronize());
       }
 
       // recv mesg
       MPI_Startall(num_of_r_reqs, mympi->pair_r_reqs[ipair_mpi][istage_mpi]);
+      MPI_Startall(num_of_r_reqs, mympi->pair_r_reqs_fault[ipair_mpi][istage_mpi]);
 
       // rk start
       if (istage==0)
@@ -347,20 +348,26 @@ drv_rk_curv_col_allstep(
           grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
           grid.y = (nj + block.y - 1) / block.y;
           grid.z = (nk + block.z - 1) / block.z;
-          fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_a, 
-                                              fault_d, f_tmp_d, f_pre_d, f_rhs_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            float *f_tmp_thisone = f_tmp_d + id*fault_wav->siz_ilevel;
+            float *f_pre_thisone = f_pre_d + id*fault_wav->siz_ilevel;
+            float *f_rhs_thisone = f_rhs_d + id*fault_wav->siz_ilevel;
+            fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_a, 
+                                                id, fault_d, f_tmp_thisone, f_pre_thisone, f_rhs_thisone);
+          }
 
           fault2wave_onestage(
                         w_tmp_d, wav_d, 
                         f_tmp_d, fault_wav_d,
-                        i0, fault_d, metric_d, gd_d);
+                        fault_d, metric_d, gd_d);
         }
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
-
+        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
+        MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         
         // pml_tmp
         if(bdrypml_d.is_enable_pml == 1)
@@ -391,8 +398,15 @@ drv_rk_curv_col_allstep(
           grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
           grid.y = (nj + block.y - 1) / block.y;
           grid.z = (nk + block.z - 1) / block.z;
-          fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_b, 
-                                              fault_d, f_end_d, f_pre_d, f_rhs_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            float *f_end_thisone = f_end_d + id*fault_wav->siz_ilevel;
+            float *f_pre_thisone = f_pre_d + id*fault_wav->siz_ilevel;
+            float *f_rhs_thisone = f_rhs_d + id*fault_wav->siz_ilevel;
+            fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_b, 
+                                                id, fault_d, f_end_thisone, f_pre_thisone, f_rhs_thisone);
+          }
+
         }
         {
           dim3 block(8,8);
@@ -401,7 +415,11 @@ drv_rk_curv_col_allstep(
           grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update_first <<<grid, block>>> (nj, nk, coef, fault_d);
+
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            fault_stress_update_first <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
+          }
         }
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
@@ -438,18 +456,26 @@ drv_rk_curv_col_allstep(
           grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
           grid.y = (nj + block.y - 1) / block.y;
           grid.z = (nk + block.z - 1) / block.z;
-          fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_a, 
-                                              fault_d, f_tmp_d, f_pre_d, f_rhs_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            float *f_tmp_thisone = f_tmp_d + id*fault_wav->siz_ilevel;
+            float *f_pre_thisone = f_pre_d + id*fault_wav->siz_ilevel;
+            float *f_rhs_thisone = f_rhs_d + id*fault_wav->siz_ilevel;
+            fault_wav_update <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_a, 
+                                                id, fault_d, f_tmp_thisone, f_pre_thisone, f_rhs_thisone);
+          }
+
           fault2wave_onestage(
                         w_tmp_d, wav_d, 
                         f_tmp_d, fault_wav_d,
-                        i0, fault_d, metric_d, gd_d);
+                        fault_d, metric_d, gd_d);
         }
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
+        MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         // pml_tmp
         if(bdrypml_d.is_enable_pml == 1)
         {
@@ -479,8 +505,13 @@ drv_rk_curv_col_allstep(
           grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
           grid.y = (nj + block.y - 1) / block.y;
           grid.z = (nk + block.z - 1) / block.z;
-          fault_wav_update_end <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_b, 
-                                                  fault_d, f_end_d, f_rhs_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            float *f_end_thisone = f_end_d + id*fault_wav->siz_ilevel;
+            float *f_rhs_thisone = f_rhs_d + id*fault_wav->siz_ilevel;
+            fault_wav_update_end <<<grid, block>>>(gd_d, fault_wav->ncmp, coef_b, 
+                                                   id, fault_d, f_end_thisone, f_rhs_thisone);
+          }
         }
         {
           dim3 block(8,8);
@@ -489,7 +520,10 @@ drv_rk_curv_col_allstep(
           grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            fault_stress_update <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
+          }
         }
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
@@ -525,12 +559,18 @@ drv_rk_curv_col_allstep(
           grid.x = (2*fault_wav->ncmp + block.x - 1) / block.x;
           grid.y = (nj + block.y - 1) / block.y;
           grid.z = (nk + block.z - 1) / block.z;
-          fault_wav_update_end <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_b, 
-                                                  fault_d, f_end_d, f_rhs_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            float *f_end_thisone = f_end_d + id*fault_wav->siz_ilevel;
+            float *f_rhs_thisone = f_rhs_d + id*fault_wav->siz_ilevel;
+            fault_wav_update_end <<<grid, block>>> (gd_d, fault_wav->ncmp, coef_b, 
+                                                    id, fault_d, f_end_thisone, f_rhs_thisone);
+          }
+
           fault2wave_onestage(
                         w_end_d, wav_d, 
                         f_end_d, fault_wav_d,
-                        i0, fault_d, metric_d, gd_d);
+                        fault_d, metric_d, gd_d);
         }
         {
           dim3 block(8,8);
@@ -539,13 +579,17 @@ drv_rk_curv_col_allstep(
           grid.y = (nk + block.y - 1) / block.y;
 
           float coef = coef_b / dt;
-          fault_stress_update <<<grid, block>>> (nj, nk, coef, fault_d);
+          for(int id=0; id<fault_wav->number_fault; id++)
+          {
+            fault_stress_update <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
+          }
         }
         
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, myid);
+        blk_macdrp_pack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
+        MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
         {
@@ -566,15 +610,17 @@ drv_rk_curv_col_allstep(
 
       MPI_Waitall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
       MPI_Waitall(num_of_r_reqs, mympi->pair_r_reqs[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
+      MPI_Waitall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
+      MPI_Waitall(num_of_r_reqs, mympi->pair_r_reqs_fault[ipair_mpi][istage_mpi], MPI_STATUS_IGNORE);
  
       if (istage != num_rk_stages-1) 
       {
         blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
       } else 
       {
         blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp,neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, fault_wav->ncmp, neighid_d);
+        blk_macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
       }
     } // RK stages
 
@@ -629,7 +675,7 @@ drv_rk_curv_col_allstep(
     PG_slice_output(PG,gd,output_dir,output_fname_part,topoid);
   }
   // io fault init_t0, peak_Vs at final time, use w_buff as buff
-  io_fault_end_t_nc_put(&iofault_nc, gd, fault_d, w_buff);
+  io_fault_end_t_nc_put(&iofault_nc, gd, fault, fault_d, w_buff);
 
   // finish all time loop calculate, cudafree device pointer
   CUDACHECK(cudaFree(PG_d));

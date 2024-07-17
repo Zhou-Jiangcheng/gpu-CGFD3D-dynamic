@@ -29,9 +29,6 @@ typedef struct {
   int fdy_nghosts;
   int fdz_nghosts;
 
-  int npoint_x; 
-  int npoint_y; 
-  int npoint_z; 
   // global index
   int gni1, gnj1, gnk1; // global index, do not accout ghost point
   int gni2, gnj2, gnk2; // global index
@@ -145,9 +142,10 @@ geometric_symmetry(gd_t *gd, float *v4d, int ncmp);
 
 int
 gd_curv_gen_fault(gd_t *gd,
+                  int  number_fault, 
                   int  *fault_x_index,
                   float dh,
-                  char *in_grid_fault_nc);
+                  char *fault_coord_dir);
 
 int
 nc_read_fault_geometry(float *fault_x, float *fault_y, float *fault_z, 

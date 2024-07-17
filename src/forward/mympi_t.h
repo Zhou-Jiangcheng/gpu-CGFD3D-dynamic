@@ -25,6 +25,9 @@ typedef struct {
   size_t siz_rbuff;
   float *sbuff;
   float *rbuff;
+
+  size_t siz_sbuff_fault;
+  size_t siz_rbuff_fault;
   float *sbuff_fault;
   float *rbuff_fault;
 
@@ -51,6 +54,9 @@ typedef struct {
 
   MPI_Request ***pair_r_reqs;
   MPI_Request ***pair_s_reqs;
+
+  MPI_Request ***pair_r_reqs_fault;
+  MPI_Request ***pair_s_reqs_fault;
 
 } mympi_t;
 

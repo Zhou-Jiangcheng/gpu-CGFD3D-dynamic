@@ -13,7 +13,6 @@ trial_slipweakening_onestage(
                   float *w_cur_d,
                   float *f_cur_d,
                   float *f_pre_d,
-                  int i0,
                   int isfree,
                   float dt,
                   gd_t gd_d,
@@ -35,10 +34,10 @@ trial_slipweakening_gpu(
                   float *f_T1x, float *f_T1y, float *f_T1z,
                   float *f_mVx, float *f_mVy, float *f_mVz,
                   float *xi_x,  float *xi_y,  float *xi_z,
-                  float *jac3d, int i0, int isfree, float dt, 
+                  float *jac3d, int isfree, float dt, 
                   int nj1, int nj, int nk1, int nk, int ny,
-                  size_t siz_iy, size_t siz_iz, 
-                  size_t siz_slice_yz, int jdir, int kdir,
-                  fault_t F, fault_coef_t FC);
+                  size_t siz_iy, size_t siz_iz, size_t siz_slice_yz, 
+                  int jdir, int kdir,
+                  int id, fault_t F, fault_coef_t FC);
 
 #endif

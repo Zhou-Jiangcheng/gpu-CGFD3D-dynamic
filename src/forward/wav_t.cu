@@ -37,7 +37,7 @@ wav_init(gd_t *gd,
   // just need alloc space to recv wave from device
   // V->siz_icmp * (V->ncmp+3) is the max limit
   // Vx, Vy, Vz, Txx, Tyy, Tzz, Tyz, Txz, Txy, Exx, Eyy, Ezz, Eyz, Exz, Exy
-  V->v5d = (float *) fdlib_mem_calloc_1d_float(V->siz_icmp * (V->ncmp+6),
+  V->v5d = (float *) fdlib_mem_calloc_1d_float(V->siz_ilevel * V->nlevel,
                         0.0, "v5d, wf_el3d_1st");
   // position of each var
   size_t *cmp_pos = (size_t *) fdlib_mem_calloc_1d_sizet(

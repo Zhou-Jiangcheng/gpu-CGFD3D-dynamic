@@ -400,9 +400,10 @@ gd_exchange(gd_t *gd,
 
 int
 gd_curv_gen_fault(gd_t *gd,
+                  int number_fault,
                   int *fault_x_index,
                   float dh,
-                  char *in_grid_fault_nc)
+                  char *fault_coord_dir)
 {
   int nx = gd->nx;
   int ny = gd->ny;
@@ -419,11 +420,12 @@ gd_curv_gen_fault(gd_t *gd,
   int nk1 = gd->nk1;
   int nk2 = gd->nk2;
   int gni1 = gd->gni1;
-  int npoint_x = gd->npoint_x;
+
+  int total_gpoints = gd->nx;   //with ghost points. x direction only has 1 mpi
 
   size_t siz_iy  = gd->siz_iy;
   size_t siz_iz  = gd->siz_iz;
-  size_t iptr, iptr_b, iptr_c;
+  size_t iptr, iptr1;
 
   float *x3d = gd->x3d;
   float *y3d = gd->y3d;
@@ -432,79 +434,116 @@ gd_curv_gen_fault(gd_t *gd,
   float *fault_x = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_y = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_z = (float *) malloc(sizeof(float)*nj*nk);
-  float *xline   = (float *) malloc(sizeof(float)*nx);
 
-  nc_read_fault_geometry(fault_x, fault_y, fault_z, in_grid_fault_nc, gd);
-
-  int i0 = fault_x_index[0] + 3;  // now with ghost index 
-  xline[i0] = 0.0;
-  int width1 = 10;
-  int width2 = 55;
-  float compr;
-  int dist;
-  for(int i = i0-1; i>=ni1; i--)
+  int i0, i1; 
+  float x, y, z;
+  float dhx, dhy, dhz;
+  char in_file[CONST_MAX_STRLEN]; 
+  if(number_fault == 1)
   {
-    dist = abs(i-i0); 
-    if(dist < width1)
-    {
-      compr = 0;
+    sprintf(in_file,"%s/fault_coord_1.nc",fault_coord_dir); 
+  
+    nc_read_fault_geometry(fault_x, fault_y, fault_z, in_file, gd);
+
+    i0 = fault_x_index[0] + 3;  // now with ghost index 
+
+    for (int k = nk1; k <= nk2; k++){
+      for (int j = nj1; j <= nj2; j++){
+        x = fault_x[j-3 + (k-3) * nj];
+        y = fault_y[j-3 + (k-3) * nj];
+        z = fault_z[j-3 + (k-3) * nj];
+        //left region
+        for (int i = 0; i <= i0; i++){
+          iptr = i + j * siz_iy + k * siz_iz;
+          x3d[iptr] = x - (i0-i)*dh;
+          y3d[iptr] = y;
+          z3d[iptr] = z;
+        }
+        //right region
+        for (int i = i0+1; i < total_gpoints; i++){
+          iptr = i + j * siz_iy + k * siz_iz;
+          x3d[iptr] = x + (i-i0)*dh;
+          y3d[iptr] = y;
+          z3d[iptr] = z;
+        }
+      }
     }
-    if(dist>=width1 && dist < width2)
-    {
-      compr = 1.0 - cos(PI * (i - (i0 - width1))/(float)(width2-width1));
-    }
-    if(dist >= width2)
-    {
-      compr = 2.0;
-    }
-    compr = 0.5 + 0.25 * compr;
-    xline[i] = xline[i+1] - dh *compr;
-  }
-  for(int i = i0+1; i<=ni2; i++)
+  } 
+  else if(number_fault > 1)
   {
-    dist = abs(i-i0); 
-    if(dist < width1)
-    {
-      compr = 0;
+    // id = 0
+    // read first fault, generate left region
+    sprintf(in_file,"%s/fault_coord_1.nc",fault_coord_dir); 
+  
+    nc_read_fault_geometry(fault_x, fault_y, fault_z, in_file, gd);
+
+    i0 = fault_x_index[0] + 3;  // now with ghost index 
+
+    for (int k = nk1; k <= nk2; k++){
+      for (int j = nj1; j <= nj2; j++){
+        x = fault_x[j-3 + (k-3) * nj];
+        y = fault_y[j-3 + (k-3) * nj];
+        z = fault_z[j-3 + (k-3) * nj];
+        //left region
+        for (int i = 0; i <= i0; i++){
+          iptr = i + j * siz_iy + k * siz_iz;
+          x3d[iptr] = x - (i0-i)*dh;
+          y3d[iptr] = y;
+          z3d[iptr] = z;
+        }
+      }
     }
-    if(dist>=width1 && dist < width2)
+    for(int id=1; id<number_fault; id++)
     {
-      compr = 1.0 - cos(PI * (i - (i0 + width1))/(float)(width2-width1));
+      sprintf(in_file,"%s/fault_coord_%d.nc",fault_coord_dir,id+1);  //id+1, due to C code start 0
+    
+      nc_read_fault_geometry(fault_x, fault_y, fault_z, in_file, gd);
+
+      i0 = fault_x_index[id-1] + 3;  // now with ghost index 
+      i1 = fault_x_index[id] + 3;    // now with ghost index 
+
+      for (int k = nk1; k <= nk2; k++){
+        for (int j = nj1; j <= nj2; j++){
+          x = fault_x[j-3 + (k-3) * nj];
+          y = fault_y[j-3 + (k-3) * nj];
+          z = fault_z[j-3 + (k-3) * nj];
+          iptr1 = i0 + j * siz_iy + k * siz_iz;
+          dhx = (x - x3d[iptr1])/(i1-i0);
+          dhy = (y - y3d[iptr1])/(i1-i0);
+          dhz = (z - z3d[iptr1])/(i1-i0);
+          for (int i = i0+1; i <= i1; i++){
+            iptr = i + j * siz_iy + k * siz_iz;
+            // 1D linear interp 
+            x3d[iptr] = x - (i1-i)*dhx;
+            y3d[iptr] = y - (i1-i)*dhy;
+            z3d[iptr] = z - (i1-i)*dhz;
+          }
+        }
+      }
     }
-    if(dist >= width2)
-    {
-      compr = 2.0;
-    }
-    compr = 0.5 + 0.25 * compr;
-    xline[i] = xline[i-1] + dh *compr;
-  }
-
-  for (int k = nk1; k <= nk2; k++){
-    for (int j = nj1; j <= nj2; j++){
-      for (int i = ni1; i <= ni2; i++){
-
-        //int gi = gni1 + i - 3; 
-        //float x = fault_x[j-3 + (k-3) * nj] + gi * dh + x0;
-
-        float x = fault_x[j-3 + (k-3) * nj] + xline[i];
-        float y = fault_y[j-3 + (k-3) * nj];
-        float z = fault_z[j-3 + (k-3) * nj];
-
-        iptr = i + j * siz_iy + k * siz_iz;
-        x3d[iptr] = x;
-        y3d[iptr] = y;
-        z3d[iptr] = z;
+    // right region
+    i1 = fault_x_index[number_fault-1] + 3;    // now with ghost index 
+    for (int k = nk1; k <= nk2; k++){
+      for (int j = nj1; j <= nj2; j++){
+        x = fault_x[j-3 + (k-3) * nj];
+        y = fault_y[j-3 + (k-3) * nj];
+        z = fault_z[j-3 + (k-3) * nj];
+        //right region
+        for (int i = i1+1; i < total_gpoints; i++){
+          iptr = i + j * siz_iy + k * siz_iz;
+          x3d[iptr] = x + (i-i1)*dh;
+          y3d[iptr] = y;
+          z3d[iptr] = z;
+        }
       }
     }
   }
-
   // extend to ghosts. 
   geometric_symmetry(gd,gd->v4d,gd->ncmp);
    
   free(fault_x);
   free(fault_y);
   free(fault_z);
-  free(xline);
 
   return 0;
 }
@@ -2089,10 +2128,6 @@ gd_info_set(gd_t *const gd,
   gd->gni2 = gd->gni1 + gd->ni - 1;
   gd->gnj2 = gd->gnj1 + gd->nj - 1;
   gd->gnk2 = gd->gnk1 + gd->nk - 1;
-  
-  gd->npoint_x = number_of_total_grid_points_x; 
-  gd->npoint_y = number_of_total_grid_points_y; 
-  gd->npoint_z = number_of_total_grid_points_z;
 
   // x dimention varies first
   gd->siz_iy   = nx; 
