@@ -344,3 +344,4 @@ fault_wav_update_end(gd_t gd_d, int num_of_vars,
     w_update[iptr_f] += coef * w_input2[iptr_f];
   }
 }
+

@@ -2182,6 +2182,7 @@ io_fault_recv_read_locate(gd_t      *gd,
   char line[500];
 
   io_fault_recv->total_number = 0;
+  io_fault_recv->flag_swap = 0;
   if (!(fp = fopen (in_filenm, "rt")))
 	{
     fprintf(stdout,"#########         ########\n");
@@ -2194,6 +2195,8 @@ io_fault_recv_read_locate(gd_t      *gd,
 
   int total_point_y = gd->total_point_y;
   int total_point_z = gd->total_point_z;
+  int gnj2 = gd->gnj2;
+  int gnk2 = gd->gnk2;
   // number of station
   int num_recv;
 
@@ -2233,6 +2236,17 @@ io_fault_recv_read_locate(gd_t      *gd,
     iz = floor(rz);
     ry_inc = ry - iy;
     rz_inc = rz - iz;
+    // check recv in ghost region
+    // if there is a point, perform fault variable exchange
+    // exchange 1 point for interp
+    if(iy == gnj2 && ry_inc >0)
+    {
+      io_fault_recv->flag_swap = 1;
+    }
+    if(iz == gnk2 && rz_inc >0)
+    {
+      io_fault_recv->flag_swap = 1;
+    }
 
     if (gd_info_gindx_is_inner(ix,iy,iz,gd) == 1)
     {
@@ -2279,6 +2293,7 @@ io_fault_recv_read_locate(gd_t      *gd,
         fprintf(stdout,"######### Warning ########\n");
         fprintf(stdout,"#########         ########\n");
         fprintf(stdout,"fault_recv_number[%d] physical coordinates are outside calculation area !\n",ir);
+        exit(1);
       }
     }
   }
@@ -2329,7 +2344,7 @@ io_fault_recv_keep(io_fault_recv_t *io_fault_recv, fault_t F_d,
     CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
     for (int icmp=0; icmp < ncmp; icmp++)
     {
-      int iptr_sta = icmp * io_fault_recv->max_nt + it;
+      iptr_sta = icmp * io_fault_recv->max_nt + it;
       this_recv->seismo[iptr_sta] = buff[4*icmp+0] * Ly1 * Lz1
                                   + buff[4*icmp+1] * Ly2 * Lz1
                                   + buff[4*icmp+2] * Ly1 * Lz2

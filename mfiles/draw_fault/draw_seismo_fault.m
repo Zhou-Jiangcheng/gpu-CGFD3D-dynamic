@@ -11,7 +11,7 @@ output_dir='../../project/output';
 % Slip, Slip1, Slip2
 % n->normal s1->strike s2->dip
 % which variable to plot
-varnm='Vs1';
+varnm='Slip';
 % which station to plot (start from index '1')
 startid=1;
 endid = 3;

@@ -16,11 +16,12 @@ j1 = 51;
 j2 = 350;
 k1 = 51;
 k2 = 200;
+id=2;
 % nucleation shape. 1 is square, 2 is circle.
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 100;
+srcj = 1000;
 srck = 150;   
 
 % 1st method
@@ -60,8 +61,8 @@ Trans_M = [cos(theta), sin(theta), 0.0; ...
 Stress_tensor = Trans_M * Stress_pri * Trans_M';
 
 % load fault geometry
-fnm_grid   = './fault_coord_2.nc';
-fnm_stress = './init_stress_2.nc';
+fnm_grid = sprintf("./fault_coord_%d.nc",id);
+fnm_stress = sprintf("./init_stress_%d.nc",id);
 
 x  = ncread(fnm_grid, 'x');
 y  = ncread(fnm_grid, 'y');

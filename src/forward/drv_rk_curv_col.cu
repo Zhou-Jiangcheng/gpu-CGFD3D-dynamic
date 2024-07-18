@@ -364,8 +364,8 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
+        macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         
@@ -472,8 +472,8 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
+        macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        macdrp_pack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         // pml_tmp
@@ -586,8 +586,8 @@ drv_rk_curv_col_allstep(
         }
         
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
-        blk_macdrp_pack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
+        macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, myid);
+        macdrp_pack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs_fault[ipair_mpi][istage_mpi]);
         // pml_end
@@ -615,12 +615,12 @@ drv_rk_curv_col_allstep(
  
       if (istage != num_rk_stages-1) 
       {
-        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
+        macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
+        macdrp_unpack_fault_mesg_gpu(f_tmp_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
       } else 
       {
-        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp,neighid_d);
-        blk_macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
+        macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
+        macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
       }
     } // RK stages
 
@@ -651,7 +651,10 @@ drv_rk_curv_col_allstep(
 
     // calculate fault slip, Vs, ... at each dt  
     fault_var_update(f_end_d, it, dt, gd_d, fault_d, fault_coef_d, fault_wav_d);
-
+    if(io_fault_recv->flag_swap == 1)
+    {
+      fault_var_exchange(gd, fault_d, mympi, neighid_d);
+    }
     // swap w_pre and w_end pointer, avoid copying
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;
     f_cur_d = f_pre_d; f_pre_d = f_end_d; f_end_d = f_cur_d;

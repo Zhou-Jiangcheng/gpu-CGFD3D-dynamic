@@ -58,9 +58,10 @@ typedef struct
 
 typedef struct
 {
-  int                 total_number;
-  int                 max_nt;
-  int                 ncmp;
+  int  total_number;
+  int  max_nt;
+  int  ncmp;
+  int  flag_swap; 
   io_fault_recv_one_t *fault_recvone;
 } io_fault_recv_t;
 

@@ -67,8 +67,8 @@ cat << ieof > $PAR_FILE
   "io_time_skip" : 1,
 
   "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,200,51,350,51,200],
-  "fault_x_index" : [ 100, 200 ],
+  "fault_grid" : [51,350,51,200],
+  "fault_x_index" : [ 100],
   "grid_generation_method" : {
       "fault_plane" : {
         "fault_geometry_dir" : "${INPUTDIR}/prep_fault",

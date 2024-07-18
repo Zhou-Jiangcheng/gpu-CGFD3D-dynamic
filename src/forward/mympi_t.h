@@ -58,6 +58,22 @@ typedef struct {
   MPI_Request ***pair_r_reqs_fault;
   MPI_Request ***pair_s_reqs_fault;
 
+  // for fault output var exchange
+  size_t siz_sbuff_out_fault;
+  size_t siz_rbuff_out_fault;
+  float *sbuff_out_fault;
+  float *rbuff_out_fault;
+
+  size_t siz_sbuff_y1_out_fault;
+  size_t siz_sbuff_y2_out_fault;
+  size_t siz_sbuff_z1_out_fault;
+  size_t siz_sbuff_z2_out_fault;
+
+  size_t siz_rbuff_y1_out_fault;
+  size_t siz_rbuff_y2_out_fault;
+  size_t siz_rbuff_z1_out_fault;
+  size_t siz_rbuff_z2_out_fault;
+
 } mympi_t;
 
 /*******************************************************************************

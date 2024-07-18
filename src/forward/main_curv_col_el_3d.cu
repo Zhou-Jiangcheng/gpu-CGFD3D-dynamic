@@ -207,8 +207,6 @@ int main(int argc, char** argv)
 
       if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
       gd_curv_metric_cal(gd, gd_metric);
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-      gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -216,8 +214,6 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import metric file ...\n"); 
       gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->metric_import_dir);
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-      gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -275,8 +271,6 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
       md_import(gd, md, blk->output_fname_part, par->media_import_dir);
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange media ...\n"); 
-      gd_exchange(gd,md->v4d,md->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -586,6 +580,14 @@ int main(int argc, char** argv)
                             par->fault_x_index,
                             par->fault_station_file,
                             comm, myid, verbose);
+  // receive flag_exchange_var from each proc
+  int sendbuf = io_fault_recv->flag_swap;
+  MPI_Allreduce(&sendbuf,&io_fault_recv->flag_swap,1,MPI_INT,MPI_MAX,comm);
+  if(myid == 0 && io_fault_recv->flag_swap == 1)
+  {
+    fprintf(stdout,"have fault recv in ghost region, need exchange fault var\n");
+    fflush(stdout);
+  }
 
   // line
   io_line_locate(gd, ioline,
@@ -677,10 +679,17 @@ int main(int argc, char** argv)
   //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
-  blk_macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
+  macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
                   wav->ncmp);
-  blk_macdrp_fault_mesg_init(mympi, fd, gd->nj, gd->nk,
-                  fault_wav->ncmp, par->number_fault);
+  macdrp_fault_mesg_init(mympi, fd, gd->nj, gd->nk,
+                  fault_wav->ncmp, par->number_fault); 
+  // output 9 varialbe, need -2
+  if(io_fault_recv->flag_swap == 1)
+  {
+    int ncmp_out = fault->ncmp-2;
+    macdrp_fault_output_mesg_init(mympi, fd, gd->nj, gd->nk,
+                    ncmp_out, par->number_fault);
+  }
 
   //-------------------------------------------------------------------------------
   //-- qc
