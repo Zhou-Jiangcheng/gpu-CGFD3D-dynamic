@@ -421,8 +421,6 @@ gd_curv_gen_fault(gd_t *gd,
   int nk2 = gd->nk2;
   int gni1 = gd->gni1;
 
-  int total_gpoints = gd->nx;   //with ghost points. x direction only has 1 mpi
-
   size_t siz_iy  = gd->siz_iy;
   size_t siz_iz  = gd->siz_iz;
   size_t iptr, iptr1;
@@ -434,6 +432,7 @@ gd_curv_gen_fault(gd_t *gd,
   float *fault_x = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_y = (float *) malloc(sizeof(float)*nj*nk);
   float *fault_z = (float *) malloc(sizeof(float)*nj*nk);
+  float *xline   = (float *) malloc(sizeof(float)*nx);
 
   int i0, i1; 
   float x, y, z;
@@ -447,22 +446,61 @@ gd_curv_gen_fault(gd_t *gd,
 
     i0 = fault_x_index[0] + 3;  // now with ghost index 
 
+    xline[i0] = 0.0;
+    int width1 = 10;
+    int width2 = 55;
+    float compr;
+    int dist;
+    for(int i = i0-1; i>=ni1; i--)
+    {
+      dist = abs(i-i0); 
+      if(dist < width1)
+      {
+        compr = 0;
+      }
+      if(dist>=width1 && dist < width2)
+      {
+        compr = 1.0 - cos(PI * (i - (i0 - width1))/(float)(width2-width1));
+      }
+      if(dist >= width2)
+      {
+        compr = 2.0;
+      }
+      compr = 0.5 + 0.25 * compr;
+      xline[i] = xline[i+1] - dh *compr;
+    }
+    for(int i = i0+1; i<=ni2; i++)
+    {
+      dist = abs(i-i0); 
+      if(dist < width1)
+      {
+        compr = 0;
+      }
+      if(dist>=width1 && dist < width2)
+      {
+        compr = 1.0 - cos(PI * (i - (i0 + width1))/(float)(width2-width1));
+      }
+      if(dist >= width2)
+      {
+        compr = 2.0;
+      }
+      compr = 0.5 + 0.25 * compr;
+      xline[i] = xline[i-1] + dh *compr;
+    }
+
     for (int k = nk1; k <= nk2; k++){
       for (int j = nj1; j <= nj2; j++){
-        x = fault_x[j-3 + (k-3) * nj];
-        y = fault_y[j-3 + (k-3) * nj];
-        z = fault_z[j-3 + (k-3) * nj];
-        //left region
-        for (int i = 0; i <= i0; i++){
+        for (int i = ni1; i <= ni2; i++){
+
+          //int gi = gni1 + i - 3; 
+          //float x = fault_x[j-3 + (k-3) * nj] + gi * dh + x0;
+
+          float x = fault_x[j-3 + (k-3) * nj] + xline[i];
+          float y = fault_y[j-3 + (k-3) * nj];
+          float z = fault_z[j-3 + (k-3) * nj];
+
           iptr = i + j * siz_iy + k * siz_iz;
-          x3d[iptr] = x - (i0-i)*dh;
-          y3d[iptr] = y;
-          z3d[iptr] = z;
-        }
-        //right region
-        for (int i = i0+1; i < total_gpoints; i++){
-          iptr = i + j * siz_iy + k * siz_iz;
-          x3d[iptr] = x + (i-i0)*dh;
+          x3d[iptr] = x;
           y3d[iptr] = y;
           z3d[iptr] = z;
         }
@@ -485,7 +523,7 @@ gd_curv_gen_fault(gd_t *gd,
         y = fault_y[j-3 + (k-3) * nj];
         z = fault_z[j-3 + (k-3) * nj];
         //left region
-        for (int i = 0; i <= i0; i++){
+        for (int i = ni1; i <= i0; i++){
           iptr = i + j * siz_iy + k * siz_iz;
           x3d[iptr] = x - (i0-i)*dh;
           y3d[iptr] = y;
@@ -529,7 +567,7 @@ gd_curv_gen_fault(gd_t *gd,
         y = fault_y[j-3 + (k-3) * nj];
         z = fault_z[j-3 + (k-3) * nj];
         //right region
-        for (int i = i1+1; i < total_gpoints; i++){
+        for (int i = i1+1; i <= ni2; i++){
           iptr = i + j * siz_iy + k * siz_iz;
           x3d[iptr] = x + (i-i1)*dh;
           y3d[iptr] = y;

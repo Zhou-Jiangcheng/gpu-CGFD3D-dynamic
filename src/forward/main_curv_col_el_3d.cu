@@ -585,7 +585,9 @@ int main(int argc, char** argv)
   MPI_Allreduce(&sendbuf,&io_fault_recv->flag_swap,1,MPI_INT,MPI_MAX,comm);
   if(myid == 0 && io_fault_recv->flag_swap == 1)
   {
+    fprintf(stdout,"########################################################\n");
     fprintf(stdout,"have fault recv in ghost region, need exchange fault var\n");
+    fprintf(stdout,"########################################################\n");
     fflush(stdout);
   }
 

@@ -41,7 +41,7 @@ z1 = z(k1:k2, j1:j2);
 var1 = "Vs1";
 var2 = "Vs2";
 figure(1);
-for nlayer = 3001 : 100 : 3001
+for nlayer = 1001 : 100 : 1001
 % disp(it);
 % [Tn,t] = gather_fault(output_dir,fault_index(id),nlayer,'Tn',nproj,nprok);
 [Vs1,t] = gather_fault(output_dir,fault_index(id),nlayer,var1,nproj,nprok);

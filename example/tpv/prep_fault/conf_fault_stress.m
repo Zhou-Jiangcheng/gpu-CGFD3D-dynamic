@@ -16,12 +16,12 @@ j1 = 51;
 j2 = 350;
 k1 = 51;
 k2 = 200;
-id=2;
+id=1;
 % nucleation shape. 1 is square, 2 is circle.
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 1000;
+srcj = 100;
 srck = 150;   
 
 % 1st method

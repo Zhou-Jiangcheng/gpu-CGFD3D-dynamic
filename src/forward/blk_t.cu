@@ -1350,17 +1350,16 @@ fault_var_exchange(gd_t *gd, fault_t F_d, mympi_t *mympi, int *neighid_d)
   MPI_Sendrecv(sbuff_y1_out_fault, siz_sbuff_y1_out_fault, MPI_FLOAT, mympi->neighid[2], 11,
                rbuff_y2_out_fault, siz_rbuff_y2_out_fault, MPI_FLOAT, mympi->neighid[3], 11,
                mympi->topocomm, &status);
-  //MPI_Sendrecv(sbuff_y2_out_fault, siz_sbuff_y2_out_fault, MPI_FLOAT, mympi->neighid[3], 22,
-  //             rbuff_y1_out_fault, siz_rbuff_y1_out_fault, MPI_FLOAT, mympi->neighid[2], 22,
-  //             mympi->topocomm, &status);
-  //MPI_Sendrecv(sbuff_z1_out_fault, siz_sbuff_z1_out_fault, MPI_FLOAT, mympi->neighid[4], 33,
-  //             rbuff_z2_out_fault, siz_rbuff_z2_out_fault, MPI_FLOAT, mympi->neighid[5], 33,
-  //             mympi->topocomm, &status);
-  //MPI_Sendrecv(sbuff_z2_out_fault, siz_sbuff_z2_out_fault, MPI_FLOAT, mympi->neighid[5], 44,
-  //             rbuff_z1_out_fault, siz_rbuff_z1_out_fault, MPI_FLOAT, mympi->neighid[4], 44,
-  //             mympi->topocomm, &status);
+  MPI_Sendrecv(sbuff_y2_out_fault, siz_sbuff_y2_out_fault, MPI_FLOAT, mympi->neighid[3], 22,
+               rbuff_y1_out_fault, siz_rbuff_y1_out_fault, MPI_FLOAT, mympi->neighid[2], 22,
+               mympi->topocomm, &status);
+  MPI_Sendrecv(sbuff_z1_out_fault, siz_sbuff_z1_out_fault, MPI_FLOAT, mympi->neighid[4], 33,
+               rbuff_z2_out_fault, siz_rbuff_z2_out_fault, MPI_FLOAT, mympi->neighid[5], 33,
+               mympi->topocomm, &status);
+  MPI_Sendrecv(sbuff_z2_out_fault, siz_sbuff_z2_out_fault, MPI_FLOAT, mympi->neighid[5], 44,
+               rbuff_z1_out_fault, siz_rbuff_z1_out_fault, MPI_FLOAT, mympi->neighid[4], 44,
+               mympi->topocomm, &status);
 
-/*
   // unpack
   {
     dim3 block(ny2_g,8);
@@ -1426,7 +1425,6 @@ fault_var_exchange(gd_t *gd, fault_t F_d, mympi_t *mympi, int *neighid_d)
     }
     CUDACHECK(cudaDeviceSynchronize());
   }
-  */
 
   return 0;
 }

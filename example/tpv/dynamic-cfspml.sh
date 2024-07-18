@@ -39,7 +39,7 @@ VERBOSE=100
 GPU_START_ID=4
 
 #-- total x grid points
-NX=300
+NX=200
 #-- total y grid points
 NY=400
 #-- total z grid points
