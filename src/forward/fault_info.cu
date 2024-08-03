@@ -903,10 +903,10 @@ fault_init(fault_t *F,
   sprintf(cmp_name[icmp],"%s","Slip2");
   
   icmp += 1;
-  sprintf(cmp_name[icmp],"%s","peak_Vs");
+  sprintf(cmp_name[icmp],"%s","Peak_vs");
 
   icmp += 1;
-  sprintf(cmp_name[icmp],"%s","init_t0");
+  sprintf(cmp_name[icmp],"%s","Init_t0");
 
   // set pointer
   F->cmp_pos  = cmp_pos;
@@ -937,8 +937,8 @@ fault_init(fault_t *F,
     thisone->Slip  = thisone->output + F->cmp_pos[6];
     thisone->Slip1 = thisone->output + F->cmp_pos[7];
     thisone->Slip2 = thisone->output + F->cmp_pos[8];
-    thisone->peak_Vs = thisone->output + F->cmp_pos[9];
-    thisone->init_t0 = thisone->output + F->cmp_pos[10];
+    thisone->Peak_vs = thisone->output + F->cmp_pos[9];
+    thisone->Init_t0 = thisone->output + F->cmp_pos[10];
     // for inner
     thisone->tTn          = (float *) malloc(sizeof(float)*ny*nz);
     thisone->tTs1         = (float *) malloc(sizeof(float)*ny*nz);
@@ -957,7 +957,7 @@ fault_init(fault_t *F,
     memset(thisone->Vs1,          0, sizeof(float)*ny*nz);
     memset(thisone->Vs2,          0, sizeof(float)*ny*nz);
     memset(thisone->init_t0_flag, 0, sizeof(int)  *ny*nz);
-    memset(thisone->peak_Vs,      0, sizeof(float)*ny*nz);
+    memset(thisone->Peak_vs,      0, sizeof(float)*ny*nz);
   }
 
   return 0;
@@ -1039,10 +1039,10 @@ fault_set(fault_t *F,
         
         // united is used for pml, pml with fault easy write code
         // united == 1, means contain pml and strong boundry 
-        // usually unilateral pml < 30 and strong boundry >= 50
+        // usually unilateral pml < 40 and strong boundry >= 50
         if(bdry_has_free == 1) 
         {
-          if( gj >= 30 && gj < total_point_y - 30 && gk >= 30) {
+          if( gj >= 40 && gj < total_point_y - 40 && gk >= 40) {
             F_thisone->united[iptr_f] = 0;
           }else{
             F_thisone->united[iptr_f] = 1;
@@ -1050,8 +1050,8 @@ fault_set(fault_t *F,
         } 
         else if(bdry_has_free == 0)
         {
-          if( gj >= 30 && gj < total_point_y - 30 && gk >= 30 
-              && gk < total_point_z - 30) {
+          if( gj >= 40 && gj < total_point_y - 40 && gk >= 40 
+              && gk < total_point_z - 40) {
             F_thisone->united[iptr_f] = 0;
           }else{
             F_thisone->united[iptr_f] = 1;
@@ -1064,7 +1064,7 @@ fault_set(fault_t *F,
           F_thisone->faultgrid[iptr_f] = 0;
         }
 
-        F_thisone->init_t0[iptr_f] = -9999.9;
+        F_thisone->Init_t0[iptr_f] = -9999.9;
         F_thisone->flag_rup[iptr_f] = 0;
       }
     }

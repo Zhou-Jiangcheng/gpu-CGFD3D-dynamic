@@ -2005,10 +2005,10 @@ io_fault_nc_create(iofault_t *iofault,
     ierr = nc_def_var(iofault_nc->ncid[i], "Slip2",     NC_FLOAT, 3, dimid,   
                     &(iofault_nc->varid[9+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "peak_Vs",   NC_FLOAT, 2, dimid+1, 
+    ierr = nc_def_var(iofault_nc->ncid[i], "Peak_vs",   NC_FLOAT, 2, dimid+1, 
                     &(iofault_nc->varid[10+i*num_of_vars]));
     handle_nc_err(ierr);   
-    ierr = nc_def_var(iofault_nc->ncid[i], "init_t0",   NC_FLOAT, 2, dimid+1, 
+    ierr = nc_def_var(iofault_nc->ncid[i], "Init_t0",   NC_FLOAT, 2, dimid+1, 
                     &(iofault_nc->varid[11+i*num_of_vars]));
     handle_nc_err(ierr);   
 

@@ -104,8 +104,8 @@ typedef struct
   float *Vs;
   float *Vs1;
   float *Vs2;
-  float *peak_Vs;
-  float *init_t0;
+  float *Peak_vs;
+  float *Init_t0;
 
   float *tTn;
   float *tTs1;

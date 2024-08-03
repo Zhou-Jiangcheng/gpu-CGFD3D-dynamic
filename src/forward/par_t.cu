@@ -355,7 +355,7 @@ par_read_from_str(const char *str, par_t *par)
          sprintf(par->init_stress_dir, "%s", thirditem->valuestring);
       }
       if (thirditem = cJSON_GetObjectItem(subitem, "fault_inteval")) {
-        par->dh = thirditem->valueint;
+        par->dh = thirditem->valuedouble;
       }
     }
     // 3D grid import

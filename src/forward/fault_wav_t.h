@@ -87,11 +87,14 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
                      int it, float dt, int id, 
                      fault_t F, fault_coef_t FC);
 
-__global__ void
-fault_stress_update_first(int nj, int nk, int ny, float coef, int id, fault_t F);
+int
+fault_var_stage_update(float coef, int istage, 
+                       gd_t gd_d, fault_t F);
 
 __global__ void
-fault_stress_update(int nj, int nk, int ny, float coef, int id, fault_t F);
+fault_var_stage_update_gpu(int nj, int nj1, int nk, int nk1, int ny,
+                           float coef, int istage, 
+                           int id, fault_t F);
 
 __global__ void
 fault_wav_update(gd_t gd_d, int num_of_vars, 

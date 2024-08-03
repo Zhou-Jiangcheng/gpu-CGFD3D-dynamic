@@ -375,8 +375,8 @@ int init_fault_device(gd_t *gd, fault_t *F, fault_t *F_d)
     thisone_d->Slip  = thisone_d->output + F->cmp_pos[6];
     thisone_d->Slip1 = thisone_d->output + F->cmp_pos[7];
     thisone_d->Slip2 = thisone_d->output + F->cmp_pos[8];
-    thisone_d->peak_Vs = thisone_d->output + F->cmp_pos[9];
-    thisone_d->init_t0 = thisone_d->output + F->cmp_pos[10];
+    thisone_d->Peak_vs = thisone_d->output + F->cmp_pos[9];
+    thisone_d->Init_t0 = thisone_d->output + F->cmp_pos[10];
     // for inner
     thisone_d->tTn          = (float *) cuda_malloc(sizeof(float)*ny*nz);
     thisone_d->tTs1         = (float *) cuda_malloc(sizeof(float)*ny*nz);
@@ -398,7 +398,7 @@ int init_fault_device(gd_t *gd, fault_t *F, fault_t *F_d)
     CUDACHECK(cudaMemcpy(thisone_d->Tn,   thisone->Tn,   sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(thisone_d->Ts1,  thisone->Ts1,  sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(thisone_d->Ts2,  thisone->Ts2,  sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
-    CUDACHECK(cudaMemcpy(thisone_d->init_t0, thisone->init_t0, sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(thisone_d->Init_t0, thisone->Init_t0, sizeof(float)*ny*nz, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(thisone_d->united,       thisone->united,       sizeof(int)*ny*nz, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(thisone_d->faultgrid,    thisone->faultgrid,    sizeof(int)*ny*nz, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(thisone_d->rup_index_y,  thisone->rup_index_y,  sizeof(int)*ny*nz, cudaMemcpyHostToDevice));
@@ -411,7 +411,7 @@ int init_fault_device(gd_t *gd, fault_t *F, fault_t *F_d)
     CUDACHECK(cudaMemset(thisone_d->Vs,      0, sizeof(float)*ny*nz));
     CUDACHECK(cudaMemset(thisone_d->Vs1,     0, sizeof(float)*ny*nz));
     CUDACHECK(cudaMemset(thisone_d->Vs2,     0, sizeof(float)*ny*nz));
-    CUDACHECK(cudaMemset(thisone_d->peak_Vs, 0, sizeof(float)*ny*nz));
+    CUDACHECK(cudaMemset(thisone_d->Peak_vs, 0, sizeof(float)*ny*nz));
     CUDACHECK(cudaMemset(thisone_d->tTn,     0, sizeof(float)*ny*nz));
     CUDACHECK(cudaMemset(thisone_d->tTs1,    0, sizeof(float)*ny*nz));
     CUDACHECK(cudaMemset(thisone_d->tTs2,    0, sizeof(float)*ny*nz));

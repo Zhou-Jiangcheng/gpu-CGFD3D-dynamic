@@ -658,9 +658,6 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
       DxVx[3] = out1[0] + out2[0] + out3[0] - out4[0] - out5[0];
       DxVy[3] = out1[1] + out2[1] + out3[1] - out4[1] - out5[1];
       DxVz[3] = out1[2] + out2[2] + out3[2] - out4[2] - out5[2];
-      //DxVx[3] = 1.0;
-      //DxVy[3] = 1.0;
-      //DxVz[3] = 1.0;
     }
     if(imethod == 2)
     {

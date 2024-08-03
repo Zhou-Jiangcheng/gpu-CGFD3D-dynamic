@@ -60,7 +60,8 @@ drv_rk_curv_col_allstep(
   int num_of_pairs =  fd->num_of_pairs;
   float *rk_a = fd->rk_a;
   float *rk_b = fd->rk_b;
-  
+  float coef_a, coef_b;
+
   //gd
   int ni = gd->ni;
   int nj = gd->nj;
@@ -231,17 +232,13 @@ drv_rk_curv_col_allstep(
                    w_pre_d, w_buff, nt_total, it, t_cur);
 
 
-    if (myid==0 && verbose>10) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
+    if (myid==0 && verbose>10 && it%10==0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
     ipair = it % num_of_pairs;
-    if (myid==0 && verbose>10) fprintf(stdout, " --> ipair=%d\n",ipair);
-
     // loop RK stages for one step
     for (istage=0; istage<num_rk_stages; istage++)
     {
-      if (myid==0 && verbose>10) fprintf(stdout, " --> istage=%d\n",istage);
-
       // for mesg
       if (istage != num_rk_stages-1) {
         ipair_mpi = ipair;
@@ -321,7 +318,7 @@ drv_rk_curv_col_allstep(
 
           break;
         }
-        //  synchronize onestage device func.
+        // synchronize onestage device func.
         CUDACHECK(cudaDeviceSynchronize());
       }
 
@@ -332,8 +329,8 @@ drv_rk_curv_col_allstep(
       // rk start
       if (istage==0)
       {
-        float coef_a = rk_a[istage] * dt;
-        float coef_b = rk_b[istage] * dt;
+        coef_a = rk_a[istage] * dt;
+        coef_b = rk_b[istage] * dt;
 
         // temp wavefield
         {
@@ -408,19 +405,6 @@ drv_rk_curv_col_allstep(
           }
 
         }
-        {
-          dim3 block(8,8);
-          dim3 grid;
-          grid.x = (nj + block.x - 1) / block.x;
-          grid.y = (nk + block.y - 1) / block.y;
-
-          float coef = coef_b / dt;
-
-          for(int id=0; id<fault_wav->number_fault; id++)
-          {
-            fault_stress_update_first <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
-          }
-        }
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
         {
@@ -440,8 +424,8 @@ drv_rk_curv_col_allstep(
       }
       else if (istage<num_rk_stages-1)
       {
-        float coef_a = rk_a[istage] * dt;
-        float coef_b = rk_b[istage] * dt;
+        coef_a = rk_a[istage] * dt;
+        coef_b = rk_b[istage] * dt;
         //temp wavefield
         {
           dim3 block(256);
@@ -513,18 +497,6 @@ drv_rk_curv_col_allstep(
                                                    id, fault_d, f_end_thisone, f_rhs_thisone);
           }
         }
-        {
-          dim3 block(8,8);
-          dim3 grid;
-          grid.x = (nj + block.x - 1) / block.x;
-          grid.y = (nk + block.y - 1) / block.y;
-
-          float coef = coef_b / dt;
-          for(int id=0; id<fault_wav->number_fault; id++)
-          {
-            fault_stress_update <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
-          }
-        }
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
         {
@@ -544,7 +516,7 @@ drv_rk_curv_col_allstep(
       }
       else // last stage
       {
-        float coef_b = rk_b[istage] * dt;
+        coef_b = rk_b[istage] * dt;
 
         // w_end
         {
@@ -571,18 +543,6 @@ drv_rk_curv_col_allstep(
                         w_end_d, wav_d, 
                         f_end_d, fault_wav_d,
                         fault_d, metric_d, gd_d);
-        }
-        {
-          dim3 block(8,8);
-          dim3 grid;
-          grid.x = (nj + block.x - 1) / block.x;
-          grid.y = (nk + block.y - 1) / block.y;
-
-          float coef = coef_b / dt;
-          for(int id=0; id<fault_wav->number_fault; id++)
-          {
-            fault_stress_update <<<grid, block>>> (nj, nk, ny, coef, id, fault_d);
-          }
         }
         
         // pack and isend
@@ -622,6 +582,11 @@ drv_rk_curv_col_allstep(
         macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, wav->ncmp, neighid_d);
         macdrp_unpack_fault_mesg_gpu(f_end_d, fd, gd, fault_wav_d, mympi, ipair_mpi, istage_mpi, neighid_d);
       }
+
+      // update fault output var in each stage
+      // now only Tn Ts1 Ts2 need
+      coef_b = rk_b[istage];
+      fault_var_stage_update(coef_b,istage, gd_d, fault_d);
     } // RK stages
 
     //--------------------------------------------

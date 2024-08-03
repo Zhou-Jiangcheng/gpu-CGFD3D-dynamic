@@ -49,9 +49,6 @@ trial_slipweakening_onestage(
   for(int id=0; id<FW.number_fault; id++)
   {
     float *f_cur_thisone = f_cur_d + id*FW.siz_ilevel; 
-    float *f_Vx    = f_cur_thisone + FW.Vx_pos ;
-    float *f_Vy    = f_cur_thisone + FW.Vy_pos ;
-    float *f_Vz    = f_cur_thisone + FW.Vz_pos ;
     float *f_T2x   = f_cur_thisone + FW.T2x_pos;
     float *f_T2y   = f_cur_thisone + FW.T2y_pos;
     float *f_T2z   = f_cur_thisone + FW.T2z_pos;
@@ -257,7 +254,7 @@ trial_slipweakening_gpu(
           a_2 * f_T1z[5*siz_slice_yz+iptr_f] +
           a_3 * f_T1z[6*siz_slice_yz+iptr_f] ;
       }
-      // dh = 1, so omit dh in formula
+      //dh = 1, so omit dh in formula
       Rx[m] = 0.5*((2*m-1)*Rx[m] + (DyT2x + DzT3x));
       Ry[m] = 0.5*((2*m-1)*Ry[m] + (DyT2y + DzT3y));
       Rz[m] = 0.5*((2*m-1)*Rz[m] + (DyT2z + DzT3z));

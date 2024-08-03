@@ -247,14 +247,14 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
     f_mT1y[iptr_f] = f_T1y[iptr_f+3*siz_slice_yz];
     f_mT1z[iptr_f] = f_T1z[iptr_f+3*siz_slice_yz];
 
-    if(Vs > F_thisone->peak_Vs[iptr_f]) 
+    if(Vs > F_thisone->Peak_vs[iptr_f]) 
     {
-      F_thisone->peak_Vs[iptr_f] = Vs;
+      F_thisone->Peak_vs[iptr_f] = Vs;
     }
 
     if(F_thisone->init_t0_flag[iptr_f] == 0) {
       if (Vs > 1e-3) {
-        F_thisone->init_t0[iptr_f] = it * dt;;
+        F_thisone->Init_t0[iptr_f] = (it+1) * dt;;
         F_thisone->init_t0_flag[iptr_f] = 1;
         F_thisone->flag_rup[iptr_f] = 1;
       }
@@ -263,34 +263,54 @@ fault_var_update_gpu(float *f_Vx,float *f_Vy, float *f_Vz,
   return;
 }
 
-__global__ void
-fault_stress_update_first(int nj, int nk, int ny, float coef, int id, fault_t F)
+int
+fault_var_stage_update(float coef, int istage, gd_t gd_d, fault_t F)
 {
-  size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
-  fault_one_t *F_thisone = F.fault_one + id;
-
-  size_t iptr_f = (iy+3) + (iz+3)*ny;
-  if(iy<nj && iz<nk && F_thisone->united[iptr_f]==0){
-    F_thisone->Tn [iptr_f] = coef * F_thisone->tTn [iptr_f];
-    F_thisone->Ts1[iptr_f] = coef * F_thisone->tTs1[iptr_f];
-    F_thisone->Ts2[iptr_f] = coef * F_thisone->tTs2[iptr_f];
+  int nj  = gd_d.nj;
+  int nj1 = gd_d.nj1;
+  int nk  = gd_d.nk;
+  int nk1 = gd_d.nk1;
+  int ny  = gd_d.ny;
+  for(int id=0; id<F.number_fault; id++)
+  {
+    {
+      dim3 block(8,8);
+      dim3 grid;
+      grid.x = (nj + block.x - 1) / block.x;
+      grid.y = (nk + block.y - 1) / block.y;
+      fault_var_stage_update_gpu <<<grid, block >>>(
+                                 nj, nj1, nk, nk1, ny, coef, istage,  
+                                 id, F);
+    }
   }
-  return;
+  
+  return 0;
 }
 
 __global__ void
-fault_stress_update(int nj, int nk, int ny, float coef, int id, fault_t F)
+fault_var_stage_update_gpu(int nj, int nj1, int nk, int nk1, int ny,
+                           float coef, int istage, int id, fault_t F)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
+
   fault_one_t *F_thisone = F.fault_one + id;
 
-  size_t iptr_f = (iy+3) + (iz+3)*ny;
-  if(iy<nj && iz<nk && F_thisone->united[iptr_f]==0){
-    F_thisone->Tn [iptr_f] += coef * F_thisone->tTn [iptr_f];
-    F_thisone->Ts1[iptr_f] += coef * F_thisone->tTs1[iptr_f];
-    F_thisone->Ts2[iptr_f] += coef * F_thisone->tTs2[iptr_f];
+  size_t iptr_f = (iy+nj1) + (iz+nk1)*ny;
+
+  if(iy<nj && iz<nk && F_thisone->united[iptr_f]==0)
+  {
+    if(istage == 0)
+    {
+      F_thisone->Tn [iptr_f] = coef * F_thisone->tTn [iptr_f];
+      F_thisone->Ts1[iptr_f] = coef * F_thisone->tTs1[iptr_f];
+      F_thisone->Ts2[iptr_f] = coef * F_thisone->tTs2[iptr_f];
+    } else
+    {
+      F_thisone->Tn [iptr_f] += coef * F_thisone->tTn [iptr_f];
+      F_thisone->Ts1[iptr_f] += coef * F_thisone->tTs1[iptr_f];
+      F_thisone->Ts2[iptr_f] += coef * F_thisone->tTs2[iptr_f];
+    }
   }
   return;
 }
