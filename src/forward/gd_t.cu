@@ -445,14 +445,17 @@ gd_curv_gen_fault(gd_t *gd,
 
     i0 = fault_x_index[0] + 3;  // now with ghost index 
     
-    float theta = 0.0/180.0*PI;
+    //float theta = 0.0/180.0*PI;
     for (int k = nk1; k <= nk2; k++){
       for (int j = nj1; j <= nj2; j++){
         for (int i = ni1; i <= ni2; i++){
 
-          float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh * cos(theta);
+          float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh;
           float y = fault_y[j-3 + (k-3) * nj];
-          float z = fault_z[j-3 + (k-3) * nj] + (i-i0)*dh * sin(theta);
+          float z = fault_z[j-3 + (k-3) * nj];
+          //float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh * cos(theta);
+          //float y = fault_y[j-3 + (k-3) * nj];
+          //float z = fault_z[j-3 + (k-3) * nj] + (i-i0)*dh * sin(theta);
 
           iptr = i + j * siz_iy + k * siz_iz;
           x3d[iptr] = x;
