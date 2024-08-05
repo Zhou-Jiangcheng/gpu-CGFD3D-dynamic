@@ -2281,22 +2281,19 @@ io_fault_recv_read_locate(gd_t      *gd,
       this_recv->indx1d[3] = (j_local+1) + (k_local+1) * gd->ny;
       nr_this += 1;
     }
-  }
-
-  if(myid==0)
-  {
-    for (ir=0; ir<num_recv; ir++)
+    if(myid==0)
     {
       if(iy<0 || iy>total_point_y-1 || iz<0 || iz>total_point_z-1 )
       {
         fprintf(stdout,"#########         ########\n");
-        fprintf(stdout,"######### Warning ########\n");
+        fprintf(stdout,"#########  Error  ########\n");
         fprintf(stdout,"#########         ########\n");
-        fprintf(stdout,"fault_recv_number[%d] physical coordinates are outside calculation area !\n",ir);
+        fprintf(stdout,"fault_recv_number[%d] physical coordinates are outside calculation area !\n",ir+1);
         exit(1);
       }
     }
   }
+
 
   fclose(fp);
  

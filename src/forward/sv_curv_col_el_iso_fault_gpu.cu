@@ -1108,7 +1108,7 @@ void sv_curv_col_el_iso_rhs_fault_stress_F_gpu(
                 + matVx2Vz[idx + 3*2 + 2] * DxVz[n]
                 + matVy2Vz[idx + 3*2 + 0] * DyVx[n]
                 + matVy2Vz[idx + 3*2 + 1] * DyVy[n]
-                + matVy2Vz[idx + 3*2 + 2] * DyVz[n] ;
+                + matVy2Vz[idx + 3*2 + 2] * DyVz[n];
       } 
 
       if(isfree==1 && km==1){

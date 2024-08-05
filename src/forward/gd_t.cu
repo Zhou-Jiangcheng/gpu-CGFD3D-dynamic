@@ -445,7 +445,7 @@ gd_curv_gen_fault(gd_t *gd,
 
     i0 = fault_x_index[0] + 3;  // now with ghost index 
     
-    //float theta = 0.0/180.0*PI;
+    float theta = 0.0/180.0*PI;
     for (int k = nk1; k <= nk2; k++){
       for (int j = nj1; j <= nj2; j++){
         for (int i = ni1; i <= ni2; i++){
@@ -453,9 +453,9 @@ gd_curv_gen_fault(gd_t *gd,
           float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh;
           float y = fault_y[j-3 + (k-3) * nj];
           float z = fault_z[j-3 + (k-3) * nj];
-          //float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh * cos(theta);
+          //float x = fault_x[j-3 + (k-3) * nj] + (i-i0)*dh;
           //float y = fault_y[j-3 + (k-3) * nj];
-          //float z = fault_z[j-3 + (k-3) * nj] + (i-i0)*dh * sin(theta);
+          //float z = fault_z[j-3 + (k-3) * nj] + (i-i0)*dh * tan(theta);
 
           iptr = i + j * siz_iy + k * siz_iz;
           x3d[iptr] = x;
@@ -1972,6 +1972,7 @@ gd_info_set(gd_t *const gd,
             const int number_of_total_grid_points_x,
             const int number_of_total_grid_points_y,
             const int number_of_total_grid_points_z,
+                  int bdry_has_cfspml,
                   int abs_num_of_layers[][2],
             const int fdx_nghosts,
             int const fdy_nghosts,
@@ -1983,11 +1984,33 @@ gd_info_set(gd_t *const gd,
   gd->total_point_x = number_of_total_grid_points_x;
   gd->total_point_y = number_of_total_grid_points_y;
   gd->total_point_z = number_of_total_grid_points_z;
+
+
+  int abs_num_of_layers_temp[CONST_NDIM][2];
+  if(bdry_has_cfspml == 1)
+  {
+    for (int idim=0; idim < CONST_NDIM; idim++) {
+      for (int iside=0; iside < 2; iside++) {
+        abs_num_of_layers_temp[idim][iside] = abs_num_of_layers[idim][iside];
+      }
+    }
+  }
+  if(bdry_has_cfspml == 0)
+  {
+    for (int idim=0; idim < CONST_NDIM; idim++) {
+      for (int iside=0; iside < 2; iside++) {
+        //abs_num_of_layers_temp[idim][iside] = 0;
+        abs_num_of_layers_temp[idim][iside] = abs_num_of_layers[idim][iside];
+      }
+    }
+  }
   // determine ni
   int nx_et = number_of_total_grid_points_x;
 
+  // if use absexp, not double abs layer
+  // only cfspml need double to load balance
   // double cfspml load
-  nx_et += abs_num_of_layers[0][0] + abs_num_of_layers[0][1];
+  nx_et += abs_num_of_layers_temp[0][0] + abs_num_of_layers_temp[0][1];
 
   // partition into average plus left at last
   int nx_avg  = nx_et / mympi->nprocx;
@@ -2007,10 +2030,10 @@ gd_info_set(gd_t *const gd,
   int ni = nx_avg;
   // subtract nlay for pml node
   if (mympi->neighid[0] == MPI_PROC_NULL) {
-    ni -= abs_num_of_layers[0][0];
+    ni -= abs_num_of_layers_temp[0][0];
   }
   if (mympi->neighid[1] == MPI_PROC_NULL) {
-    ni -= abs_num_of_layers[0][1];
+    ni -= abs_num_of_layers_temp[0][1];
   }
   // first nx_left node add one more point
   if (mympi->topoid[0] < nx_left) {
@@ -2020,7 +2043,7 @@ gd_info_set(gd_t *const gd,
   if (mympi->topoid[0]==0) {
     gd->gni1 = 0;
   } else {
-    gd->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers[0][0];
+    gd->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers_temp[0][0];
   }
   if (nx_left != 0) {
     gd->gni1 += (mympi->topoid[0] < nx_left) ? mympi->topoid[0] : nx_left;
@@ -2029,7 +2052,8 @@ gd_info_set(gd_t *const gd,
   // determine nj
   int ny_et = number_of_total_grid_points_y;
   // double cfspml load
-  ny_et += abs_num_of_layers[1][0] + abs_num_of_layers[1][1];
+  ny_et += abs_num_of_layers_temp[1][0] + abs_num_of_layers_temp[1][1];
+
   int ny_avg  = ny_et / mympi->nprocy;
   int ny_left = ny_et % mympi->nprocy;
 
@@ -2043,10 +2067,10 @@ gd_info_set(gd_t *const gd,
   }
   int nj = ny_avg;
   if (mympi->neighid[2] == MPI_PROC_NULL) {
-    nj -= abs_num_of_layers[1][0];
+    nj -= abs_num_of_layers_temp[1][0];
   }
   if (mympi->neighid[3] == MPI_PROC_NULL) {
-    nj -= abs_num_of_layers[1][1];
+    nj -= abs_num_of_layers_temp[1][1];
   }
   // not equal divided points given to first ny_left procs
   if (mympi->topoid[1] < ny_left) {
@@ -2056,7 +2080,7 @@ gd_info_set(gd_t *const gd,
   if (mympi->topoid[1]==0) {
     gd->gnj1 = 0;
   } else {
-    gd->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers[1][0];
+    gd->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers_temp[1][0];
   }
   if (ny_left != 0) {
     gd->gnj1 += (mympi->topoid[1] < ny_left) ? mympi->topoid[1] : ny_left;
@@ -2065,8 +2089,7 @@ gd_info_set(gd_t *const gd,
   // determine nk
   int nz_et = number_of_total_grid_points_z;
   // double cfspml load
-  // if has free_surface, abs_num_of_layers[2][1] = 0
-  nz_et += abs_num_of_layers[2][0] + abs_num_of_layers[2][1];
+  nz_et += abs_num_of_layers_temp[2][0] + abs_num_of_layers_temp[2][1];
   int nz_avg  = nz_et / mympi->nprocz;
   int nz_left = nz_et % mympi->nprocz;
   if (nz_avg < 2 * fdz_nghosts) {
@@ -2079,10 +2102,10 @@ gd_info_set(gd_t *const gd,
   }
   int nk = nz_avg;
   if (mympi->neighid[4] == MPI_PROC_NULL) {
-    nk -= abs_num_of_layers[2][0];
+    nk -= abs_num_of_layers_temp[2][0];
   }
   if (mympi->neighid[5] == MPI_PROC_NULL) {
-    nk -= abs_num_of_layers[2][1];
+    nk -= abs_num_of_layers_temp[2][1];
   }
   // not equal divided points given to first nz_left procs
   if (mympi->topoid[2] < nz_left) {
@@ -2092,7 +2115,7 @@ gd_info_set(gd_t *const gd,
   if (mympi->topoid[2]==0) {
     gd->gnk1 = 0;
   } else {
-    gd->gnk1 = mympi->topoid[2] * nz_avg - abs_num_of_layers[2][0];
+    gd->gnk1 = mympi->topoid[2] * nz_avg - abs_num_of_layers_temp[2][0];
   }
   if (nz_left != 0) {
     gd->gnk1 += (mympi->topoid[2] < nz_left) ? mympi->topoid[2] : nz_left;

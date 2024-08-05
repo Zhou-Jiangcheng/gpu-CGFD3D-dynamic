@@ -132,6 +132,7 @@ int main(int argc, char** argv)
               par->number_of_total_grid_points_x,
               par->number_of_total_grid_points_y,
               par->number_of_total_grid_points_z,
+              par->bdry_has_cfspml,
               par->abs_num_of_layers,
               fd->fdx_nghosts,
               fd->fdy_nghosts,
