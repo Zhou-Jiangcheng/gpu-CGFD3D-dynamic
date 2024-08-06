@@ -54,17 +54,12 @@
            -(b_1 * *(var_ptr + 2)))
 
 //macdrp normal op
-#define c_1  -0.30874
-#define c_2  -0.6326
-#define c_3  1.233
-#define c_4  -0.3334
-#define c_5  0.04168
 
-//#define c_1  -0.29164704779069994
-//#define c_2  -0.66674514216519998
-//#define c_3  1.2501177132452999
-//#define c_4  -0.33341180882999999
-//#define c_5  0.041686285540599999
+#define c_1  -0.291647047
+#define c_2  -0.666745142
+#define c_3   1.250117713
+#define c_4  -0.333411808
+#define c_5   0.041686285
 
 // use this MACDRP more faster. used by wavefield calculate.
 #define M_FD_SHIFT_PTR_MACDRP_COEF(deriv, var_ptr, fd_shift, fd_coef)     \
@@ -128,13 +123,6 @@
            -(c_5 * *(var_ptr - 3)))
 
 //certer 6th op
-//#define d_1  -0.02084
-//#define d_2  0.1667
-//#define d_3  -0.7709
-//#define d_4  0.0
-//#define d_5  0.7709
-//#define d_6  -0.1667
-//#define d_7  0.02084
 #define d_1  -0.01666667
 #define d_2   0.15000000
 #define d_3  -0.75000000

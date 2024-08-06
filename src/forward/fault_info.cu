@@ -524,6 +524,7 @@ fault_coef_cal(gd_t *gd,
             thisone->matPlus2Min5[iptr_f*9+ij] = mat2[ii][jj];
           }
         }
+
         // method 2 coef 
         // minus
         // T1 Vy Vz -> Vx
