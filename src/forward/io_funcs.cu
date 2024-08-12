@@ -29,8 +29,7 @@ io_recv_read_locate(gd_t      *gd,
                     int       num_of_mpiprocs_z,
                     char      *in_filenm,
                     MPI_Comm  comm,
-                    int       myid,
-                    int       verbose)
+                    int       myid)
 {
   FILE *fp;
   char line[500];
@@ -2175,8 +2174,7 @@ io_fault_recv_read_locate(gd_t      *gd,
                           int       *fault_indx,
                           char      *in_filenm,
                           MPI_Comm  comm,
-                          int       myid,
-                          int       verbose)
+                          int       myid)
 {
   FILE *fp;
   char line[500];

@@ -17,7 +17,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project1
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -60,14 +60,28 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : $NPROCS_Y,
   "number_of_mpiprocs_z" : $NPROCS_Z,
 
-  "dynamic_method" : 2,
-  "fault_grid" : [101,896,78,300],
-
-  "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 5000,
+  "size_of_time_step" : 0.01,
+  "number_of_time_steps" : 2500,
   "#time_window_length" : 15,
   "check_stability" : 1,
-  "io_time_skip" : 2,
+  "io_time_skip" : 1,
+
+  "dynamic_method" : 2,
+  "fault_grid" : [101,896,78,300],
+  "fault_x_index" : [ 100],
+  "grid_generation_method" : {
+      "fault_plane" : {
+        "fault_geometry_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault",
+        "fault_inteval" : 90.0
+      },
+      "#grid_import" : {
+        "import_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault"
+      }
+  },
+  "is_export_grid" : 1,
+  "grid_export_dir"   : "$GRID_DIR",
 
   "boundary_x_left" : {
       "cfspml" : {
@@ -113,21 +127,6 @@ cat << ieof > $PAR_FILE
       "free" : "timg"
       },
 
-  "grid_generation_method" : {
-      "fault_x_index" : [ 100 ],
-      "fault_plane" : {
-        "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 90.0
-      },
-      "#grid_import" : {
-        "import_dir" : "${INPUTDIR}/prep_fault",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc"
-      }
-  },
-  "is_export_grid" : 1,
-  "grid_export_dir"   : "$GRID_DIR",
-
   "metric_calculation_method" : {
       "#import" : "$GRID_DIR",
       "calculate" : 1
@@ -168,7 +167,8 @@ cat << ieof > $PAR_FILE
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "#in_station_file" : "$INPUTDIR/station.list",
+  "in_station_file" : "$INPUTDIR/station.list",
+  "fault_station_file" : "$INPUTDIR/fault_station.list",
 
   "#receiver_line" : [
     {
@@ -185,16 +185,16 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, $NZ ],
+      "grid_index_start" : [ 1, 1, $NZ ],
       "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,

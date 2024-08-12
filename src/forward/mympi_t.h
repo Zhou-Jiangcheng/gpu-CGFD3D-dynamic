@@ -86,7 +86,7 @@ mympi_set(mympi_t *mympi,
           int number_of_mpiprocs_y,
           int number_of_mpiprocs_z,
           MPI_Comm comm, 
-          const int myid, const int verbose);
+          const int myid);
 
 int
 mympi_print(mympi_t *mympi);

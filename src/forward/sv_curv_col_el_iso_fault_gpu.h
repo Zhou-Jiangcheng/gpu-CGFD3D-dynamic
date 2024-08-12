@@ -30,7 +30,7 @@ sv_curv_col_el_iso_fault_onestage(
                     fd_op_t *fdx_op,
                     fd_op_t *fdy_op,
                     fd_op_t *fdz_op,
-                    const int myid, const int verbose);
+                    const int myid);
 
 __global__
 void sv_curv_col_el_iso_rhs_fault_velo_gpu(

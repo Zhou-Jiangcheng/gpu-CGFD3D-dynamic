@@ -173,7 +173,7 @@ metric = cal_metric(xf,yf,zf,dh);
 [vec_n, vec_m, vec_l] = cal_basevectors(metric);
 jac = metric.jac;
 disp('write output...')
-fnm_out = "./fault_coord.nc"
+fnm_out = "./fault_coord_1.nc"
 ncid = netcdf.create(fnm_out, 'CLOBBER');
 dimid(1) = netcdf.defDim(ncid,'ny',ny);
 dimid(2) = netcdf.defDim(ncid,'nz',nz);

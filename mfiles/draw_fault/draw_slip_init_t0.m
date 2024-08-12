@@ -6,8 +6,8 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json'
-output_dir='../../project/output'
+parfnm='../../project1/test.json'
+output_dir='../../project1/output'
 
 id=1;
 
@@ -19,7 +19,7 @@ j1 = par.fault_grid(1);
 j2 = par.fault_grid(2);
 k1 = par.fault_grid(3);
 k2 = par.fault_grid(4);
-fault_index = par.grid_generation_method.fault_x_index;
+fault_index = par.fault_x_index;
 nt = fault_num_time(output_dir);
 
 [x,y,z] = gather_fault_coord(output_dir,fault_index(id),nproj,nprok);
@@ -31,12 +31,12 @@ z = z * 1e-3;
 x1 = x(k1:k2, j1:j2);
 y1 = y(k1:k2, j1:j2);
 z1 = z(k1:k2, j1:j2);
-varnm1 = 'slip1';
-varnm2 = 'slip2';
-varnm3 = 'init_t0';
-[Us1] = gather_fault(output_dir,nt,varnm1,nproj,nprok);
-[Us2] = gather_fault(output_dir,nt,varnm2,nproj,nprok);
-[t0] = gather_fault_final(output_dir,varnm3,nproj,nprok);
+var1 = 'Slip1';
+var2 = 'Slip2';
+var3 = 'Init_t0';
+[Slip1,t] = gather_fault(output_dir,fault_index(id),nt,var1,nproj,nprok);
+[Slip2,t] = gather_fault(output_dir,fault_index(id),nt,var2,nproj,nprok);
+[t0] = gather_fault_final(output_dir,fault_index(id),var3,nproj,nprok);
 
 x1 = x(k1:k2, j1:j2);
 y1 = y(k1:k2, j1:j2);
@@ -48,13 +48,13 @@ flag_print = 0;
 vec_t = 1:1:25;
 
 h0 = figure;
-[C1,h] = contour(x1,z1,t1,vec_t,'k','ShowText','on');
+[C1,h] = contour(x1',z1',t1',vec_t,'k','ShowText','on');
 clabel(C1,h,'labelSpacing',10000);
 clabel(C1,h,'fontsize',14);
 set(h0,'visible','off');
 
 h0 = figure;
-[C2,h] = contour(y1,z1,t1,vec_t,'k','ShowText','on');
+[C2,h] = contour(y1',z1',t1',vec_t,'k','ShowText','on');
 clabel(C2,h,'labelSpacing',10000); 
 clabel(C2,h,'fontsize',14);
 set(h0, 'visible', 'off');
@@ -72,11 +72,11 @@ C2(:,c)=[];
 t_x = C1(1,:); 
 t_y = C2(1,:);
 t_z = C1(2,:);
+
 %%
-close all
 % draw the rupture time
 figure(1)
-surf(x1, y1, z1, Us1(k1:k2,j1:j2)); 
+surf(x1, y1, z1, Slip1(k1:k2,j1:j2)) ;
 hold on;
 temp = 0;
 for ii = 1:count
@@ -119,7 +119,7 @@ if flag_print==1
 end
 %%
 figure(2)
-surf(x1, y1, z1, Us2(k1:k2,j1:j2) ); 
+surf(x1', y1', z1', Slip2(k1:k2,j1:j2)'); 
 hold on;
 temp = 0;
 for ii = 1:count
@@ -131,8 +131,6 @@ axis equal;
 shading interp;
 view([60, 30]);
 colormap( 'jet' );
-colorbar; 
-colorbar
 c = colorbar;
 ax =gca;
 ax.Position(1) = 0.15
@@ -160,3 +158,4 @@ if flag_print==1
     fnm_out=['ts-l-dip'];
     print(gcf,[fnm_out '.png'],'-dpng');
 end
+

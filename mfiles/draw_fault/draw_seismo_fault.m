@@ -4,17 +4,17 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json';
-output_dir='../../project/output';
+parfnm='../../project2/test.json';
+output_dir='../../project2/output';
 
 % Vs, Vs1, Vs2, Tn, Ts1, Ts2
 % Slip, Slip1, Slip2
 % n->normal s1->strike s2->dip
 % which variable to plot
-varnm='Slip';
+varnm='Vs1';
 % which station to plot (start from index '1')
-startid=1;
-endid = 3;
+startid=2;
+endid = 2;
 
 % figure control parameters
 flag_print=0;
@@ -65,3 +65,18 @@ for irec=startid:1:endid
         print(gcf,[varnm,'_rec_no',num2str(irec),'.png'],'-dpng');
     end
 end
+
+seismodata1 = seismodata;
+seismot1 = seismot;
+save('seismodata1.mat','seismodata1');
+save('seismot1.mat','seismot1');
+
+% seismodata2 = seismodata;
+% seismot2 = seismot;
+% save seismodata2.mat;
+% save seismot2.mat;
+
+% seismodata3 = seismodata;
+% seismot3 = seismot;
+% save seismodata3.mat;
+% save seismot3.mat;

@@ -5,8 +5,8 @@ addmypath;
 
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json'
-output_dir='../../project/output'
+parfnm='../../project2/test.json'
+output_dir='../../project2/output'
 
 id=1;
 
@@ -38,31 +38,36 @@ z1 = z(k1:k2, j1:j2);
 % Vs, Vs1, Vs2, Tn, Ts1, Ts2
 % Slip, Slip1, Slip2
 % n->normal s1->strike s2->dip
+% var1 = "Slip";
 var1 = "Vs1";
-var2 = "Vs2";
+var2 = "Slip2";
 figure(1);
-for nlayer = 1001 : 100 : 1001
+for nlayer = 1501 : 50 : 1501
 % disp(it);
 % [Tn,t] = gather_fault(output_dir,fault_index(id),nlayer,'Tn',nproj,nprok);
-[Vs1,t] = gather_fault(output_dir,fault_index(id),nlayer,var1,nproj,nprok);
-[Vs2,t] = gather_fault(output_dir,fault_index(id),nlayer,var2,nproj,nprok);
+[V1,t] = gather_fault(output_dir,fault_index(id),nlayer,var1,nproj,nprok);
+[V2,t] = gather_fault(output_dir,fault_index(id),nlayer,var2,nproj,nprok);
 
-% V = Tn(k1:k2, j1:j2);
-V = Vs1(k1:k2, j1:j2);
-% V = sqrt(Vs1(k1:k2, j1:j2).^2+Vs2(k1:k2, j1:j2).^2);
-surf(x1, y1, z1, V);
+% V = V1(k1:k2, j1:j2);
+
+V = V1;
+max(max(abs(V)))
+% V = V2(k1:k2, j1:j2);
+% V = sqrt(V1.^2+V2.^2);
+% surf(x1, y1, z1, V);
+surf(x, y, z, V);
 set(gca,'layer','top');
 set(gcf,'color','white','renderer','painters');
 axis equal; 
 shading interp;
 view([60, 30]);    
-xlabel('Prep-to-strike (km)','rotation',-48,'fontsize',9.4);
-ylabel('Strike(N40°E) Distance (km)','rotation',15,'fontsize',9.4);
-zlabel('Depth (km)','fontsize',9.4);
+% xlabel('Prep-to-strike (km)','rotation',-48,'fontsize',9.4);
+% ylabel('Strike(N40°E) Distance (km)','rotation',15,'fontsize',9.4);
+% zlabel('Depth (km)','fontsize',9.4);
 
 set(gcf,'color','w');
 title(['tangshan fault ',newline,newline,'Vs t=' num2str(t),'s'],'FontSize',12);
-% set(gca,'Clim',[0,12]);
+% set(gca,'Clim',[0,6]);
 colorbar;
 colormap( 'jet' );
 

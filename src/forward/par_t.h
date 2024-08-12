@@ -222,7 +222,7 @@ typedef struct{
 } par_t;
 
 int
-par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose);
+par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par);
 
 int 
 par_read_from_str(const char *str, par_t *par);

@@ -5,24 +5,31 @@ clear all;
 % if use this script, some parameters is determined by 
 % this script, not json.
 
-addmypath;
-nj = 400; 
-nk = 200;
-dh = 100;
-mu_s = 0.325; 
-mu_d = 0.275; 
-Dc = 0.4;
-j1 = 51;
-j2 = 350;
-k1 = 51;
-k2 = 200;
 id=1;
+addmypath;
+nj = 800; 
+nk = 600;
+dh = 100;
+mu_s = 0.677; 
+mu_d = 0.373; 
+Dc = 0.4;
+j1 = 50;
+j2 = 750;
+k1 = 50;
+k2 = 550;
+mu_s_mat = zeros(nj, nk);
+mu_d_mat = zeros(nj, nk);
+Dc_mat = zeros(nj,nk);
+mu_s_mat(:, :) = 1000.0;
+mu_s_mat(j1:j2,k1:k2) = mu_s;
+mu_d_mat(:, :) = mu_d;
+Dc_mat(:, :) = Dc;
 % nucleation shape. 1 is square, 2 is circle.
 nucleation_shape = 2; % circle
 nucleation_size = 1500.0; % radius
 R2 = nucleation_size + dh * 15; % Transition zone
-srcj = 100;
-srck = 150;   
+srcj = 400;
+srck = 300;   
 
 % 1st method
 % R = 0.6;
@@ -46,7 +53,7 @@ Angle_SH = 87;
 
 % azimuth of x-axis, degree in the East of North
 % angle is fault strike, conf_fault_grid.m has calculate
-angle = 220;
+angle = 120;
 Angle_x = 90 + angle; 
 
 % Degree in counter-clockwise,
@@ -60,6 +67,9 @@ Trans_M = [cos(theta), sin(theta), 0.0; ...
          0.0,         0.0,        1.0];
 Stress_tensor = Trans_M * Stress_pri * Trans_M';
 
+Stress_tensor=[60,29.38,0;...
+               29.38,60,0;...
+                0,0,0]*(-1.0e6);
 % load fault geometry
 fnm_grid = sprintf("./fault_coord_%d.nc",id);
 fnm_stress = sprintf("./init_stress_%d.nc",id);
@@ -132,8 +142,7 @@ for k = 1:nk
 end
 
 taus = sqrt(Ts1.^2 + Ts2.^2);
-% miu0 = -taus./(Tn);
-miu0 = -taus./(mu_s*Tn);
+
 %figure(1); 
 %surf(x1, y1, z1, Ts1(j1:j2,k1:k2)/1.0e6); axis equal; shading interp; view([60, 30]); 
 %title('Ts1 Strike stress');colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
@@ -143,19 +152,13 @@ miu0 = -taus./(mu_s*Tn);
 %figure(3);
 %surf(x1, y1, z1, Tn(j1:j2,k1:k2)/1.0e6 ); axis equal; shading interp; view([60, 30]); 
 %title('Tn Normal stress' );colormap('jet');colorbar;set(gcf,'color','w');set(get(colorbar(),'Title'),'string','MPa');
+
+%%
+miu1 = -taus./(mu_s_mat.*Tn);
 figure(4);
-surf(x1, y1, z1, miu0(j1:j2, k1:k2)); axis equal; shading interp; view([60, 30]); 
+surf(x1, y1, z1, miu1(j1:j2, k1:k2)); axis equal; shading interp; view([60, 30]); 
 title(['tangshan fault',char(10),'left initial rupture',char(10),'Ts/(u*Tn)']);
 colormap('jet');colorbar;set(gcf,'color','w');
-%%
-mu_s_mat = zeros(nj, nk);
-mu_d_mat = zeros(nj, nk);
-Dc_mat = zeros(nj,nk);
-mu_s_mat(:, :) = 1000.0;
-mu_s_mat(j1:j2,k1:k2) = mu_s;
-mu_d_mat(:, :) = mu_d;
-Dc_mat(:, :) = Dc;
-
 % figure; surf(x, y, z, mu_s_mat ); axis equal; shading interp; view([60, 30]); title('mu_s' );colormap('jet');colorbar
 dTx = zeros(nj, nk);
 dTy = zeros(nj, nk);

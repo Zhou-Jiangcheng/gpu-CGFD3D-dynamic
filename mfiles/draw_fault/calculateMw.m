@@ -4,8 +4,8 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/test.json'
-output_dir='../../project/output'
+parfnm='../../project2/test.json'
+output_dir='../../project2/output'
 
 par = loadjson(parfnm);
 nproi=1;
@@ -25,7 +25,7 @@ nt = fault_num_time(output_dir);
 [D, t] = gather_fault(output_dir,fault_index(id),nt,varnm,nproj,nprok);
 sum(sum(D))
 max(max(D))
-[mu] = gather_fault_media(output_dir,varnm_media,nproj,nprok);
+[mu] = gather_fault_media(output_dir,fault_index(id),varnm_media,nproj,nprok);
 A = jac'*dh*dh;
 M0 = sum(sum(mu.*D.*A));
 Mw = 2*log10(M0)/3.0-6.06;

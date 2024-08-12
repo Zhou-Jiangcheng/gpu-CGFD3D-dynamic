@@ -23,7 +23,7 @@ trial_slipweakening_onestage(
                   fault_coef_t FC,
                   fd_op_t *fdy_op,
                   fd_op_t *fdz_op,
-                  const int myid, const int verbose);
+                  const int myid);
 
 __global__ void 
 trial_slipweakening_gpu(

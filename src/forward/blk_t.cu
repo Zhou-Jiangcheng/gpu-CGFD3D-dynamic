@@ -15,7 +15,7 @@
 
 int
 blk_init(blk_t *blk,
-         const int myid, const int verbose)
+         const int myid)
 {
   int ierr = 0;
 
@@ -50,8 +50,7 @@ blk_set_output(blk_t *blk,
                mympi_t *mympi,
                char *output_dir,
                char *grid_export_dir,
-               char *media_export_dir,
-               const int verbose)
+               char *media_export_dir)
 {
   // output name
   sprintf(blk->output_fname_part,"px%d_py%d_pz%d", mympi->topoid[0],mympi->topoid[1],mympi->topoid[2]);

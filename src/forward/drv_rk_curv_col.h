@@ -39,7 +39,6 @@ drv_rk_curv_col_allstep(
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
-  char *output_dir,
-  const int verbose);
+  char *output_dir);
 
 #endif

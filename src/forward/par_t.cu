@@ -14,7 +14,7 @@
  * for MPI, master read, broadcast to all procs
  */
 int
-par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
+par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par)
 {
   char *str;
 

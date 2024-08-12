@@ -34,7 +34,7 @@ sv_curv_col_el_iso_onestage(
   fd_op_t *fdx_op,
   fd_op_t *fdy_op,
   fd_op_t *fdz_op,
-  const int myid, const int verbose)
+  const int myid)
 {
   // local pointer get each vars
   float *Vx    = w_cur_d + wav_d.Vx_pos ;
@@ -161,7 +161,7 @@ sv_curv_col_el_iso_onestage(
                         lfdx_shift_d, lfdx_coef_d,
                         lfdy_shift_d, lfdy_coef_d,
                         lfdz_shift_d, lfdz_coef_d,
-                        myid, verbose);
+                        myid);
     CUDACHECK(cudaDeviceSynchronize());
   }
 
@@ -184,7 +184,7 @@ sv_curv_col_el_iso_onestage(
                           fdy_len, lfdy_indx_d, 
                           fdz_len, lfdz_indx_d,
                           idir, jdir, kdir,
-                          myid, verbose);
+                          myid);
       CUDACHECK(cudaDeviceSynchronize());
     }
     // velocity: vlow
@@ -200,7 +200,7 @@ sv_curv_col_el_iso_onestage(
                         matVx2Vz,matVy2Vz,
                         ni1,ni,nj1,nj,nk1,nk2,siz_iy,siz_iz,
                         idir, jdir, kdir,
-                        myid, verbose);
+                        myid);
       CUDACHECK(cudaDeviceSynchronize());
     }
   }
@@ -217,7 +217,7 @@ sv_curv_col_el_iso_onestage(
                                   lfdy_shift_d, lfdy_coef_d,
                                   lfdz_shift_d, lfdz_coef_d,
                                   bdrypml_d, bdryfree_d,
-                                  myid, verbose);
+                                  myid);
   }
   
   // end func
@@ -245,7 +245,7 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     int * lfdx_shift, float * lfdx_coef,
     int * lfdy_shift, float * lfdy_coef,
     int * lfdz_shift, float * lfdz_coef,
-    const int myid, const int verbose)
+    const int myid)
 {
   // local var
   float DxTxx,DxTyy,DxTzz,DxTxy,DxTxz,DxTyz,DxVx,DxVy,DxVz;
@@ -410,7 +410,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     int fdy_len, int * fdy_indx, 
     int fdz_len, int * fdz_indx, 
     int idir, int jdir, int kdir,
-    const int myid, const int verbose)
+    const int myid)
 {
   // local var
   float DxTx,DyTy,DzTz;
@@ -616,7 +616,7 @@ sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
     size_t siz_iy, size_t siz_iz,
     int idir, int jdir, int kdir,
-    const int myid, const int verbose)
+    const int myid)
 {
 
   // local var
@@ -771,7 +771,7 @@ sv_curv_col_el_iso_rhs_cfspml(
     int *lfdy_shift, float *lfdy_coef,
     int *lfdz_shift, float *lfdz_coef,
     bdrypml_t bdrypml, bdryfree_t bdryfree,
-    const int myid, const int verbose)
+    const int myid)
 {
   // check each side
   for (int idim=0; idim<CONST_NDIM; idim++)
@@ -812,7 +812,7 @@ sv_curv_col_el_iso_rhs_cfspml(
                                 lfdy_shift, lfdy_coef,
                                 lfdz_shift, lfdz_coef,
                                 bdrypml, bdryfree, 
-                                myid, verbose);
+                                myid);
         cudaDeviceSynchronize();
       }
     } // iside
@@ -838,7 +838,7 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
                                         int *lfdy_shift, float *lfdy_coef,
                                         int *lfdz_shift, float *lfdz_coef,
                                         bdrypml_t bdrypml, bdryfree_t bdryfree,
-                                        const int myid, const int verbose)
+                                        const int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1297,8 +1297,7 @@ __global__ void
 sv_curv_col_el_iso_dvh2dvz_gpu(gd_t    gd_d,
                                gd_metric_t metric_d,
                                md_t       md_d,
-                               bdryfree_t      bdryfree_d,
-                               const int verbose)
+                               bdryfree_t      bdryfree_d)
 {
   int ni1 = gd_d.ni1;
   int ni2 = gd_d.ni2;

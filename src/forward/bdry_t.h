@@ -175,15 +175,13 @@ bdry_pml_set(gd_t *gd,
              int   in_num_layers[][2],
              float in_alpha_max[][2], //
              float in_beta_max[][2], //
-             float in_velocity[][2], //
-             int verbose);
+             float in_velocity[][2]);
 
 // alloc auxvar
 void
 bdry_pml_auxvar_init(int nx, int ny, int nz, 
                      wav_t *wav,
-                     bdrypml_auxvar_t *auxvar,
-                     const int verbose);
+                     bdrypml_auxvar_t *auxvar);
 
 int
 bdry_cal_abl_len_dh(gd_t *gd, 
@@ -197,8 +195,7 @@ int
 bdry_free_set(gd_t    *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
-              int   in_is_sides[][2],
-              const int verbose);
+              int   in_is_sides[][2]);
 
 int
 bdry_ablexp_set(gd_t *gd,
@@ -209,8 +206,7 @@ bdry_ablexp_set(gd_t *gd,
                 int   in_num_layers[][2],
                 float in_velocity[][2], //
                 float dt,
-                int  *topoid,
-                int verbose);
+                int  *topoid);
 
 float
 bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh);

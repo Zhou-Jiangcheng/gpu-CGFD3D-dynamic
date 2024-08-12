@@ -25,8 +25,7 @@ int
 bdry_free_set(gd_t    *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
-              int   in_is_sides[][2],
-              const int verbose)
+              int   in_is_sides[][2])
 {
   int ierr = 0;
 
@@ -86,8 +85,7 @@ bdry_pml_set(gd_t *gd,
              int   in_num_layers[][2],
              float in_alpha_max[][2], //
              float in_beta_max[][2], //
-             float in_velocity[][2], //
-             int verbose)
+             float in_velocity[][2])
 {
   int ni1 = gd->ni1;
   int ni2 = gd->ni2;
@@ -246,7 +244,7 @@ bdry_pml_set(gd_t *gd,
       int nz = (bdrypml->nk2[idim][iside] - bdrypml->nk1[idim][iside] + 1);
 
       bdry_pml_auxvar_init(nx,ny,nz,wav,
-                           &(bdrypml->auxvar[idim][iside]),verbose);
+                           &(bdrypml->auxvar[idim][iside]));
     } // iside
   } // idim
 
@@ -256,8 +254,7 @@ bdry_pml_set(gd_t *gd,
 void
 bdry_pml_auxvar_init(int nx, int ny, int nz, 
                      wav_t *wav,
-                     bdrypml_auxvar_t *auxvar,
-                     const int verbose)
+                     bdrypml_auxvar_t *auxvar)
 {
   auxvar->nx   = nx;
   auxvar->ny   = ny;
@@ -461,8 +458,7 @@ bdry_ablexp_set(gd_t *gd,
                 int   in_num_layers[][2],
                 float in_velocity[][2], //
                 float dt,
-                int  *topoid,
-                int verbose)
+                int  *topoid)
 {
   int ierr = 0;
   int ni1 = gd->ni1;

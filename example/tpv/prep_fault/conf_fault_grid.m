@@ -5,39 +5,50 @@ clear;
 close all;
 
 addmypath;
-nj =400; % without ghost points 
-nk =200; 
+nj =800; % without ghost points 
+nk =600; 
 dh = 100; %grid physics length
-j1 = 51;
-j2 = 350;
-k1 = 51;
-k2 = 200;
+j1 = 50;
+j2 = 750;
+k1 = 50;
+k2 = 550;
 
 x = zeros(nj, nk);
 y = zeros(nj, nk);
 z = zeros(nj, nk);
 id=1;
-theta = 0/4*pi;
 for k = 1:nk
   for j = 1:nj
-        x(j,k) = 0 + (k-nk)*dh*tan(theta)+0000;
-%         y(j,k) = (j-1-nj/2)*dh;
-        y(j,k) = (j-1)*dh;
+        x(j,k) = 0;
+        y(j,k) = (j-nj/2)*dh;
+%         y(j,k) = (j-1)*dh;
         z(j,k) = (k-nk)*dh;
   end
 end
 if 0
+% get random topography
+N = [nj nk]; % size in pixels of image
+F = 10;        % frequency-filter width
+[Y,Z] = ndgrid(1:N(1),1:N(2));
+j = min(Y-1,N(1)-Y+1);
+k = min(Z-1,N(2)-Z+1);
+H = exp(-.5*(j.^2+k.^2)/F^2);
+X = real(ifft2(H.*fft2(randn(N))));
+X = X .* 1e3;
+x=x+X;
+end
+if 0
 for j = 1:nj
     for k = 1:nk
-        r1 = sqrt((y(j,k)+10.5e3).^2 + (z(j,k)+7.5e3).^2);
-        r2 = sqrt((y(j,k)-10.5e3).^2 + (z(j,k)+7.5e3).^2);
+        r1 = sqrt((y(j,k)-10e3).^2 + (z(j,k)+7.5e3).^2);
+        r2 = sqrt((y(j,k)+10e3).^2 + (z(j,k)+7.5e3).^2);
         fxy = 0;
         if(r1 <3e3)
-            fxy = 200 * (1+cos(pi*r1/3e3));
+            fxy = 300 * (1+cos(pi*r1/3e3));
         end
         
         if(r2 <3e3)
-            fxy = 200 * (1+cos(pi*r2/3e3));
+            fxy = 300 * (1+cos(pi*r2/3e3));
         end
         
         x(j,k)=x(j,k)+fxy;

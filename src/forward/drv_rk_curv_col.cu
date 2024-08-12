@@ -49,8 +49,7 @@ drv_rk_curv_col_allstep(
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
-  char *output_dir,
-  const int verbose)
+  char *output_dir)
 {
   int imethod = par->imethod;
   int io_time_skip = par->io_time_skip;
@@ -133,19 +132,19 @@ drv_rk_curv_col_allstep(
   // for mpi message
   int   ipair_mpi, istage_mpi;
   // create fault slice nc output files
-  if (myid==0 && verbose>0) fprintf(stdout,"prepare fault slice nc output ...\n"); 
+  if (myid==0) fprintf(stdout,"prepare fault slice nc output ...\n"); 
   iofault_nc_t iofault_nc;
   io_fault_nc_create(iofault,
                      gd->ni, gd->nj, gd->nk, topoid,
                      &iofault_nc);
   // create slice nc output files
-  if (myid==0 && verbose>0) fprintf(stdout,"prepare slice nc output ...\n"); 
+  if (myid==0) fprintf(stdout,"prepare slice nc output ...\n"); 
   ioslice_nc_t ioslice_nc;
   io_slice_nc_create(ioslice, wav->ncmp, wav->cmp_name,
                      gd->ni, gd->nj, gd->nk, topoid,
                      &ioslice_nc);
   // create snapshot nc output files
-  if (myid==0 && verbose>0) fprintf(stdout,"prepare snap nc output ...\n"); 
+  if (myid==0) fprintf(stdout,"prepare snap nc output ...\n"); 
   iosnap_nc_t  iosnap_nc;
   io_snap_nc_create(iosnap, &iosnap_nc, topoid);
 
@@ -190,7 +189,7 @@ drv_rk_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else
@@ -205,7 +204,7 @@ drv_rk_curv_col_allstep(
   // time loop
   //--------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"start time loop ...\n"); 
+  if (myid==0) fprintf(stdout,"start time loop ...\n"); 
 
   for (int it=0; it<nt_total; it++)
   {
@@ -232,7 +231,7 @@ drv_rk_curv_col_allstep(
                    w_pre_d, w_buff, nt_total, it, t_cur);
 
 
-    if (myid==0 && verbose>10 && it%10==0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
+    if (myid==0 && it%10==0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
     ipair = it % num_of_pairs;
@@ -291,7 +290,7 @@ drv_rk_curv_col_allstep(
                         fault_wav_d, fault_d, fault_coef_d,
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
-                        myid, verbose);
+                        myid);
 
           fault2wave_onestage(
                         w_cur_d, wav_d, 
@@ -304,7 +303,7 @@ drv_rk_curv_col_allstep(
                         fd->pair_fdx_op[ipair][istage],
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
-                        myid, verbose);
+                        myid);
 
           sv_curv_col_el_iso_fault_onestage(
                         w_cur_d, w_rhs_d, f_cur_d, f_rhs_d,
@@ -314,7 +313,7 @@ drv_rk_curv_col_allstep(
                         fd->pair_fdx_op[ipair][istage],
                         fd->pair_fdy_op[ipair][istage],
                         fd->pair_fdz_op[ipair][istage],
-                        myid, verbose);
+                        myid);
 
           break;
         }
@@ -593,8 +592,7 @@ drv_rk_curv_col_allstep(
     // QC
     //--------------------------------------------
     if (qc_check_nan_number_of_step >0  && (it % qc_check_nan_number_of_step) == 0) {
-      if (myid==0 && verbose>10) fprintf(stdout,"-> check value nan\n");
-        //wav_check_value(w_end);
+      if (myid==0) fprintf(stdout,"-> check value nan\n");
     }
     //--------------------------------------------
     if (bdryexp_d.is_enable_ablexp == 1) {

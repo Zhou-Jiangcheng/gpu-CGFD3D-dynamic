@@ -1,5 +1,5 @@
 4
-recv1_y_z 1 200  100
-recv2_y_z 1 200  90.5 
-recv3_y_z 1 150  150
-recv4_y_z 1 150  150.5
+recv1_y_z 1 200  150
+recv2_y_z 1 250  150 
+recv3_y_z 1 300  150
+recv4_y_z 1 310  150

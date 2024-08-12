@@ -18,7 +18,7 @@ trial_slipweakening_onestage(
                   fault_coef_t FC,
                   fd_op_t *fdy_op,
                   fd_op_t *fdz_op,
-                  const int myid, const int verbose)
+                  const int myid)
 {
   // local pointer get each vars
   float *Txx   = w_cur_d + wav_d.Txx_pos;

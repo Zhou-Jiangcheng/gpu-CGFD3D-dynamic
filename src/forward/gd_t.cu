@@ -445,7 +445,7 @@ gd_curv_gen_fault(gd_t *gd,
 
     i0 = fault_x_index[0] + 3;  // now with ghost index 
     
-    float theta = 0.0/180.0*PI;
+    //float theta = 0.0/180.0*PI;
     for (int k = nk1; k <= nk2; k++){
       for (int j = nj1; j <= nj2; j++){
         for (int i = ni1; i <= ni2; i++){
@@ -1976,8 +1976,7 @@ gd_info_set(gd_t *const gd,
                   int abs_num_of_layers[][2],
             const int fdx_nghosts,
             int const fdy_nghosts,
-            const int fdz_nghosts,
-            const int verbose)
+            const int fdz_nghosts)
 {
   int ierr = 0;
 

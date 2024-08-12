@@ -276,8 +276,8 @@ gd_info_set(gd_t *const gd,
                   int abs_num_of_layers[][2],
             const int fdx_nghosts,
             int const fdy_nghosts,
-            const int fdz_nghosts,
-            const int verbose);
+            const int fdz_nghosts);
+
 int
 gd_info_lindx_is_inner(int i, int j, int k, gd_t *gd);
 

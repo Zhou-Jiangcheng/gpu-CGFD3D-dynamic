@@ -17,7 +17,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project3
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -41,9 +41,9 @@ GPU_START_ID=0
 #-- total x grid points
 NX=200
 #-- total y grid points
-NY=960
+NY=400
 #-- total z grid points
-NZ=300
+NZ=200
 #-- total ympi procs
 NPROCS_Y=2
 #-- total z mpi procs
@@ -60,63 +60,62 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : $NPROCS_Y,
   "number_of_mpiprocs_z" : $NPROCS_Z,
 
-  "dynamic_method" : 2,
-  "fault_grid" : [101,896,78,300],
-
-  "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 5000,
-  "#time_window_length" : 15,
+  "#size_of_time_step" : 0.0125,
+  "#number_of_time_steps" : 800,
+  "time_window_length" : 10,
   "check_stability" : 1,
-  "io_time_skip" : 2,
+  "io_time_skip" : 1,
+
+  "dynamic_method" : 1,
+  "fault_grid" : [51,350,51,200],
+  "fault_x_index" : [ 100],
+  "grid_generation_method" : {
+      "fault_plane" : {
+        "fault_geometry_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault",
+        "fault_inteval" : 100.0
+      },
+      "#grid_import" : {
+        "import_dir" : "${INPUTDIR}/prep_fault",
+        "fault_init_stress_dir" : "${INPUTDIR}/prep_fault"
+      }
+  },
+  "is_export_grid" : 1,
+  "grid_export_dir"   : "$GRID_DIR",
 
   "boundary_x_left" : {
       "ablexp" : {
-          "number_of_layers" : 50,
+          "number_of_layers" : 30,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_x_right" : {
       "ablexp" : {
-          "number_of_layers" : 50,
+          "number_of_layers" : 30,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_front" : {
       "ablexp" : {
-          "number_of_layers" : 50,
+          "number_of_layers" : 30,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_y_back" : {
       "ablexp" : {
-          "number_of_layers" : 50,
+          "number_of_layers" : 30,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_z_bottom" : {
       "ablexp" : {
-          "number_of_layers" : 50,
+          "number_of_layers" : 30,
           "ref_vel"  : 7000.0
           }
       },
   "boundary_z_top" : {
       "free" : "timg"
       },
-
-  "grid_generation_method" : {
-      "fault_x_index" : [ 100 ],
-      "fault_plane" : {
-        "fault_geometry_file" : "${INPUTDIR}/prep_fault/fault_coord.nc",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc",
-        "fault_inteval" : 90.0
-      },
-      "#grid_import" : {
-        "import_dir" : "${INPUTDIR}/prep_fault",
-        "fault_init_stress_file" : "${INPUTDIR}/prep_fault/init_stress.nc"
-      }
-  },
-  "is_export_grid" : 1,
-  "grid_export_dir"   : "$GRID_DIR",
 
   "metric_calculation_method" : {
       "#import" : "$GRID_DIR",
@@ -159,6 +158,7 @@ cat << ieof > $PAR_FILE
   "output_dir" : "$OUTPUT_DIR",
 
   "#in_station_file" : "$INPUTDIR/station.list",
+  "fault_station_file" : "$INPUTDIR/fault_station.list",
 
   "#receiver_line" : [
     {
@@ -175,16 +175,16 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 51 ],
       "y_index" : [ 120 ],
       "z_index" : [ 199 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, $NZ ],
+      "grid_index_start" : [ 1, 1, $NZ ],
       "grid_index_count" : [ $NX, $NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
@@ -220,7 +220,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START__ID 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

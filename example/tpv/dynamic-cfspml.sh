@@ -6,8 +6,8 @@ set -e
 date
 
 #-- system related dir
-#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../../main
@@ -17,7 +17,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../../project
+PROJDIR=`pwd`/../../project2
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -35,15 +35,14 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 #-- grid and mpi configurations
 #----------------------------------------------------------------------
-VERBOSE=100
-GPU_START_ID=4
+GPU_START_ID=0
 
 #-- total x grid points
-NX=200
+NX=400
 #-- total y grid points
-NY=400
+NY=800
 #-- total z grid points
-NZ=200
+NZ=600
 #-- total ympi procs
 NPROCS_Y=2
 #-- total z mpi procs
@@ -60,15 +59,15 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : $NPROCS_Y,
   "number_of_mpiprocs_z" : $NPROCS_Z,
 
-  "size_of_time_step" : 0.005,
-  "number_of_time_steps" : 3000,
-  "#time_window_length" : 15,
+  "size_of_time_step" : 0.01,
+  "number_of_time_steps" : 1500,
+  "#time_window_length" : 10,
   "check_stability" : 1,
   "io_time_skip" : 1,
 
   "dynamic_method" : 2,
-  "fault_grid" : [51,350,51,200],
-  "fault_x_index" : [ 100],
+  "fault_grid" : [50,750,50,550],
+  "fault_x_index" : [ 200],
   "grid_generation_method" : {
       "fault_plane" : {
         "fault_geometry_dir" : "${INPUTDIR}/prep_fault",
@@ -230,7 +229,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $GPU_START_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
